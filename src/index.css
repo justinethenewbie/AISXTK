@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@layer utilities {
+  .neon-glow-cyan {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.35), inset 0 0 10px rgba(6, 182, 212, 0.1);
+  }
+  .neon-glow-emerald {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.1);
+  }
+  .neon-glow-purple {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.35), inset 0 0 10px rgba(168, 85, 247, 0.1);
+  }
+  .neon-border-cyan {
+    border-color: rgba(6, 182, 212, 0.4);
+  }
+  .neon-border-emerald {
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+}
+
+/* Ensure ultra crisp high-contrast math formula rendering */
+.katex {
+  color: #67e8f9 !important;
+  font-size: 1.05em;
+  text-shadow: 0 0 2px rgba(6, 182, 212, 0.4);
+}
+
+.paper-theme-white .katex {
+  color: #0369a1 !important;
+  text-shadow: none;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+/* Base high-contrast body */
+body {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
+/* Custom scrollbars for cyber neon look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+  box-shadow: 0 0 10px #06b6d4;
+}
+
+/* Word Equation Editor Ribbon Zero-Scroll & Full-Width Tray Fixes */
+.word-app-wrapper,
+.word-ribbon,
+.ribbon-group,
+.group-content,
+.structures-list {
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  flex-wrap: wrap !important;
+}
+
+.symbols-box {
+  width: 100% !important;
+  max-width: 480px;
+}
+
+.symbols-grid {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)) !important;
+}
+
+.dropdown-menu {
+  width: 520px !important;
+  max-width: 90vw !important;
+  max-height: none !important;
+  overflow: visible !important;
+  z-index: 99999 !important;
+}
+
+.template-grid {
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)) !important;
+}
+
+/* ========================================================================= */
+/* MS Word WYSIWYG MathLive <math-field> Inline Integration                  */
+/* ========================================================================= */
+math-field {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 1.15em;
+  line-height: normal;
+  border-radius: 4px;
+  cursor: text;
+  margin: 0 4px;
+  /* Luminous high-contrast neon cyan text color for formulas in dark mode */
+  color: #38bdf8 !important;
+  --color: #38bdf8 !important;
+  --caret-color: #38bdf8 !important;
+  --placeholder-color: #38bdf8 !important;
+  --placeholder-opacity: 1 !important;
+  --selection-background-color: rgba(6, 182, 212, 0.45) !important;
+  --selection-color: #ffffff !important;
+  font-weight: 600;
+  text-shadow: 0 0 2px rgba(56, 189, 248, 0.45);
+  filter: drop-shadow(0 0 1px rgba(6, 182, 212, 0.35));
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* 1. FOCUS / ACTIVE STATE (Border appears & stands out) */
+math-field:focus-within {
+  border: 1.5px solid #38bdf8 !important;
+  background-color: rgba(56, 189, 248, 0.12) !important;
+  padding: 2px 7px !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+  outline: none !important;
+}
+
+/* 2. BLUR / UNFOCUS STATE (Border & background completely disappear like printed text) */
+math-field:not(:focus-within) {
+  border: 1.5px solid transparent !important;
+  background: transparent !important;
+  padding: 0 2px !important;
+  box-shadow: none !important;
+}
+
+/* 3. HOVER STATE (Subtle dashed border for easy re-selection) */
+math-field:hover:not(:focus-within) {
+  border: 1.5px dashed rgba(56, 189, 248, 0.55) !important;
+  background-color: rgba(56, 189, 248, 0.05) !important;
+}
+
+/* Light paper theme overrides (High-contrast deep blue on white) */
+.paper-theme-white math-field {
+  color: #0284c7 !important;
+  --color: #0284c7 !important;
+  --caret-color: #0284c7 !important;
+  --placeholder-color: #0284c7 !important;
+  --placeholder-opacity: 1 !important;
+  --selection-background-color: rgba(2, 132, 199, 0.25) !important;
+  --selection-color: #0f172a !important;
+  font-weight: 600;
+  text-shadow: none;
+  filter: none;
+}
+
+.paper-theme-white math-field:focus-within {
+  border: 1.5px solid #0284c7 !important;
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.3) !important;
+  color: #0284c7 !important;
+}
+
+.paper-theme-white math-field:hover:not(:focus-within) {
+  border: 1.5px dashed rgba(2, 132, 199, 0.45) !important;
+}
+
+/* Hide default MathLive virtual keyboard & menu toggle buttons */
+math-field::part(virtual-keyboard-toggle),
+math-field::part(menu-toggle) {
+  display: none !important;
+}
+
+/* Placeholder styling inside math-field */
+math-field::part(placeholder),
+math-field .ML__placeholder {
+  color: #38bdf8 !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+
+.paper-theme-white math-field::part(placeholder),
+.paper-theme-white math-field .ML__placeholder {
+  color: #0284c7 !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+
+/* Contenteditable Word Sheet styling: ultra sharp text contrast */
+.word-sheet-editor {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
+  overflow-y: auto;
+  line-height: 1.8;
+  color: #ffffff !important;
+  font-weight: 500;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.paper-theme-white .word-sheet-editor {
+  color: #0f172a !important;
+  text-shadow: none;
+}
+
+.word-sheet-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #94a3b8 !important;
+  font-style: italic;
+  pointer-events: none;
+  display: block;
+}

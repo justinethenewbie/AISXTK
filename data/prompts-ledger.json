@@ -1,0 +1,79 @@
+[
+  {
+    "stepNumber": 1,
+    "phaseTitle": "Khởi Tạo Kiến Trúc Nền Tảng Ứng Dụng Học Tập XSTK Toàn Diện",
+    "category": "Architecture & Core Learning Engine",
+    "goal": "Xây dựng toàn bộ nền tảng học tập Xác Suất Thống Kê Đại Học với 7 chương chuẩn, phương pháp Feynman 5 bước, chấm điểm bằng hình ảnh/iPad và phòng vấn đáp AI.",
+    "fullPromptText": "Hãy xây dựng một ứng dụng web học tập toàn diện cho môn Xác Suất Thống Kê Đại Học (XSTK) theo phong cách hiện đại...",
+    "systemInstructionsPrompt": "Bạn là AI Tutor kiêm Chuyên gia Sư phạm Xác suất thống kê Đại học...",
+    "technicalImplementation": ["React SPA", "KaTeX", "Canvas iPad", "Express backend"],
+    "keyOutputs": ["curriculumData.ts", "ChapterLearning.tsx", "InteractiveCanvas.tsx", "TheoreticalViva.tsx"],
+    "timestamp": "2026-10-18 09:00:00"
+  },
+  {
+    "stepNumber": 2,
+    "phaseTitle": "Vi Xử Lý Toán Học 4 Bước & Giải Tích Phân Biến Ngẫu Nhiên Liên Tục",
+    "category": "Math Processor & Continuous Variable Analysis",
+    "goal": "Biến ứng dụng thành một bộ vi xử lý toán học thông minh, tự động giải các bài toán tích phân biến ngẫu nhiên liên tục theo 4 bước chuẩn.",
+    "fullPromptText": "Bạn là bộ vi xử lý toán học kiêm gia sư môn Xác suất thống kê đại học...",
+    "systemInstructionsPrompt": "Luôn tuân thủ quy trình 4 bước chuẩn mực và kèm mẹo bấm máy Casio fx-580VN X...",
+    "technicalImplementation": ["MathProcessor.tsx", "Simpson integration", "Fraction & Decimal dual output"],
+    "keyOutputs": ["MathProcessor.tsx", "Casio fx-580VN X guide"],
+    "timestamp": "2026-10-18 14:30:00"
+  },
+  {
+    "stepNumber": 3,
+    "phaseTitle": "Máy Tính Casio Ảo Chạy Trực Tiếp Trên Web & Bàn Phím Ký Hiệu Đặc Biệt",
+    "category": "Virtual Casio Calculator & Keypad UI",
+    "goal": "Nâng cấp máy tính xác suất thống kê hoạt động như máy tính cầm tay Casio fx-580VN X thực thụ.",
+    "fullPromptText": "Hãy cập nhật và nâng cấp riêng cho tính năng Máy tính Xác suất thống kê...",
+    "systemInstructionsPrompt": "Không bao giờ từ chối bài toán tích phân. Hiển thị song song phân số và số thập phân.",
+    "technicalImplementation": ["CasioCalculator.tsx", "Natural Textbook Display", "Nerdamer integration"],
+    "keyOutputs": ["CasioCalculator.tsx", "casio_simulator.html"],
+    "timestamp": "2026-10-18 20:15:00"
+  },
+  {
+    "stepNumber": 4,
+    "phaseTitle": "Trích Xuất Đề Thi & Bài Tập Ra File Word (.doc) và PDF (In A4)",
+    "category": "Export & Document Generation",
+    "goal": "Bổ sung các nút bấm trích xuất bộ câu hỏi trắc nghiệm và tự luận do AI sinh ra thành file Word và PDF.",
+    "fullPromptText": "Các tính năng tạo bài tập cần được tạo thêm các nút để trích bài tập ra các định dạng file khác...",
+    "systemInstructionsPrompt": "Định dạng bảng chuẩn hóa, bảo toàn ký tự tiếng Việt Unicode.",
+    "technicalImplementation": ["exportUtils.ts", "Word export BOM", "Print-Ready CSS A4"],
+    "keyOutputs": ["exportUtils.ts", "Word/PDF toolbar"],
+    "timestamp": "2026-10-19 08:45:00"
+  },
+  {
+    "stepNumber": 5,
+    "phaseTitle": "Đổi Tên Thành EDT & Đồng Bộ Giao Diện Cyber Neon Độ Tương Phản Cao",
+    "category": "UI/UX & Modern Neon Harmonization",
+    "goal": "Đổi tên thương hiệu thành EDT, thiết lập bảng màu Cyber Neon Cyan và Emerald độ tương phản cao.",
+    "fullPromptText": "Giao diện đổi thành màu neon hiện đại hài hòa và ngôn ngữ chính là tiếng việt...",
+    "systemInstructionsPrompt": "Sử dụng Cyber Neon Cyan và Neon Emerald trên nền slate-950.",
+    "technicalImplementation": ["Tailwind CSS", "Metadata update", "Dark obsidian theme"],
+    "keyOutputs": ["metadata.json", "TopNavbar.tsx", "Global theme"],
+    "timestamp": "2026-10-19 14:00:00"
+  },
+  {
+    "stepNumber": 6,
+    "phaseTitle": "Sơ Đồ Tư Duy AI Phân Nhánh, Tích Hợp Google Drive & Tốc Độ Siêu Tốc < 3 Giây",
+    "category": "AI Mindmap & Google Drive Workspace Integration",
+    "goal": "Xây dựng công cụ tạo sơ đồ tư duy phân nhánh thông minh với central topic input, đồng bộ Google Workspace OAuth & Google Drive, chuẩn hóa model gemini-2.5-flash.",
+    "fullPromptText": "Hãy cập nhật và tối ưu hóa toàn diện ứng dụng EDT: tối ưu tốc độ phản hồi siêu tốc < 3 giây bằng gemini-2.5-flash, Natural Textbook Display trên Casio, và tích hợp Google Drive Cloud Hub.",
+    "systemInstructionsPrompt": "Xuất JSON súc tích, chuẩn KaTeX, không viết lan man thừa thãi.",
+    "technicalImplementation": ["MindmapViewer.tsx", "googleDriveService.ts", "Google Workspace OAuth scopes", "server.ts fast proxy"],
+    "keyOutputs": ["MindmapViewer.tsx", "GoogleDriveModal.tsx", "generate-mindmap endpoint"],
+    "timestamp": "2026-10-20 09:30:00"
+  },
+  {
+    "stepNumber": 7,
+    "phaseTitle": "Cổng Đăng Nhập Bắt Buộc (Facebook Auth Wall), Cổng Quản Trị PIN 24062007 & Sửa Lỗi Modal Prompt",
+    "category": "Database Persistence, Security Gate & React Hook Fix",
+    "goal": "Thiết lập màn hình đăng nhập bắt buộc trước khi vào học để lưu trữ dữ liệu vào users_database.json, bảo mật Developer Portal với mã PIN 24062007, và khắc phục triệt để lỗi Hook trật tự trong PromptHistoryModal.",
+    "fullPromptText": "Tôi muốn người dùng trước khi vào học cần phải đăng nhập mới được quyền sử dụng công cụ học này giống như trình duyệt đăng nhập facebook. Nhà phát hành cũng phải đăng nhập qua mã PIN. Sửa lỗi màn hình đen ở phần tổng hợp prompt.",
+    "systemInstructionsPrompt": "Bảo mật tuyệt đối vai trò nhà phát hành, bắt buộc xác thực phiên đăng nhập, đồng bộ users_database.json bền vững trên server.",
+    "technicalImplementation": ["AuthModal.tsx", "users_database.json", "PromptHistoryModal.tsx hook order fix", "Mandatory login wall in App.tsx"],
+    "keyOutputs": ["AuthModal.tsx", "users_database.json", "PromptHistoryModal.tsx"],
+    "timestamp": "2026-10-20 14:20:00"
+  }
+]

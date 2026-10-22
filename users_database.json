@@ -1,0 +1,294 @@
+[
+  {
+    "id": "USR-278929",
+    "fullName": "Test Sinh Vien EDT",
+    "email": "test_student_1792504278760@student.edu.vn",
+    "role": "sinh_vien",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    "studentId": "26110999",
+    "university": "ĐH Kinh Tế TP.HCM (UEH)",
+    "classGroup": "2026-XSTK",
+    "gpa": 3.92,
+    "exp": 1060,
+    "level": 6,
+    "streakDays": 1,
+    "studyHours": 7.2,
+    "exercisesSolved": 41,
+    "accuracyRate": 100,
+    "createdAt": "2026-10-20 13:51:18",
+    "lastActive": "Vừa xong",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Nắm vững bản chất Bước 2: Bản Chất Khái Niệm (Bài 1: Xác Suất và Công Thức Tính Xác Suất)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      }
+    ]
+  },
+  {
+    "id": "USR-DEV-001",
+    "fullName": "Justine Dev (EDT Lead)",
+    "email": "justine.ct.forwork@gmail.com",
+    "role": "nha_phat_trien",
+    "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+    "studentId": "EDT-ADMIN",
+    "university": "Đại học Quốc Gia TP.HCM",
+    "classGroup": "EDT-CORE-TEAM",
+    "gpa": 4,
+    "exp": 9999,
+    "level": 50,
+    "streakDays": 45,
+    "studyHours": 128.5,
+    "exercisesSolved": 342,
+    "accuracyRate": 98.4,
+    "createdAt": "2026-01-15 08:30:00",
+    "lastActive": "Đang online",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Xác thực Cổng Quản Trị",
+        "detail": "Mở khóa quyền Nhà Phát Triển với mã PIN bảo mật",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Xác thực Cổng Quản Trị",
+        "detail": "Mở khóa quyền Nhà Phát Triển với mã PIN bảo mật",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Khởi tạo hệ thống",
+        "detail": "Triển khai máy tính Casio & Vi xử lý tích phân 4 bước",
+        "timestamp": "10 phút trước"
+      },
+      {
+        "action": "Quản trị CSDL",
+        "detail": "Kiểm toán kho dữ liệu người dùng users_database.json",
+        "timestamp": "30 phút trước"
+      }
+    ]
+  },
+  {
+    "id": "USR-2026-089",
+    "fullName": "Nguyễn Văn An",
+    "email": "an.nguyen@student.hcmut.edu.vn",
+    "role": "sinh_vien",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    "studentId": "2210452",
+    "university": "ĐH Bách Khoa TP.HCM (HCMUT)",
+    "classGroup": "2026-DHKT01",
+    "gpa": 3.82,
+    "exp": 2450,
+    "level": 12,
+    "streakDays": 14,
+    "studyHours": 42.5,
+    "exercisesSolved": 128,
+    "accuracyRate": 92.5,
+    "createdAt": "2026-02-10 14:20:00",
+    "lastActive": "15 phút trước",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Làm trắc nghiệm",
+        "detail": "Hoàn thành 10 câu Chương 3: Biến ngẫu nhiên liên tục",
+        "timestamp": "15 phút trước"
+      },
+      {
+        "action": "Máy tính Casio",
+        "detail": "Giải tích phân suy rộng cận âm vô cực đến dương vô cực",
+        "timestamp": "1 giờ trước"
+      }
+    ]
+  },
+  {
+    "id": "USR-2026-112",
+    "fullName": "Trần Thị Mai Lan",
+    "email": "lan.tran@hcmus.edu.vn",
+    "role": "sinh_vien",
+    "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+    "studentId": "23110098",
+    "university": "ĐH Khoa Học Tự Nhiên (HCMUS)",
+    "classGroup": "2026-KHTN-KDL",
+    "gpa": 3.91,
+    "exp": 3120,
+    "level": 15,
+    "streakDays": 21,
+    "studyHours": 56,
+    "exercisesSolved": 175,
+    "accuracyRate": 95.2,
+    "createdAt": "2026-02-14 09:15:00",
+    "lastActive": "2 giờ trước",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Vấn đáp AI",
+        "detail": "Hoàn thành vấn đáp Phân phối Chuẩn Tắc Z với điểm 9.5/10",
+        "timestamp": "2 giờ trước"
+      },
+      {
+        "action": "Tự luận",
+        "detail": "Giải bài toán tìm hằng số k hàm mật độ",
+        "timestamp": "Hôm qua"
+      }
+    ]
+  },
+  {
+    "id": "USR-2026-205",
+    "fullName": "Lê Hoàng Long",
+    "email": "long.le@neu.edu.vn",
+    "role": "sinh_vien",
+    "avatarUrl": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150",
+    "studentId": "11234902",
+    "university": "ĐH Kinh Tế Quốc Dân (NEU)",
+    "classGroup": "2026-TCNH04",
+    "gpa": 3.65,
+    "exp": 1850,
+    "level": 9,
+    "streakDays": 7,
+    "studyHours": 31,
+    "exercisesSolved": 86,
+    "accuracyRate": 88,
+    "createdAt": "2026-03-01 11:00:00",
+    "lastActive": "3 giờ trước",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Xuất đề thi",
+        "detail": "Xuất 20 câu trắc nghiệm sang file Word (.doc)",
+        "timestamp": "3 giờ trước"
+      },
+      {
+        "action": "Bấm máy Casio",
+        "detail": "Tra cứu giá trị tới hạn z_alpha và t_alpha",
+        "timestamp": "5 giờ trước"
+      }
+    ]
+  },
+  {
+    "id": "USR-2026-301",
+    "fullName": "TS. Trần Minh Đức",
+    "email": "duc.tran@lecturer.edu.vn",
+    "role": "giang_vien",
+    "avatarUrl": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+    "studentId": "GV-XSTK-09",
+    "university": "Đại học Bách Khoa",
+    "classGroup": "Bộ môn Toán Ứng Dụng",
+    "gpa": 4,
+    "exp": 7200,
+    "level": 35,
+    "streakDays": 60,
+    "studyHours": 95,
+    "exercisesSolved": 520,
+    "accuracyRate": 99.1,
+    "createdAt": "2026-01-20 10:00:00",
+    "lastActive": "Hôm nay",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Tạo đề thi",
+        "detail": "Biên soạn đề thi tự luận 5 bước cho kỳ thi giữa kỳ",
+        "timestamp": "Hôm nay"
+      },
+      {
+        "action": "Chấm bài hình ảnh",
+        "detail": "Chấm barem lời giải bài toán xác suất có điều kiện",
+        "timestamp": "Hôm qua"
+      }
+    ]
+  }
+]

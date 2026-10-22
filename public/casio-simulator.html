@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDT - Máy Tính Giả Lập Casio Chuyên Dụng XSTK</title>
+  
+  <!-- MathLive CDN for visual math editing -->
+  <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive-static.css">
+  <script defer src="https://unpkg.com/mathlive"></script>
+  
+  <!-- Nerdamer JS CDN for instant numerical and symbolic calculations -->
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/nerdamer.core.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Algebra.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Calculus.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Solve.js"></script>
+
+  <style>
+    :root {
+      --neon-cyan: #00f0ff;
+      --neon-green: #00ff9d;
+      --neon-purple: #bd00ff;
+      --neon-amber: #ffb700;
+      --bg-dark: #0a0e17;
+      --panel-dark: #121826;
+      --casio-casing: #1e2638;
+      --screen-bg: #c5dbcc;
+      --screen-text: #1a2f23;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #151f32 0%, var(--bg-dark) 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 9999px;
+      color: var(--neon-cyan);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 30%, var(--neon-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .calculator-container {
+      width: 100%;
+      max-width: 900px;
+      background: var(--casio-casing);
+      border: 2px solid rgba(0, 240, 255, 0.3);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 240, 255, 0.15);
+      border-radius: 28px;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* Top Casio Badge */
+    .casio-brand-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .casio-logo {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #ffffff;
+    }
+
+    .casio-model {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--neon-cyan);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+
+    /* Screen display area */
+    .screen-housing {
+      background: #0f1420;
+      border: 2px solid #2d3748;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: inset 0 3px 10px rgba(0,0,0,0.8);
+      margin-bottom: 20px;
+    }
+
+    .screen-status-bar {
+      display: flex;
+      justify-content: space-between;
+      color: #64748b;
+      font-size: 11px;
+      font-family: monospace;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    math-field {
+      width: 100%;
+      min-height: 64px;
+      font-size: 22px;
+      background: var(--screen-bg);
+      color: var(--screen-text);
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+      border: 1px solid #94a3b8;
+      outline: none;
+    }
+
+    math-field:focus-within {
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 0 8px rgba(0, 240, 255, 0.5);
+    }
+
+    /* Quick Result preview bar */
+    .result-display {
+      margin-top: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 255, 157, 0.3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-label {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .result-value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--neon-green);
+      text-shadow: 0 0 10px rgba(0, 255, 157, 0.4);
+    }
+
+    /* Keypad Layout */
+    .keypad-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      margin: 14px 0 8px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .keypad-section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .grid-keys {
+      display: grid;
+      gap: 8px;
+    }
+
+    .grid-continuous {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-discrete {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-numpad {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    button.key-btn {
+      background: #1a2233;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      box-shadow: 0 3px 0 #0d121d;
+    }
+
+    button.key-btn:hover {
+      background: #243048;
+      border-color: var(--neon-cyan);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 0 #0d121d, 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    button.key-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0d121d;
+    }
+
+    button.key-btn .sub-text {
+      font-size: 9px;
+      color: #94a3b8;
+    }
+
+    button.key-cyan {
+      border-color: rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.08);
+      color: var(--neon-cyan);
+    }
+
+    button.key-purple {
+      border-color: rgba(189, 0, 255, 0.4);
+      background: rgba(189, 0, 255, 0.08);
+      color: #d8b4fe;
+    }
+
+    button.key-action {
+      background: #e11d48;
+      border-color: #f43f5e;
+      color: white;
+      box-shadow: 0 3px 0 #881337;
+    }
+    button.key-action:hover {
+      background: #f43f5e;
+    }
+
+    button.key-eval {
+      background: linear-gradient(135deg, #00ff9d 0%, #00b4d8 100%);
+      border: none;
+      color: #032014;
+      font-weight: 800;
+      font-size: 16px;
+      grid-column: span 2;
+      box-shadow: 0 3px 0 #008f58, 0 0 20px rgba(0, 255, 157, 0.4);
+    }
+    button.key-eval:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 0 #008f58, 0 0 25px rgba(0, 255, 157, 0.6);
+    }
+
+    /* LaTeX and AI payload preview area */
+    .latex-output-box {
+      margin-top: 24px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .latex-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .latex-header span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--neon-cyan);
+    }
+
+    .latex-text {
+      width: 100%;
+      padding: 10px;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f8fafc;
+      font-family: monospace;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 50px;
+    }
+
+    /* Step-by-step 4-step solver box */
+    .solver-card {
+      margin-top: 20px;
+      background: #0c121e;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .solver-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--neon-cyan);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .step-label {
+      font-weight: 700;
+      color: var(--neon-cyan);
+      margin-bottom: 2px;
+    }
+
+    /* Casio fx-580VN X Exam guide note */
+    .casio-exam-note {
+      margin-top: 14px;
+      background: rgba(255, 183, 0, 0.08);
+      border: 1px solid rgba(255, 183, 0, 0.4);
+      border-radius: 12px;
+      padding: 14px;
+      color: #fef08a;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .casio-exam-note strong {
+      color: var(--neon-amber);
+    }
+
+    .btn-copy {
+      background: #334155;
+      border: none;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .btn-copy:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand-badge">⚡ EDT CASIO SIMULATOR ⚡</div>
+    <h1>Máy Tính Giả Lập Casio Chuyên Dụng XSTK</h1>
+    <p class="subtitle">Mô phỏng Casio fx-580VN X & fx-570VN PLUS cho Biến ngẫu nhiên Rời rạc & Liên tục</p>
+  </div>
+
+  <div class="calculator-container">
+    <!-- Casio Model Badge Header -->
+    <div class="casio-brand-bar">
+      <div class="casio-logo">CASIO</div>
+      <div class="casio-model">fx-580VN X CLASSWIZ • XSTK PRO</div>
+    </div>
+
+    <!-- Screen Display Housing -->
+    <div class="screen-housing">
+      <div class="screen-status-bar">
+        <span>MATH • D</span>
+        <span id="calc-status">SẴN SÀNG NHẬP BIỂU THỨC</span>
+        <span>EDT PRO</span>
+      </div>
+
+      <!-- MathLive visual mathematical field -->
+      <math-field id="mf" virtual-keyboard-mode="manual">\int_{0}^{2} (3x^2) dx</math-field>
+
+      <!-- Instant Numerical Evaluation Bar -->
+      <div class="result-display">
+        <span class="result-label">KẾT QUẢ TỨC THÌ (NERDAMER JS / NUMERICAL):</span>
+        <span id="fast-result" class="result-value">8.0000</span>
+      </div>
+    </div>
+
+    <!-- Keypad 1: Continuous Random Variable (Giải tích biến liên tục) -->
+    <div class="keypad-section-title">
+      <span>1. GIẢI TÍCH BIẾN NGẪU NHIÊN LIÊN TỤC</span>
+    </div>
+    <div class="grid-keys grid-continuous">
+      <button class="key-btn key-cyan" onclick="insertLatex('\\int_{#0}^{#?}(#?)dx')">
+        <span>∫ Xác định</span>
+        <span class="sub-text">\int_{a}^{b} f(x) dx</span>
+      </button>
+
+      <button class="key-btn key-cyan" onclick="insertLatex('\\int_{-\\infty}^{+\\infty}(#0)dx')">
+        <span>∫ Suy rộng</span>
+        <span class="sub-text">-∞ đến +∞</span>
+      </button>
+
+      <button class="key-btn key-cyan" onclick="insertLatex('+\\infty')">
+        <span>+Vô cực</span>
+        <span class="sub-text">+\infty</span>
+      </button>
+
+      <button class="key-btn key-cyan" onclick="insertLatex('-\\infty')">
+        <span>-Vô cực</span>
+        <span class="sub-text">-\infty</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('\\frac{#0}{#?}')">
+        <span>Phân số</span>
+        <span class="sub-text">\frac{a}{b}</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('\\sqrt{#0}')">
+        <span>Căn bậc 2</span>
+        <span class="sub-text">\sqrt{x}</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('^{#0}')">
+        <span>Số mũ</span>
+        <span class="sub-text">x^{n}</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('e^{#0}')">
+        <span>e mũ x</span>
+        <span class="sub-text">e^{x}</span>
+      </button>
+    </div>
+
+    <!-- Keypad 2: Discrete & Combinatorics (Tổ hợp & Biến rời rạc) -->
+    <div class="keypad-section-title">
+      <span>2. TỔ HỢP, RỜI RẠC & PHÂN PHỐI</span>
+    </div>
+    <div class="grid-keys grid-discrete">
+      <button class="key-btn key-purple" onclick="insertLatex('\\binom{#0}{#?}')">
+        <span>Tổ hợp nCr</span>
+        <span class="sub-text">\binom{n}{k}</span>
+      </button>
+
+      <button class="key-btn key-purple" onclick="insertLatex('P(#0, #?)')">
+        <span>Chỉnh hợp nPr</span>
+        <span class="sub-text">A_n^k</span>
+      </button>
+
+      <button class="key-btn key-purple" onclick="insertLatex('!')">
+        <span>Giai thừa !</span>
+        <span class="sub-text">x!</span>
+      </button>
+
+      <button class="key-btn key-purple" onclick="insertLatex('\\sum_{x=#0}^{#?}')">
+        <span>Tổng Sigma</span>
+        <span class="sub-text">\sum_{x=a}^{b}</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('\\Phi(#0)')">
+        <span>Chuẩn Phi(z)</span>
+        <span class="sub-text">P(Z ≤ z)</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('E(X)')">
+        <span>Kỳ vọng E(X)</span>
+        <span class="sub-text">Mean μ</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('Var(X)')">
+        <span>Phương sai</span>
+        <span class="sub-text">Var(X) = σ²</span>
+      </button>
+
+      <button class="key-btn" onclick="insertLatex('\\sigma')">
+        <span>Độ lệch σ</span>
+        <span class="sub-text">Std Dev</span>
+      </button>
+    </div>
+
+    <!-- Keypad 3: Standard Calculator & Control -->
+    <div class="keypad-section-title">
+      <span>3. PHÍM SỐ & THAO TÁC CƠ BẢN</span>
+    </div>
+    <div class="grid-keys grid-numpad">
+      <button class="key-btn" onclick="insertLatex('7')">7</button>
+      <button class="key-btn" onclick="insertLatex('8')">8</button>
+      <button class="key-btn" onclick="insertLatex('9')">9</button>
+      <button class="key-btn key-action" onclick="deleteChar()">DEL</button>
+      <button class="key-btn key-action" onclick="clearAll()">AC</button>
+
+      <button class="key-btn" onclick="insertLatex('4')">4</button>
+      <button class="key-btn" onclick="insertLatex('5')">5</button>
+      <button class="key-btn" onclick="insertLatex('6')">6</button>
+      <button class="key-btn" onclick="insertLatex('\\times ')">×</button>
+      <button class="key-btn" onclick="insertLatex('\\div ')">÷</button>
+
+      <button class="key-btn" onclick="insertLatex('1')">1</button>
+      <button class="key-btn" onclick="insertLatex('2')">2</button>
+      <button class="key-btn" onclick="insertLatex('3')">3</button>
+      <button class="key-btn" onclick="insertLatex('+')">+</button>
+      <button class="key-btn" onclick="insertLatex('-')">-</button>
+
+      <button class="key-btn" onclick="insertLatex('0')">0</button>
+      <button class="key-btn" onclick="insertLatex('.')">.</button>
+      <button class="key-btn key-cyan" onclick="insertLatex('x')">Biến X</button>
+      <button class="key-btn" onclick="insertLatex('(')">(</button>
+      <button class="key-btn" onclick="insertLatex(')')">)</button>
+
+      <button class="key-btn key-eval" onclick="calculateResult()">
+        [ = TÍNH KẾT QUẢ ]
+      </button>
+      <button class="key-btn key-cyan" style="grid-column: span 3;" onclick="solve4StepsAI()">
+        ⚡ BỘ VI XỬ LÝ 4 BƯỚC (GIA SƯ AI)
+      </button>
+    </div>
+
+    <!-- LaTeX Output Code Box -->
+    <div class="latex-output-box">
+      <div class="latex-header">
+        <span>CHUỖI MÃ LATEX XUẤT RA (GỬI BACKEND / GEMINI API):</span>
+        <button class="btn-copy" onclick="copyLatex()">Sao chép mã LaTeX</button>
+      </div>
+      <textarea id="latex-output" class="latex-text" readonly></textarea>
+    </div>
+
+    <!-- Step-by-Step 4-Step Solution View -->
+    <div id="solution-section" class="solver-card">
+      <div class="solver-title">
+        <span>📖 BỘ VI XỬ LÝ TOÁN HỌC: BÀI GIẢI CHI TIẾT 4 BƯỚC</span>
+      </div>
+
+      <div class="step-item">
+        <div class="step-label">Bước 1: Viết lại đề bài bằng công thức toán học rõ ràng</div>
+        <div id="step-1-text">\int_{0}^{2} 3x^2 \, dx</div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-label">Bước 2: Tìm nguyên hàm F(x) chi tiết từng bước</div>
+        <div id="step-2-text">F(x) = \int 3x^2 dx = 3 \cdot \frac{x^3}{3} = x^3 + C</div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-label">Bước 3: Thế cận trên trừ cận dưới F(b) - F(a) (hoặc giới hạn lim nếu có vô cực)</div>
+        <div id="step-3-text">F(2) - F(0) = 2^3 - 0^3 = 8 - 0 = 8</div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-label">Bước 4: Xuất kết quả cuối cùng (Phân số tối giản & Thập phân 4 chữ số Casio)</div>
+        <div id="step-4-text">
+          <strong>Phân số tối giản:</strong> 8/1 <br>
+          <strong>Màn hình Casio fx-580VN X:</strong> 8.0000
+        </div>
+      </div>
+
+      <!-- Casio fx-580VN X Exam guide note -->
+      <div class="casio-exam-note">
+        <strong>📌 CÁCH BẤM MÁY CASIO FX-580VN X TRONG PHÒNG THI:</strong><br>
+        1. Bấm phím <strong>Tích phân ∫dx</strong> (ngay dưới nút ALPHA).<br>
+        2. Nhập hàm số: bấm hệ số, ấn <strong>ALPHA + X</strong>, ấn phím số mũ.<br>
+        3. Dùng phím điều hướng mũi tên lên/xuống để nhập cận dưới và cận trên.<br>
+        4. Bấm dấu <strong>[ = ]</strong> để máy tính tính toán.<br>
+        <strong>⚠️ LƯU Ý ĐẶC BIỆT:</strong> Nếu cận trên là <strong>+∞</strong>, hãy thay bằng số <strong>10^9</strong> (hoặc <strong>10</strong> đối với phân phối chuẩn tắc Z); nếu cận dưới là <strong>-∞</strong>, hãy thay bằng số <strong>-10^9</strong> để máy Casio tính được xấp xỉ chính xác!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mf = document.getElementById('mf');
+    const latexOutput = document.getElementById('latex-output');
+    const fastResult = document.getElementById('fast-result');
+    const calcStatus = document.getElementById('calc-status');
+
+    // Update latex output when user types or modifies math-field
+    mf.addEventListener('input', () => {
+      updateLatexDisplay();
+      quickEvaluate();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateLatexDisplay();
+      quickEvaluate();
+    });
+
+    function updateLatexDisplay() {
+      if (mf) {
+        latexOutput.value = mf.value;
+      }
+    }
+
+    function insertLatex(code) {
+      if (mf) {
+        mf.insert(code);
+        mf.focus();
+        updateLatexDisplay();
+        quickEvaluate();
+      }
+    }
+
+    function deleteChar() {
+      if (mf) {
+        mf.executeCommand('deleteBackward');
+        mf.focus();
+        updateLatexDisplay();
+        quickEvaluate();
+      }
+    }
+
+    function clearAll() {
+      if (mf) {
+        mf.value = '';
+        mf.focus();
+        updateLatexDisplay();
+        fastResult.innerText = '0';
+      }
+    }
+
+    function copyLatex() {
+      latexOutput.select();
+      document.execCommand('copy');
+      alert('Đã sao chép mã LaTeX thành công!');
+    }
+
+    // Numerical & symbolic calculation with Nerdamer JS
+    function quickEvaluate() {
+      try {
+        const val = mf.value;
+        if (!val || val.trim() === '') {
+          fastResult.innerText = '0';
+          return;
+        }
+
+        // Check if it's a definite integral: \int_{a}^{b} f(x) dx
+        // Regex to extract lower bound, upper bound, and integrand
+        const intRegex = /\\int_\{([^}]+)\}\^\{([^}]+)\}(?:\\left\(|\()?(.*?)(?:\\right\)|\))?dx/i;
+        const match = val.match(intRegex);
+
+        if (match) {
+          let lower = match[1].replace(/\\infty/g, '9999').replace(/\\pi/g, 'pi');
+          let upper = match[2].replace(/\\infty/g, '9999').replace(/\\pi/g, 'pi');
+          let integrand = match[3]
+            .replace(/\\cdot/g, '*')
+            .replace(/\\times/g, '*')
+            .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+            .replace(/\^/g, '^')
+            .replace(/\\/g, '');
+
+          // If upper contains +inf or 9999
+          if (upper.includes('9999')) upper = '100';
+          if (lower.includes('-9999')) lower = '-100';
+
+          const nerdInt = `defint(${integrand}, ${lower}, ${upper}, x)`;
+          const res = nerdamer(nerdInt).evaluate().text();
+          const num = parseFloat(res);
+          if (!isNaN(num)) {
+            fastResult.innerText = num.toFixed(4);
+            calcStatus.innerText = 'TÍNH TÍCH PHÂN THÀNH CÔNG';
+            return;
+          }
+        }
+
+        // Generic evaluation for normal expressions
+        let clean = val
+          .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+          .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+          .replace(/\\times/g, '*')
+          .replace(/\\div/g, '/')
+          .replace(/\\cdot/g, '*')
+          .replace(/\\pi/g, 'PI')
+          .replace(/e\^\{([^}]+)\}/g, 'exp($1)')
+          .replace(/\\binom\{([^}]+)\}\{([^}]+)\}/g, 'nCr($1,$2)');
+
+        // If it's a plain expression
+        if (!clean.includes('\\int')) {
+          const evalRes = nerdamer(clean).evaluate().text();
+          const parsed = parseFloat(evalRes);
+          if (!isNaN(parsed)) {
+            fastResult.innerText = parsed.toFixed(4);
+            calcStatus.innerText = 'KẾT QUẢ ĐÃ ĐƯỢC TÍNH';
+            return;
+          }
+        }
+
+        fastResult.innerText = 'Đang nhập...';
+        calcStatus.innerText = 'ĐANG PHÂN TÍCH';
+      } catch (e) {
+        // Fallback gracefully
+        calcStatus.innerText = 'SẴN SÀNG TÍNH TOÁN';
+      }
+    }
+
+    function calculateResult() {
+      quickEvaluate();
+      alert(`Kết quả tính toán: ${fastResult.innerText}\nMã LaTeX: ${mf.value}`);
+    }
+
+    // Connect to AI 4-step solver
+    async function solve4StepsAI() {
+      const latex = mf.value;
+      if (!latex) {
+        alert('Vui lòng nhập biểu thức toán học trước!');
+        return;
+      }
+
+      calcStatus.innerText = 'AI ĐANG GIẢI 4 BƯỚC...';
+
+      try {
+        const res = await fetch('/api/tutor/solve-math', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expression: latex })
+        });
+        const data = await res.json();
+        if (data && data.success && data.solution) {
+          const s = data.solution;
+          document.getElementById('step-1-text').innerText = s.step1Rephrased || latex;
+          document.getElementById('step-2-text').innerText = s.step2Antiderivative || 'Đang xử lý';
+          document.getElementById('step-3-text').innerText = s.step3SubstituteLimits || 'Đang xử lý';
+          document.getElementById('step-4-text').innerHTML = `
+            <strong>Phân số tối giản:</strong> ${s.step4FinalFraction || '---'} <br>
+            <strong>Màn hình Casio fx-580VN X:</strong> ${s.step4FinalDecimal || fastResult.innerText}
+          `;
+          calcStatus.innerText = 'HOÀN TẤT GIẢI 4 BƯỚC';
+        } else {
+          // Local demo computation fallback
+          document.getElementById('step-1-text').innerText = latex;
+          document.getElementById('step-4-text').innerHTML = `
+            <strong>Phân số tối giản:</strong> ${fastResult.innerText} <br>
+            <strong>Màn hình Casio fx-580VN X:</strong> ${fastResult.innerText}
+          `;
+          calcStatus.innerText = 'ĐÃ TÍNH XONG (BỘ GIẢI CỤC BỘ)';
+        }
+      } catch (err) {
+        document.getElementById('step-1-text').innerText = latex;
+        document.getElementById('step-4-text').innerHTML = `
+          <strong>Giá trị tính nhanh:</strong> ${fastResult.innerText}
+        `;
+        calcStatus.innerText = 'HOÀN TẤT (CỤC BỘ)';
+      }
+    }
+  </script>
+</body>
+</html>

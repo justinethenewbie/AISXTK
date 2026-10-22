@@ -1,0 +1,6 @@
+{
+  "name": "EDT - AI Tutor Xác Suất Thống Kê Đại Học",
+  "description": "EDT - Hệ thống gia sư AI & Máy tính Casio chuyên dụng môn Xác Suất Thống Kê, giải toán 4 bước, trích xuất bài tập Word/PDF và giao diện hiện đại.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MS Word Equation Editor Ribbon</title>
+
+  <!-- 1. KaTeX: Dùng để vẽ icon công thức thu nhỏ (có ô vuông) trên các nút Menu giống hệt Word -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <!-- 2. MathLive: Dùng làm vùng soạn thảo công thức trực quan (WYSIWYG) -->
+  <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive-static.css">
+  <script defer src="https://unpkg.com/mathlive"></script>
+
+  <style>
+    :root {
+      --word-blue: #185abd;
+      --word-ribbon-bg: #f3f2f1;
+      --word-border: #d2d0ce;
+      --word-hover: #edebe9;
+      --word-active: #c8c6c4;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #e1dfdd;
+      margin: 0;
+      padding: 20px;
+      color: #201f1e;
+    }
+
+    .word-app-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--word-border);
+      border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      overflow: visible;
+    }
+
+    /* Thanh tiêu đề xanh đặc trưng của Microsoft Word */
+    .word-header {
+      background: var(--word-blue);
+      color: white;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+    }
+
+    /* Thanh Ribbon chính chia làm 3 khu vực: Tools | Symbols | Structures */
+    .word-ribbon {
+      display: flex;
+      background: var(--word-ribbon-bg);
+      border-bottom: 1px solid var(--word-border);
+      padding: 8px 10px 4px;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .ribbon-group {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-right: 10px;
+      border-right: 1px solid var(--word-border);
+    }
+
+    .ribbon-group:last-child {
+      border-right: none;
+    }
+
+    .group-content {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+    }
+
+    .group-title {
+      text-align: center;
+      font-size: 11px;
+      color: #605e5c;
+      margin-top: 4px;
+      padding-top: 2px;
+      user-select: none;
+    }
+
+    /* Khu vực 1: Công cụ chuyển đổi (Tools) */
+    .tool-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid #c8c6c4;
+      border-radius: 3px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #323130;
+      white-space: nowrap;
+    }
+
+    .tool-btn:hover, .tool-btn.active {
+      background: #deecf9;
+      border-color: var(--word-blue);
+      color: var(--word-blue);
+    }
+
+    /* Khu vực 2: Hộp lưới Ký hiệu (Symbols Gallery) */
+    .symbols-box {
+      display: flex;
+      flex-direction: column;
+      width: 280px;
+      background: #ffffff;
+      border: 1px solid #c8c6c4;
+      border-radius: 3px;
+      padding: 3px;
+    }
+
+    .symbols-category-select {
+      width: 100%;
+      font-size: 11px;
+      padding: 2px 4px;
+      margin-bottom: 3px;
+      border: 1px solid #d2d0ce;
+      border-radius: 2px;
+      background: #f8f8f8;
+      color: #323130;
+      font-weight: 600;
+    }
+
+    .symbols-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 2px;
+      height: 56px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .sym-btn {
+      height: 25px;
+      background: #ffffff;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      padding: 0;
+    }
+
+    .sym-btn:hover {
+      background: #deecf9;
+      border-color: #0078d4;
+    }
+
+    /* Khu vực 3: 11 Nút Cấu trúc thả xuống (Structures) */
+    .structures-list {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+    }
+
+    .struct-dropdown {
+      position: relative;
+    }
+
+    .struct-trigger {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      width: 58px;
+      height: 74px;
+      padding: 6px 3px 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .struct-trigger:hover, .struct-dropdown.open .struct-trigger {
+      background: #ffffff;
+      border-color: #c8c6c4;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .struct-icon {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .struct-label {
+      font-size: 10.5px;
+      color: #323130;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .struct-caret {
+      font-size: 8px;
+      color: #605e5c;
+    }
+
+    /* Menu thả xuống khi bấm vào từng nút Structure */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      z-index: 1000;
+      background: #ffffff;
+      border: 1px solid #c8c6c4;
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+      width: 310px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    /* Đẩy menu sang phải nếu nằm gần mép màn hình */
+    .struct-dropdown.align-right .dropdown-menu {
+      left: auto;
+      right: 0;
+    }
+
+    .struct-dropdown.open .dropdown-menu {
+      display: block;
+    }
+
+    .menu-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #605e5c;
+      background: #f3f2f1;
+      padding: 4px 8px;
+      margin: 4px -8px 8px;
+      border-top: 1px solid #edebe9;
+      border-bottom: 1px solid #edebe9;
+    }
+
+    .menu-section-title:first-child {
+      margin-top: -8px;
+      border-top: none;
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .template-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 68px;
+      padding: 6px 4px;
+      background: #ffffff;
+      border: 1px solid #e1dfdd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .template-card:hover {
+      background: #deecf9;
+      border-color: var(--word-blue);
+      transform: translateY(-1px);
+    }
+
+    .template-preview {
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: #111;
+    }
+
+    .template-name {
+      font-size: 10px;
+      color: #605e5c;
+      text-align: center;
+    }
+
+    /* Trình tạo Ma trận tùy chỉnh (Custom Matrix Builder) */
+    .custom-matrix-box {
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #e1dfdd;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .custom-matrix-box input {
+      width: 44px;
+      padding: 3px;
+      text-align: center;
+      border: 1px solid #c8c6c4;
+      border-radius: 3px;
+    }
+
+    .custom-matrix-box button {
+      background: var(--word-blue);
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    /* Khu vực trang giấy soạn thảo của Word */
+    .word-document-area {
+      padding: 28px;
+      background: #f8f9fa;
+    }
+
+    .equation-box-label {
+      font-size: 12px;
+      color: #605e5c;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    math-field {
+      width: 100%;
+      min-height: 84px;
+      font-size: 24px;
+      padding: 14px 18px;
+      background: #ffffff;
+      border: 2px solid #8a8886;
+      border-radius: 6px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    math-field:focus-within {
+      border-color: var(--word-blue);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(24, 90, 189, 0.18);
+    }
+
+    /* Khung chế độ Linear (LaTeX thuần) */
+    #linear-input {
+      display: none;
+      width: 100%;
+      min-height: 84px;
+      font-family: 'Consolas', monospace;
+      font-size: 16px;
+      padding: 14px;
+      border: 2px solid var(--word-blue);
+      border-radius: 6px;
+      resize: vertical;
+    }
+
+    /* Thanh xuất dữ liệu cho AI */
+    .ai-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 28px;
+      background: #f3f2f1;
+      border-top: 1px solid var(--word-border);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .latex-status {
+      font-family: monospace;
+      font-size: 13px;
+      color: #323130;
+      background: #e1dfdd;
+      padding: 6px 12px;
+      border-radius: 4px;
+      max-width: 72%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .ai-submit-btn {
+      background: var(--word-blue);
+      color: white;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="word-app-wrapper">
+  <div class="word-header">
+    <span>Microsoft Word Equation Toolbar — Web Component</span>
+    <span>Tab: Equation (Công cụ Phương trình)</span>
+  </div>
+
+  <!-- THANH RIBBON EQUATION CHUẨN MS WORD -->
+  <div class="word-ribbon">
+    
+    <!-- NHÓM 1: TOOLS & CONVERSIONS -->
+    <div class="ribbon-group">
+      <div class="group-content">
+        <div class="tool-stack">
+          <button class="tool-btn active" id="btn-prof" onclick="setMode('professional')">
+            <span>Professional (Trực quan)</span>
+          </button>
+          <button class="tool-btn" id="btn-linear" onclick="setMode('linear')">
+            <span>Linear (Mã LaTeX)</span>
+          </button>
+        </div>
+        <div class="tool-stack">
+          <button class="tool-btn" onclick="insertTemplate('\\text{#?}')">
+            <b>ab</b> <span>Chèn chữ (Text)</span>
+          </button>
+          <button class="tool-btn" onclick="clearEquation()">
+            <span>Xóa toàn bộ</span>
+          </button>
+        </div>
+      </div>
+      <div class="group-title">Conversions</div>
+    </div>
+
+    <!-- NHÓM 2: SYMBOLS GALLERY (8 DANH MỤC CỦA WORD) -->
+    <div class="ribbon-group">
+      <div class="group-content">
+        <div class="symbols-box">
+          <select class="symbols-category-select" id="symbol-cat-select" onchange="renderSymbolsGallery(this.value)">
+            <option value="basic">1. Toán cơ bản (Basic Math)</option>
+            <option value="greek">2. Chữ cái Hy Lạp (Greek Letters)</option>
+            <option value="letterlike">3. Ký hiệu giống chữ (Letter-Like)</option>
+            <option value="operators">4. Toán tử (Operators)</option>
+            <option value="arrows">5. Mũi tên (Arrows)</option>
+            <option value="negated">6. Quan hệ phủ định (Negated)</option>
+            <option value="scripts">7. Tập hợp & Chữ kiểu (Scripts)</option>
+            <option value="geometry">8. Hình học (Geometry)</option>
+          </select>
+          <div class="symbols-grid" id="symbols-grid"></div>
+        </div>
+      </div>
+      <div class="group-title">Symbols</div>
+    </div>
+
+    <!-- NHÓM 3: STRUCTURES (11 MENU THẢ XUỐNG CỦA WORD) -->
+    <div class="ribbon-group">
+      <div class="group-content">
+        <div class="structures-list" id="structures-container"></div>
+      </div>
+      <div class="group-title">Structures (Cấu trúc phương trình)</div>
+    </div>
+
+  </div>
+
+  <!-- VÙNG SOẠN THẢO PHƯƠNG TRÌNH -->
+  <div class="word-document-area">
+    <div class="equation-box-label">
+      <span>Bấm vào biểu tượng trên thanh công cụ, sau đó click vào các ô vuông hoặc nhấn phím <b>Tab</b> để điền số:</span>
+      <span id="mode-indicator">Chế độ: Professional</span>
+    </div>
+
+    <!-- Ô nhập WYSIWYG -->
+    <math-field id="word-math-field">
+      f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}
+    </math-field>
+
+    <!-- Ô nhập Linear (ẩn mặc định) -->
+    <textarea id="linear-input" oninput="syncFromLinear()"></textarea>
+  </div>
+
+  <!-- THANH GỬI DỮ LIỆU CHO AI -->
+  <div class="ai-footer">
+    <div class="latex-status" id="latex-preview-bar">
+      LaTeX Output: f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}
+    </div>
+    <button class="ai-submit-btn" onclick="submitToAI()">Gửi công thức vào AI</button>
+  </div>
+</div>
+
+<script>
+  // =========================================================================
+  // CƠ SỞ DỮ LIỆU KÝ HIỆU CỦA MS WORD (8 DANH MỤC SYMBOLS)
+  // =========================================================================
+  const WORD_SYMBOLS = {
+    basic: [
+      '\\pm', '\\mp', '\\times', '\\div', '\\neq', '\\approx', '\\cong', '\\equiv', '\\propto',
+      '<', '>', '\\le', '\\ge', '\\ll', '\\gg', '\\infty', '!', '\\forall',
+      '\\exists', '\\nexists', '\\in', '\\notin', '\\ni', '\\partial', '\\nabla', '\\Delta', '\\emptyset',
+      '\\cup', '\\cap', '\\%', '^\\circ', '\\therefore', '\\because', '\\alpha', '\\beta', '\\gamma',
+      '\\delta', '\\epsilon', '\\theta', '\\lambda', '\\mu', '\\pi', '\\rho', '\\sigma', '\\phi', '\\omega'
+    ],
+    greek: [
+      '\\alpha', '\\beta', '\\gamma', '\\delta', '\\epsilon', '\\varepsilon', '\\zeta', '\\eta', '\\theta',
+      '\\vartheta', '\\iota', '\\kappa', '\\lambda', '\\mu', '\\nu', '\\xi', '\\pi', '\\rho',
+      '\\varrho', '\\sigma', '\\varsigma', '\\tau', '\\upsilon', '\\phi', '\\varphi', '\\chi', '\\psi',
+      '\\omega', '\\Gamma', '\\Delta', '\\Theta', '\\Lambda', '\\Xi', '\\Pi', '\\Sigma', '\\Upsilon',
+      '\\Phi', '\\Psi', '\\Omega'
+    ],
+    letterlike: [
+      '\\forall', '\\complement', '\\partial', '\\ell', '\\hbar', '\\Im', '\\Re', '\\wp', '\\aleph',
+      '\\mathbb{N}', '\\mathbb{Z}', '\\mathbb{Q}', '\\mathbb{R}', '\\mathbb{C}', '\\mathcal{L}', '\\mathcal{F}', '\\mathcal{H}', '\\infty'
+    ],
+    operators: [
+      '+', '-', '\\times', '\\div', '\\pm', '\\mp', '\\cdot', '\\ast', '\\circ',
+      '\\bullet', '\\oplus', '\\ominus', '\\otimes', '\\oslash', '\\odot', '\\wedge', '\\vee', '\\cap',
+      '\\cup', '\\uplus', '\\sqcap', '\\sqcup', '\\subset', '\\supset', '\\subseteq', '\\supseteq', '\\vdash', '\\models'
+    ],
+    arrows: [
+      '\\leftarrow', '\\rightarrow', '\\uparrow', '\\downarrow', '\\leftrightarrow', '\\Leftarrow', '\\Rightarrow', '\\Uparrow', '\\Downarrow',
+      '\\Leftrightarrow', '\\mapsto', '\\longleftarrow', '\\longrightarrow', '\\Longleftrightarrow', '\\nearrow', '\\searrow', '\\swarrow', '\\nwarrow',
+      '\\rightleftharpoons', '\\hookleftarrow', '\\hookrightarrow'
+    ],
+    negated: [
+      '\\neq', '\\nless', '\\ngtr', '\\nleq', '\\ngeq', '\\nsim', '\\ncong', '\\not\\equiv', '\\notin',
+      '\\nsubseteq', '\\nsupseteq', '\\nparallel', '\\nmid', '\\nvdash'
+    ],
+    scripts: [
+      '\\mathcal{A}', '\\mathcal{B}', '\\mathcal{C}', '\\mathcal{D}', '\\mathcal{E}', '\\mathcal{F}', '\\mathcal{G}', '\\mathcal{H}', '\\mathcal{I}',
+      '\\mathcal{L}', '\\mathcal{M}', '\\mathcal{N}', '\\mathcal{O}', '\\mathcal{P}', '\\mathcal{R}', '\\mathcal{S}', '\\mathcal{T}', '\\mathcal{U}',
+      '\\mathbb{A}', '\\mathbb{B}', '\\mathbb{C}', '\\mathbb{E}', '\\mathbb{F}', '\\mathbb{H}', '\\mathbb{N}', '\\mathbb{P}', '\\mathbb{Q}',
+      '\\mathbb{R}', '\\mathbb{Z}'
+    ],
+    geometry: [
+      '\\angle', '\\measuredangle', '\\sphericalangle', '\\perp', '\\parallel', '\\triangle', '\\square', '\\lozenge', '\\circ',
+      '\\cong', '\\sim', '\\simeq', '\\equiv'
+    ]
+  };
+
+  // =========================================================================
+  // CƠ SỞ DỮ LIỆU 11 MENU CẤU TRÚC CỦA MS WORD (STRUCTURES)
+  // preview: Vẽ nút bấm có ô vuông (\square)
+  // insert: Chèn vào khung nhập có ô giữ chỗ (#?)
+  // =========================================================================
+  const WORD_STRUCTURES = [
+    {
+      id: 'fraction',
+      title: 'Fraction',
+      viTitle: 'Phân số',
+      icon: '\\frac{\\square}{\\square}',
+      sections: [
+        {
+          name: 'Phân số thông dụng (Common Fractions)',
+          items: [
+            { label: 'Phân số đứng', preview: '\\frac{\\square}{\\square}', insert: '\\frac{#?}{#?}' },
+            { label: 'Phân số nghiêng', preview: '\\square / \\square', insert: '{#?}/{#?}' },
+            { label: 'Phân số nhỏ', preview: '\\tfrac{\\square}{\\square}', insert: '\\tfrac{#?}{#?}' },
+            { label: 'Đạo hàm dy/dx', preview: '\\frac{dy}{dx}', insert: '\\frac{d#?}{d#?}' },
+            { label: 'Đạo hàm riêng', preview: '\\frac{\\partial y}{\\partial x}', insert: '\\frac{\\partial #?}{\\partial #?}' },
+            { label: 'Số gia Delta', preview: '\\frac{\\Delta y}{\\Delta x}', insert: '\\frac{\\Delta #?}{\\Delta #?}' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'script',
+      title: 'Script',
+      viTitle: 'Chỉ số',
+      icon: '\\square^{\\square}',
+      sections: [
+        {
+          name: 'Số mũ và Chỉ số dưới (Subscripts & Superscripts)',
+          items: [
+            { label: 'Số mũ (Superscript)', preview: '\\square^{\\square}', insert: '{#?}^{#?}' },
+            { label: 'Chỉ số dưới (Subscript)', preview: '\\square_{\\square}', insert: '{#?}_{#?}' },
+            { label: 'Cả mũ và dưới', preview: '\\square_{\\square}^{\\square}', insert: '{#?}_{#?}^{#?}' },
+            { label: 'Chỉ số bên trái', preview: '{}_{\\square}^{\\square}\\square', insert: '{}_{#?}^{#?}{#?}' },
+            { label: 'Hàm mũ cơ số e', preview: 'e^{\\square}', insert: 'e^{#?}' },
+            { label: 'Bình phương', preview: 'x^2', insert: '{#?}^2' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'radical',
+      title: 'Radical',
+      viTitle: 'Căn thức',
+      icon: '\\sqrt{\\square}',
+      sections: [
+        {
+          name: 'Các loại căn thức (Radicals)',
+          items: [
+            { label: 'Căn bậc hai', preview: '\\sqrt{\\square}', insert: '\\sqrt{#?}' },
+            { label: 'Căn bậc n', preview: '\\sqrt[\\square]{\\square}', insert: '\\sqrt[#?]{#?}' },
+            { label: 'Căn bậc ba', preview: '\\sqrt[3]{\\square}', insert: '\\sqrt[3]{#?}' },
+            { label: 'Căn bậc bốn', preview: '\\sqrt[4]{\\square}', insert: '\\sqrt[4]{#?}' },
+            { label: 'Công thức nghiệm bậc 2', preview: '\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}', insert: '\\frac{-#?\\pm\\sqrt{#?^2-4#?#?}}{2#?}' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'integral',
+      title: 'Integral',
+      viTitle: 'Tích phân',
+      icon: '\\int_{\\square}^{\\square}',
+      sections: [
+        {
+          name: 'Tích phân đơn, bội và đường (Integrals)',
+          items: [
+            { label: 'TP bất định', preview: '\\int \\square', insert: '\\int #? \\, d#?' },
+            { label: 'TP xác định', preview: '\\int_{\\square}^{\\square} \\square', insert: '\\int_{#?}^{#?} #? \\, d#?' },
+            { label: 'TP kép', preview: '\\iint \\square', insert: '\\iint #? \\, dxdy' },
+            { label: 'TP kép có cận', preview: '\\iint_{\\square}^{\\square} \\square', insert: '\\iint_{#?}^{#?} #? \\, dxdy' },
+            { label: 'TP bội ba', preview: '\\iiint \\square', insert: '\\iiint #? \\, dxdydz' },
+            { label: 'TP đường kín', preview: '\\oint \\square', insert: '\\oint_{#?} #? \\, ds' },
+            { label: 'TP suy rộng', preview: '\\int_{-\\infty}^{+\\infty} \\square', insert: '\\int_{-\\infty}^{+\\infty} #? \\, dx' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'largeop',
+      title: 'Large Operator',
+      viTitle: 'Toán tử lớn',
+      icon: '\\sum_{\\square}^{\\square}',
+      sections: [
+        {
+          name: 'Tổng, Tích, Hợp, Giao (Summations & Products)',
+          items: [
+            { label: 'Tổng có cận', preview: '\\sum_{\\square}^{\\square} \\square', insert: '\\sum_{#?}^{#?} #?' },
+            { label: 'Tổng dưới', preview: '\\sum_{\\square} \\square', insert: '\\sum_{#?} #?' },
+            { label: 'Tích Pi có cận', preview: '\\prod_{\\square}^{\\square} \\square', insert: '\\prod_{#?}^{#?} #?' },
+            { label: 'Đối tích', preview: '\\coprod_{\\square}^{\\square} \\square', insert: '\\coprod_{#?}^{#?} #?' },
+            { label: 'Hợp lớn (Union)', preview: '\\bigcup_{\\square}^{\\square} \\square', insert: '\\bigcup_{#?}^{#?} #?' },
+            { label: 'Giao lớn (Intersection)', preview: '\\bigcap_{\\square}^{\\square} \\square', insert: '\\bigcap_{#?}^{#?} #?' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'bracket',
+      title: 'Bracket',
+      viTitle: 'Dấu ngoặc',
+      icon: '\\left(\\square\\right)',
+      sections: [
+        {
+          name: 'Dấu ngoặc co giãn & Hệ phương trình (Brackets & Cases)',
+          items: [
+            { label: 'Ngoặc tròn', preview: '\\left( \\square \\right)', insert: '\\left( #? \\right)' },
+            { label: 'Ngoặc vuông', preview: '\\left[ \\square \\right]', insert: '\\left[ #? \\right]' },
+            { label: 'Ngoặc nhọn', preview: '\\left\\{ \\square \\right\\}', insert: '\\left\\{ #? \\right\\}' },
+            { label: 'Trị tuyệt đối', preview: '\\left| \\square \\right|', insert: '\\left| #? \\right|' },
+            { label: 'Chuẩn (Norm)', preview: '\\left\\| \\square \\right\\|', insert: '\\left\\| #? \\right\\|' },
+            { label: 'Ngoặc góc', preview: '\\langle \\square \\rangle', insert: '\\left\\langle #? \\right\\rangle' },
+            { label: 'Phần nguyên dưới', preview: '\\lfloor \\square \\rfloor', insert: '\\left\\lfloor #? \\right\\rfloor' },
+            { label: 'Phần nguyên trên', preview: '\\lceil \\square \\rceil', insert: '\\left\\lceil #? \\right\\rceil' },
+            { label: 'Hệ 2 phương trình', preview: '\\begin{cases} \\square \\\\ \\square \\end{cases}', insert: '\\begin{cases} #? \\\\ #? \\end{cases}' },
+            { label: 'Hệ 3 phương trình', preview: '\\begin{cases} \\square \\\\ \\square \\\\ \\square \\end{cases}', insert: '\\begin{cases} #? \\\\ #? \\\\ #? \\end{cases}' },
+            { label: 'Tổ hợp nhị thức', preview: '\\binom{\\square}{\\square}', insert: '\\binom{#?}{#?}' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'function',
+      title: 'Function',
+      viTitle: 'Hàm số',
+      icon: '\\sin\\square',
+      sections: [
+        {
+          name: 'Hàm lượng giác, Ngược & Hyperbolic',
+          items: [
+            { label: 'Sine', preview: '\\sin \\square', insert: '\\sin(#?)' },
+            { label: 'Cosine', preview: '\\cos \\square', insert: '\\cos(#?)' },
+            { label: 'Tangent', preview: '\\tan \\square', insert: '\\tan(#?)' },
+            { label: 'Cotangent', preview: '\\cot \\square', insert: '\\cot(#?)' },
+            { label: 'Secant', preview: '\\sec \\square', insert: '\\sec(#?)' },
+            { label: 'Cosecant', preview: '\\csc \\square', insert: '\\csc(#?)' },
+            { label: 'Arcsin', preview: '\\sin^{-1} \\square', insert: '\\sin^{-1}(#?)' },
+            { label: 'Arccos', preview: '\\cos^{-1} \\square', insert: '\\cos^{-1}(#?)' },
+            { label: 'Arctan', preview: '\\tan^{-1} \\square', insert: '\\tan^{-1}(#?)' },
+            { label: 'Sinh', preview: '\\sinh \\square', insert: '\\sinh(#?)' },
+            { label: 'Cosh', preview: '\\cosh \\square', insert: '\\cosh(#?)' },
+            { label: 'Tanh', preview: '\\tanh \\square', insert: '\\tanh(#?)' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'accent',
+      title: 'Accent',
+      viTitle: 'Dấu phụ',
+      icon: '\\hat{\\square}',
+       alignRight: true,
+      sections: [
+        {
+          name: 'Dấu trên ký tự, Véc-tơ & Ngoặc ôm (Accents & Bars)',
+          items: [
+            { label: 'Gạch ngang ngắn (Bar)', preview: '\\bar{\\square}', insert: '\\bar{#?}' },
+            { label: 'Gạch ngang dài', preview: '\\overline{\\square}', insert: '\\overline{#?}' },
+            { label: 'Dấu mũ (Hat)', preview: '\\hat{\\square}', insert: '\\hat{#?}' },
+            { label: 'Dấu mũ rộng', preview: '\\widehat{\\square}', insert: '\\widehat{#?}' },
+            { label: 'Dấu ngã (Tilde)', preview: '\\tilde{\\square}', insert: '\\tilde{#?}' },
+            { label: 'Dấu chấm (Đạo hàm)', preview: '\\dot{\\square}', insert: '\\dot{#?}' },
+            { label: 'Hai chấm', preview: '\\ddot{\\square}', insert: '\\ddot{#?}' },
+            { label: 'Véc-tơ ngắn', preview: '\\vec{\\square}', insert: '\\vec{#?}' },
+            { label: 'Véc-tơ dài', preview: '\\overrightarrow{\\square}', insert: '\\overrightarrow{#?}' },
+            { label: 'Ngoặc ôm trên', preview: '\\overbrace{\\square}^{\\square}', insert: '\\overbrace{#?}^{#?}' },
+            { label: 'Ngoặc ôm dưới', preview: '\\underbrace{\\square}_{\\square}', insert: '\\underbrace{#?}_{#?}' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'limitlog',
+      title: 'Limit and Log',
+      viTitle: 'Giới hạn & Log',
+      icon: '\\lim_{\\square\\to\\square}',
+      alignRight: true,
+      sections: [
+        {
+          name: 'Giới hạn, Logarit, Cực trị (Limits & Logs)',
+          items: [
+            { label: 'Giới hạn (Limit)', preview: '\\lim_{\\square \\to \\square} \\square', insert: '\\lim_{#? \\to #?} #?' },
+            { label: 'Giới hạn vô cực', preview: '\\lim_{x \\to \\infty} \\square', insert: '\\lim_{x \\to \\infty} #?' },
+            { label: 'Logarit cơ số a', preview: '\\log_{\\square} \\square', insert: '\\log_{#?}(#?)' },
+            { label: 'Logarit thập phân', preview: '\\log \\square', insert: '\\log(#?)' },
+            { label: 'Logarit tự nhiên', preview: '\\ln \\square', insert: '\\ln(#?)' },
+            { label: 'Giá trị nhỏ nhất', preview: '\\min_{\\square} \\square', insert: '\\min_{#?}(#?)' },
+            { label: 'Giá trị lớn nhất', preview: '\\max_{\\square} \\square', insert: '\\max_{#?}(#?)' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'operator',
+      title: 'Operator',
+      viTitle: 'Toán tử',
+      icon: '\\xrightarrow{\\square}',
+      alignRight: true,
+      sections: [
+        {
+          name: 'Mũi tên có chú thích & Quan hệ đặc biệt',
+          items: [
+            { label: 'Mũi tên phải có chữ', preview: '\\xrightarrow{\\square}', insert: '\\xrightarrow{#?}' },
+            { label: 'Mũi tên trái có chữ', preview: '\\xleftarrow{\\square}', insert: '\\xleftarrow{#?}' },
+            { label: 'Dấu bằng có chữ', preview: '\\overset{\\square}{=}', insert: '\\overset{#?}{=}' },
+            { label: 'Định nghĩa (:=)', preview: ':=', insert: ':=' },
+            { label: 'Định nghĩa (def)', preview: '\\overset{\\text{def}}{=}', insert: '\\overset{\\text{def}}{=}' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'matrix',
+      title: 'Matrix',
+      viTitle: 'Ma trận',
+      icon: '\\begin{bmatrix}\\square&\\square\\\\\\square&\\square\\end{bmatrix}',
+      alignRight: true,
+      hasCustomMatrix: true,
+      sections: [
+        {
+          name: 'Ma trận ngoặc vuông, ngoặc tròn & Định thức',
+          items: [
+            { label: 'Ma trận [2x2]', preview: '\\begin{bmatrix}\\square&\\square\\\\\\square&\\square\\end{bmatrix}', insert: '\\begin{bmatrix}#?&#?\\\\#?&#?\\end{bmatrix}' },
+            { label: 'Ma trận [3x3]', preview: '\\begin{bmatrix}\\square&\\square&\\square\\\\\\square&\\square&\\square\\\\\\square&\\square&\\square\\end{bmatrix}', insert: '\\begin{bmatrix}#?&#?&#?\\\\#?&#?&#?\\\\#?&#?&#?\\end{bmatrix}' },
+            { label: 'Ma trận (2x2)', preview: '\\begin{pmatrix}\\square&\\square\\\\\\square&\\square\\end{pmatrix}', insert: '\\begin{pmatrix}#?&#?\\\\#?&#?\\end{pmatrix}' },
+            { label: 'Định thức |2x2|', preview: '\\begin{vmatrix}\\square&\\square\\\\\\square&\\square\\end{vmatrix}', insert: '\\begin{vmatrix}#?&#?\\\\#?&#?\\end{vmatrix}' },
+            { label: 'Véc-tơ cột [2x1]', preview: '\\begin{bmatrix}\\square\\\\\\square\\end{bmatrix}', insert: '\\begin{bmatrix}#?\\\\#?\\end{bmatrix}' },
+            { label: 'Véc-tơ hàng [1x3]', preview: '\\begin{bmatrix}\\square&\\square&\\square\\end{bmatrix}', insert: '\\begin{bmatrix}#?&#?&#?\\end{bmatrix}' }
+          ]
+        }
+      ]
+    }
+  ];
+
+  const mathField = document.getElementById('word-math-field');
+  const linearInput = document.getElementById('linear-input');
+  const previewBar = document.getElementById('latex-preview-bar');
+  let currentMode = 'professional';
+
+  // Hàm vẽ công thức toán bằng KaTeX lên nút bấm
+  function renderKatexHTML(latexStr, displayMode = false) {
+    try {
+      return katex.renderToString(latexStr, {
+        throwOnError: false,
+        displayMode: displayMode
+      });
+    } catch (e) {
+      return latexStr;
+    }
+  }
+
+  // 1. Khởi tạo bảng Symbols (8 danh mục)
+  function renderSymbolsGallery(categoryKey) {
+    const grid = document.getElementById('symbols-grid');
+    grid.innerHTML = '';
+    const list = WORD_SYMBOLS[categoryKey] || [];
+    list.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'sym-btn';
+      btn.title = 'Chèn ' + sym;
+      btn.innerHTML = renderKatexHTML(sym);
+      btn.onclick = () => insertTemplate(sym);
+      grid.appendChild(btn);
+    });
+  }
+
+  // 2. Khởi tạo 11 nút Structures kèm Menu thả xuống của Word
+  function renderStructuresRibbon() {
+    const container = document.getElementById('structures-container');
+    container.innerHTML = '';
+
+    WORD_STRUCTURES.forEach(struct => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'struct-dropdown' + (struct.alignRight ? ' align-right' : '');
+
+      // Nút bấm chính trên Ribbon
+      const trigger = document.createElement('button');
+      trigger.className = 'struct-trigger';
+      trigger.innerHTML = `
+        <div class="struct-icon">${renderKatexHTML(struct.icon)}</div>
+        <div class="struct-label">${struct.viTitle}</div>
+        <div class="struct-caret">▼</div>
+      `;
+      trigger.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = wrapper.classList.contains('open');
+        closeAllDropdowns();
+        if (!isOpen) wrapper.classList.add('open');
+      };
+
+      // Menu thả xuống chứa các mẫu công thức
+      const menu = document.createElement('div');
+      menu.className = 'dropdown-menu';
+      menu.onclick = (e) => e.stopPropagation();
+
+      struct.sections.forEach(sec => {
+        const secTitle = document.createElement('div');
+        secTitle.className = 'menu-section-title';
+        secTitle.textContent = sec.name;
+        menu.appendChild(secTitle);
+
+        const grid = document.createElement('div');
+        grid.className = 'template-grid';
+
+        sec.items.forEach(item => {
+          const card = document.createElement('button');
+          card.className = 'template-card';
+          card.innerHTML = `
+            <div class="template-preview">${renderKatexHTML(item.preview, true)}</div>
+            <div class="template-name">${item.label}</div>
+          `;
+          card.onclick = () => {
+            insertTemplate(item.insert);
+            closeAllDropdowns();
+          };
+          grid.appendChild(card);
+        });
+
+        menu.appendChild(grid);
+      });
+
+      // Nếu là mục Ma trận, thêm bộ tạo Ma trận kích thước bất kỳ (m x n)
+      if (struct.hasCustomMatrix) {
+        const customBox = document.createElement('div');
+        customBox.className = 'custom-matrix-box';
+        customBox.innerHTML = `
+          <span>Tùy chỉnh:</span>
+          <input type="number" id="mat-rows" value="3" min="1" max="8" title="Số hàng">
+          <span>×</span>
+          <input type="number" id="mat-cols" value="3" min="1" max="8" title="Số cột">
+          <button onclick="insertCustomMatrix()">Chèn Ma trận</button>
+        `;
+        menu.appendChild(customBox);
+      }
+
+      wrapper.appendChild(trigger);
+      wrapper.appendChild(menu);
+      container.appendChild(wrapper);
+    });
+  }
+
+  function closeAllDropdowns() {
+    document.querySelectorAll('.struct-dropdown.open').forEach(el => el.classList.remove('open'));
+  }
+
+  document.addEventListener('click', closeAllDropdowns);
+
+  // Hàm chèn cấu trúc toán học vào vị trí con trỏ
+  function insertTemplate(latexTemplate) {
+    if (currentMode === 'professional') {
+      mathField.executeCommand(['insert', latexTemplate, {
+        focus: true,
+        feedback: true,
+        selectionMode: 'placeholder'
+      }]);
+      mathField.focus();
+      updatePreviewBar(mathField.value);
+    } else {
+      const clean = latexTemplate.replace(/#\?/g, '{}');
+      linearInput.value += ' ' + clean;
+      mathField.value = linearInput.value;
+      updatePreviewBar(linearInput.value);
+      linearInput.focus();
+    }
+  }
+
+  // Hàm tạo Ma trận động m hàng x n cột
+  function insertCustomMatrix() {
+    const rows = Math.min(8, Math.max(1, parseInt(document.getElementById('mat-rows').value) || 2));
+    const cols = Math.min(8, Math.max(1, parseInt(document.getElementById('mat-cols').value) || 2));
+    const rowStr = Array(cols).fill('#?').join(' & ');
+    const fullBody = Array(rows).fill(rowStr).join(' \\\\ ');
+    insertTemplate(`\\begin{bmatrix} ${fullBody} \\end{bmatrix}`);
+    closeAllDropdowns();
+  }
+
+  // Chuyển đổi giữa chế độ Professional (Trực quan) và Linear (LaTeX thuần)
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-prof').classList.toggle('active', mode === 'professional');
+    document.getElementById('btn-linear').classList.toggle('active', mode === 'linear');
+    document.getElementById('mode-indicator').textContent = 'Chế độ: ' + (mode === 'professional' ? 'Professional (Trực quan)' : 'Linear (Mã LaTeX)');
+
+    if (mode === 'linear') {
+      linearInput.value = mathField.value;
+      mathField.style.display = 'none';
+      linearInput.style.display = 'block';
+      linearInput.focus();
+    } else {
+      mathField.value = linearInput.value;
+      linearInput.style.display = 'none';
+      mathField.style.display = 'block';
+      mathField.focus();
+    }
+  }
+
+  function syncFromLinear() {
+    mathField.value = linearInput.value;
+    updatePreviewBar(linearInput.value);
+  }
+
+  function clearEquation() {
+    mathField.value = '';
+    linearInput.value = '';
+    updatePreviewBar('');
+    mathField.focus();
+  }
+
+  function updatePreviewBar(val) {
+    previewBar.textContent = 'LaTeX Output: ' + val;
+  }
+
+  mathField.addEventListener('input', () => {
+    updatePreviewBar(mathField.value);
+  });
+
+  function submitToAI() {
+    const finalLatex = currentMode === 'professional' ? mathField.value : linearInput.value;
+    alert('Chuỗi LaTeX chuẩn gửi thẳng vào AI:\n\n$$' + finalLatex + '$$');
+  }
+
+  // Khởi chạy giao diện khi tải trang
+  window.addEventListener('DOMContentLoaded', () => {
+    renderSymbolsGallery('basic');
+    renderStructuresRibbon();
+  });
+</script>
+
+</body>
+</html>
