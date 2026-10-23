@@ -20,6 +20,7 @@ const STUDY_TOOLS: ActiveToolType[] = [
   'mcq_generator',
   'learning',
   'casio_calc',
+  'charts',
   'math_processor',
   'viva_exam',
   'voice_chat',

@@ -334,7 +334,7 @@ export default function App() {
     { id: 'essay_generator', name: '✍️ Đề Tự Luận (Word/PDF)', icon: <FileText className="w-4 h-4 text-blue-400" /> },
     { id: 'mindmap', name: '🗺️ Bản Đồ Tư Duy 7 Chương', icon: <Map className="w-4 h-4 text-cyan-400" /> },
     { id: 'mistake_stats', name: '📊 Thống Kê & Phân Tích Lỗi', icon: <BarChart3 className="w-4 h-4 text-rose-400" /> },
-    { id: 'charts', name: '📈 Mô Hình Phân Phối Chuẩn', icon: <BarChart3 className="w-4 h-4 text-emerald-300" /> },
+    { id: 'charts', name: '📈 Phân Tích BCTC & Phân Phối Chuẩn / Histogram', icon: <BarChart3 className="w-4 h-4 text-emerald-300" />, isNeon: true },
     { id: 'forum', name: '💬 Diễn Đàn Học Tập EDT', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
     { id: 'profile', name: '👤 Hồ Sơ & 10 Linh Vật', icon: <User className="w-4 h-4 text-cyan-300" /> },
     ...(currentUser?.role === 'nha_phat_trien'
