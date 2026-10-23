@@ -78,21 +78,21 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </button>
 
         <button
+          onClick={() => setActiveTool('image_grading')}
+          className={`hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0 ${
+            activeTool === 'image_grading' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5 shadow-[0_4px_12px_rgba(6,182,212,0.5)]' : ''
+          }`}
+        >
+          ⚡ Gia Sư AI 1-1 & Giải Toán
+        </button>
+
+        <button
           onClick={() => setActiveTool('casio_calc')}
           className={`hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0 ${
             activeTool === 'casio_calc' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5 shadow-[0_4px_12px_rgba(6,182,212,0.5)]' : ''
           }`}
         >
           🧮 Máy Tính Casio
-        </button>
-
-        <button
-          onClick={() => setActiveTool('math_processor')}
-          className={`hover:text-emerald-300 transition-colors whitespace-nowrap shrink-0 ${
-            activeTool === 'math_processor' ? 'text-emerald-300 font-black border-b-2 border-emerald-400 pb-0.5 shadow-[0_4px_12px_rgba(16,185,129,0.5)]' : ''
-          }`}
-        >
-          ⚡ Vi Xử Lý Tích Phân
         </button>
 
         <button
@@ -111,15 +111,6 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           }`}
         >
           Đề Tự Luận
-        </button>
-
-        <button
-          onClick={() => setActiveTool('viva_exam')}
-          className={`hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0 ${
-            activeTool === 'viva_exam' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5' : ''
-          }`}
-        >
-          Giải Bài Tập (4 Bước Pólya)
         </button>
 
         <button

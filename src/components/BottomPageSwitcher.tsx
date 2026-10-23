@@ -15,6 +15,7 @@ import {
   Bug,
   Settings,
   PenTool,
+  Sparkles,
 } from 'lucide-react';
 
 interface BottomPageSwitcherProps {
@@ -31,13 +32,11 @@ export const BottomPageSwitcher: React.FC<BottomPageSwitcherProps> = ({
   onOpenBugReport,
 }) => {
   const PRIMARY_TOOLS: Array<{ id: ActiveToolType; label: string; icon: React.ReactNode }> = [
-    { id: 'essay_generator', label: 'Đề Tự Luận (Soạn Thảo Word)', icon: <FileText className="w-4 h-4 text-cyan-400" /> },
     { id: 'learning', label: 'Lý Thuyết 5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
+    { id: 'image_grading', label: '⚡ Gia Sư AI 1-1 & Giải Toán', icon: <Sparkles className="w-4 h-4 text-cyan-300" /> },
     { id: 'casio_calc', label: 'Máy Tính Casio', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
-    { id: 'math_processor', label: 'Vi Xử Lý Tích Phân', icon: <Calculator className="w-4 h-4 text-emerald-400" /> },
     { id: 'mcq_generator', label: 'Đề Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
-    { id: 'viva_exam', label: 'Giải Bài Tập & Vấn Đáp', icon: <HelpCircle className="w-4 h-4 text-purple-400" /> },
-    { id: 'image_grading', label: 'Chấm iPad/Ảnh', icon: <ImageIcon className="w-4 h-4 text-pink-400" /> },
+    { id: 'essay_generator', label: 'Đề Tự Luận', icon: <FileText className="w-4 h-4 text-blue-400" /> },
     { id: 'mindmap', label: 'Sơ Đồ Tư Duy', icon: <Map className="w-4 h-4 text-cyan-400" /> },
   ];
 

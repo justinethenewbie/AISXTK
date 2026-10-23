@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActiveToolType } from '../types/xstk';
-import { Layers, Plus, X, Calculator, Image, Mic, FileText, CheckSquare, HelpCircle, BarChart3, Map, MessageSquare, User, Bug, Settings, Database } from 'lucide-react';
+import { Layers, Plus, X, Calculator, Image, Mic, FileText, CheckSquare, HelpCircle, BarChart3, Map, MessageSquare, User, Bug, Settings, Database, Sparkles } from 'lucide-react';
 
 interface MultitaskingBarProps {
   activeTools: ActiveToolType[];
@@ -23,7 +23,7 @@ export const MultitaskingBar: React.FC<MultitaskingBarProps> = ({
 }) => {
   const TOOL_CONFIG: Record<ActiveToolType, { name: string; icon: React.ReactNode }> = {
     learning: { name: '📖 Lý thuyết 5 bước', icon: <FileText className="w-3.5 h-3.5" /> },
-    image_grading: { name: '📝 Chấm Bảng iPad', icon: <Image className="w-3.5 h-3.5" /> },
+    image_grading: { name: '⚡ Gia Sư AI 1-1 & Giải Toán', icon: <Sparkles className="w-3.5 h-3.5 text-cyan-300" /> },
     voice_chat: { name: '🗣️ Giọng nói AI', icon: <Mic className="w-3.5 h-3.5" /> },
     essay_generator: { name: '✍️ Tạo Tự luận', icon: <FileText className="w-3.5 h-3.5" /> },
     mcq_generator: { name: '✅ Tạo Trắc nghiệm', icon: <CheckSquare className="w-3.5 h-3.5" /> },
@@ -42,16 +42,13 @@ export const MultitaskingBar: React.FC<MultitaskingBarProps> = ({
   const ALL_ADDABLE_TOOLS: ActiveToolType[] = [
     'learning',
     'image_grading',
-    'voice_chat',
     'essay_generator',
     'mcq_generator',
-    'viva_exam',
-    'mistake_stats',
     'mindmap',
     'forum',
     'charts',
     'casio_calc',
-    'math_processor',
+    'mistake_stats',
     'developer_db',
   ];
 

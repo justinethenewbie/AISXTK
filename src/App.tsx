@@ -46,6 +46,7 @@ import {
   Database,
   FileCode,
   Cloud,
+  Sparkles,
 } from 'lucide-react';
 
 const INITIAL_PROFILE: UserProfile = {
@@ -249,18 +250,15 @@ export default function App() {
         );
       case 'casio_calc':
         return <CasioCalculator />;
+      case 'image_grading':
       case 'math_processor':
-        return <MathProcessor />;
+      case 'viva_exam':
+      case 'voice_chat':
+        return <ImagePdfGrading onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
       case 'mcq_generator':
         return <McqPractice onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
       case 'essay_generator':
         return <EssayPractice onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
-      case 'viva_exam':
-        return <TheoreticalViva onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
-      case 'image_grading':
-        return <ImagePdfGrading onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
-      case 'voice_chat':
-        return <VoiceInteraction onAddExp={handleAddExp} />;
       case 'mistake_stats':
         return (
           <MistakeAnalytics
@@ -326,13 +324,10 @@ export default function App() {
 
   const ALL_NAVIGATION_ITEMS: Array<{ id: ActiveToolType; name: string; icon: React.ReactNode; isNeon?: boolean }> = [
     { id: 'learning', name: '📖 Lý thuyết 5 bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
-    { id: 'casio_calc', name: '🧮 Máy tính Casio XSTK', icon: <Calculator className="w-4 h-4 text-cyan-300" />, isNeon: true },
-    { id: 'math_processor', name: '⚡ Vi Xử Lý Tích Phân & 4 Bước', icon: <Calculator className="w-4 h-4 text-emerald-400" />, isNeon: true },
+    { id: 'image_grading', name: '⚡ Gia Sư AI 1-1 & Giải Toán Toàn Diện', icon: <Sparkles className="w-4 h-4 text-cyan-300" />, isNeon: true },
+    { id: 'casio_calc', name: '🧮 Máy tính Casio XSTK', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
     { id: 'mcq_generator', name: '✅ Đề Trắc Nghiệm (Word/PDF)', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
     { id: 'essay_generator', name: '✍️ Đề Tự Luận (Word/PDF)', icon: <FileText className="w-4 h-4 text-blue-400" /> },
-    { id: 'viva_exam', name: '✍️ Giải Bài Tập (4 Bước Pólya)', icon: <HelpCircle className="w-4 h-4 text-purple-400" /> },
-    { id: 'image_grading', name: '📝 Chấm Bảng iPad / Ảnh', icon: <ImageIcon className="w-4 h-4 text-pink-400" /> },
-    { id: 'voice_chat', name: '🗣️ Giọng Nói Trực Tiếp AI', icon: <Mic className="w-4 h-4 text-sky-400" /> },
     { id: 'mindmap', name: '🗺️ Bản Đồ Tư Duy 7 Chương', icon: <Map className="w-4 h-4 text-cyan-400" /> },
     { id: 'mistake_stats', name: '📊 Thống Kê & Phân Tích Lỗi', icon: <BarChart3 className="w-4 h-4 text-rose-400" /> },
     { id: 'charts', name: '📈 Mô Hình Phân Phối Chuẩn', icon: <BarChart3 className="w-4 h-4 text-emerald-300" /> },
