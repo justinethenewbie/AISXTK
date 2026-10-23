@@ -34,7 +34,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
-    <header className="flex items-center justify-between gap-4 px-5 py-3 bg-slate-950/95 backdrop-blur-md border-b-2 border-cyan-500/30 sticky top-0 z-40 shadow-[0_4px_25px_rgba(0,0,0,0.7)] text-slate-100">
+    <header className="flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-3 bg-slate-950/95 backdrop-blur-md border-b-2 border-cyan-500/30 sticky top-0 z-40 shadow-[0_4px_25px_rgba(0,0,0,0.7)] text-slate-100 w-full max-w-full overflow-x-hidden box-border">
       {/* Zone 1: EDT Wordmark & Neon Badge */}
       <a
         href="#"
@@ -58,7 +58,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       </a>
 
       {/* Zone 2: Navigation Links (High contrast white & cyan glow) */}
-      <nav className="hidden xl:flex items-center gap-5 text-xs font-bold text-slate-200">
+      <nav className="hidden 2xl:flex items-center gap-4 text-xs font-bold text-slate-200">
         <button
           onClick={() => setActiveTool('essay_generator')}
           className={`hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0 ${

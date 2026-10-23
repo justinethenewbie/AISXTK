@@ -77,7 +77,7 @@ const INITIAL_PROFILE: UserProfile = {
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
-  const [activeTool, setActiveTool] = useState<ActiveToolType>('essay_generator');
+  const [activeTool, setActiveTool] = useState<ActiveToolType>('image_grading');
 
   const [currentChapterId, setCurrentChapterId] = useState(1);
   const [mistakes, setMistakes] = useState<MistakeRecord[]>([
@@ -340,7 +340,7 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col pb-20 selection:bg-cyan-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col pb-24 overflow-x-hidden w-full selection:bg-cyan-500 selection:text-slate-950">
       {/* Mandatory Login Wall (Facebook-style Auth Gate) */}
       {!currentUser && (
         <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
@@ -350,7 +350,7 @@ export default function App() {
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-black text-white tracking-wide">EDT - AI Tutor Xác Suất Thống Kê</h1>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+              <p className="text-sm text-slate-300 leading-relaxed font-medium">
                 Vui lòng <strong className="text-cyan-300">Đăng nhập hoặc Đăng ký tài khoản</strong> để hệ thống lưu trữ tiến độ học tập, điểm EXP, GPA và lịch sử bài làm cá nhân của bạn lên cơ sở dữ liệu!
               </p>
             </div>
@@ -358,13 +358,13 @@ export default function App() {
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => setIsAuthOpen(true)}
-                className="w-full py-4 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-2xl text-sm shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-4 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-2xl text-base shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>🔐 Đăng Nhập / Đăng Ký Tài Khoản Ngay</span>
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-400">
+            <p className="text-xs text-slate-400">
               Nhà phát hành (Developer Portal) vui lòng đăng nhập bằng mã PIN bảo mật.
             </p>
           </div>
@@ -395,40 +395,40 @@ export default function App() {
         activeWindowCount={1}
       />
 
-      {/* Main Content Layout */}
-      <div className="max-w-7xl w-full mx-auto px-4 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Main Content Layout - Expansive widescreen layout that fully utilizes the right side */}
+      <div className="max-w-[1720px] w-full mx-auto px-3 sm:px-6 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-w-0">
         {/* Left Sidebar Menu */}
-        <aside className="lg:col-span-3 space-y-4">
+        <aside className="lg:col-span-3 xl:col-span-3 2xl:col-span-2 space-y-4 min-w-0">
           <div className="bg-slate-900/90 border border-cyan-500/20 p-4 rounded-3xl shadow-[0_4px_25px_rgba(0,0,0,0.5)] space-y-2">
             <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-800">
               <h3 className="text-xs font-extrabold uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse"></span>
                 <span>CÔNG CỤ EDT AI</span>
               </h3>
-              <span className="text-[10px] text-cyan-400 font-mono font-bold">v2.5 PRO</span>
+              <span className="text-[11px] text-cyan-400 font-mono font-bold">v2.5 PRO</span>
             </div>
 
-            <nav className="space-y-1 pt-1">
+            <nav className="space-y-1.5 pt-1.5">
               {ALL_NAVIGATION_ITEMS.map((item) => {
                 const isActive = activeTool === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTool(item.id)}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
+                    className={`w-full text-left px-3.5 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-between group cursor-pointer ${
                       isActive
                         ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
                         : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <div className={`p-1 rounded-md ${isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400 group-hover:text-cyan-400'}`}>
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400 group-hover:text-cyan-400'}`}>
                         {item.icon}
                       </div>
                       <span className="truncate">{item.name}</span>
                     </div>
                     {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff]"></span>
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] shrink-0"></span>
                     )}
                   </button>
                 );
@@ -436,27 +436,27 @@ export default function App() {
             </nav>
 
             {/* Quick Prompt Blueprint Modal Trigger */}
-            <div className="pt-2 border-t border-slate-800 space-y-1.5">
+            <div className="pt-2 border-t border-slate-800 space-y-2">
               <button
                 onClick={() => setIsPromptHistoryOpen(true)}
-                className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-between bg-cyan-950/80 border border-cyan-500/40 text-cyan-200 hover:text-white hover:bg-cyan-900 shadow-[0_0_12px_rgba(6,182,212,0.25)] group cursor-pointer"
+                className="w-full text-left px-3.5 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-between bg-cyan-950/80 border border-cyan-500/40 text-cyan-200 hover:text-white hover:bg-cyan-900 shadow-[0_0_12px_rgba(6,182,212,0.25)] group cursor-pointer"
               >
                 <div className="flex items-center gap-2 truncate">
                   <FileCode className="w-4 h-4 text-cyan-400 shrink-0" />
                   <span className="truncate">📑 Tổng Hợp Prompt (PDF)</span>
                 </div>
-                <span className="text-[10px] bg-cyan-500 text-slate-950 px-1.5 py-0.5 rounded font-black">A4</span>
+                <span className="text-xs bg-cyan-500 text-slate-950 px-2 py-0.5 rounded font-black">A4</span>
               </button>
 
               <button
                 onClick={() => setIsGoogleDriveOpen(true)}
-                className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-between bg-blue-950/80 border border-blue-500/40 text-blue-200 hover:text-white hover:bg-blue-900 shadow-[0_0_12px_rgba(59,130,246,0.25)] group cursor-pointer"
+                className="w-full text-left px-3.5 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-between bg-blue-950/80 border border-blue-500/40 text-blue-200 hover:text-white hover:bg-blue-900 shadow-[0_0_12px_rgba(59,130,246,0.25)] group cursor-pointer"
               >
                 <div className="flex items-center gap-2 truncate">
                   <Cloud className="w-4 h-4 text-blue-400 shrink-0" />
                   <span className="truncate">📁 Google Drive Cloud Hub</span>
                 </div>
-                <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-black">SYNC</span>
+                <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded font-black">SYNC</span>
               </button>
             </div>
           </div>
@@ -465,14 +465,14 @@ export default function App() {
           <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-500/30 text-white p-4 rounded-3xl shadow-[0_0_20px_rgba(6,182,212,0.15)] text-center space-y-2 relative overflow-hidden">
             <div className="absolute -top-10 -right-10 w-28 h-28 bg-cyan-500/10 rounded-full blur-xl pointer-events-none"></div>
             <Mascot size="sm" equipped={profile.equippedMascot} speechText="Học XSTK mỗi ngày cùng Cú EDT nhé!" />
-            <div className="text-[11px] font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 py-1 px-3 rounded-full inline-block">
+            <div className="text-xs font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 py-1 px-3 rounded-full inline-block">
               Chuỗi học: {currentUser ? currentUser.streakDays : profile.streakDays} ngày liên tục 🔥
             </div>
           </div>
         </aside>
 
         {/* Center Primary Work Area (Displays Single Full Page) */}
-        <main className="lg:col-span-9 space-y-6">
+        <main className="lg:col-span-9 xl:col-span-9 2xl:col-span-10 space-y-6 min-w-0 w-full">
           {renderToolView(activeTool)}
         </main>
       </div>

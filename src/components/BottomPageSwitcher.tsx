@@ -41,8 +41,8 @@ export const BottomPageSwitcher: React.FC<BottomPageSwitcherProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-md border-t border-cyan-500/20 py-2 px-4 shadow-[0_-4px_25px_rgba(0,0,0,0.6)]">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-cyan-500/20 py-2.5 px-4 shadow-[0_-4px_25px_rgba(0,0,0,0.6)] w-full max-w-full overflow-x-hidden box-border">
+      <div className="max-w-[1720px] w-full mx-auto flex items-center justify-between gap-2">
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar flex-1 justify-center">
           {PRIMARY_TOOLS.map((item) => {

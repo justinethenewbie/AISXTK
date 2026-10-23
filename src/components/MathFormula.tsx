@@ -138,7 +138,7 @@ export const MathFormula: React.FC<MathFormulaProps> = ({
   if (block) {
     return (
       <div
-        className={`my-2.5 overflow-x-auto text-center py-2.5 px-4 bg-slate-950/90 rounded-2xl border-2 border-cyan-500/40 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.15)] text-sm font-mono ${className}`}
+        className={`my-3 overflow-x-auto text-center py-3.5 px-5 bg-slate-950/90 rounded-2xl border-2 border-cyan-500/40 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.15)] text-base sm:text-lg font-mono ${className}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );
@@ -146,7 +146,7 @@ export const MathFormula: React.FC<MathFormulaProps> = ({
 
   return (
     <span
-      className={`inline-block mx-0.5 font-mono text-cyan-300 font-semibold align-middle ${className}`}
+      className={`inline-block mx-0.5 font-mono text-cyan-300 font-semibold align-middle text-sm sm:text-base ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -246,7 +246,7 @@ export const MathText: React.FC<{
         return (
           <div
             key={idx}
-            className="my-2 text-center overflow-x-auto py-1 px-2 text-cyan-200"
+            className="my-3 text-center overflow-x-auto py-2.5 px-3 text-cyan-200 text-base sm:text-lg font-mono"
             dangerouslySetInnerHTML={{ __html: seg.html || seg.content }}
           />
         );
@@ -254,7 +254,7 @@ export const MathText: React.FC<{
       return (
         <span
           key={idx}
-          className="inline-block mx-0.5 text-cyan-300 font-mono font-medium align-middle"
+          className="inline-block mx-0.5 text-cyan-300 font-mono font-medium align-middle text-sm sm:text-base"
           dangerouslySetInnerHTML={{ __html: seg.html || seg.content }}
         />
       );

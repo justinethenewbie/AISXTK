@@ -463,22 +463,22 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
           {/* Current Essay Problem Card */}
           <div className="bg-slate-900 border-2 border-cyan-500/30 p-6 rounded-3xl space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="font-black text-cyan-300 text-sm">
+              <span className="font-black text-cyan-300 text-sm sm:text-base">
                 Bài toán #{activeEssayIdx + 1}: {currentEssay.title || `Bài tập tự luận ${activeEssayIdx + 1}`}
               </span>
-              <span className="text-[10px] font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold px-2.5 py-1 rounded-lg">
+              <span className="text-xs font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold px-3 py-1 rounded-lg">
                 Chiến Lược Giải & Barem Rubric
               </span>
             </div>
 
-            <div className="text-xs sm:text-sm text-white font-medium leading-relaxed">
+            <div className="text-sm sm:text-base text-white font-medium leading-relaxed">
               <MathText text={currentEssay.question} />
             </div>
 
             {/* Strategy Hint Box */}
-            <div className="p-4 bg-slate-950 rounded-2xl border border-cyan-500/30 space-y-2 text-xs">
-              <div className="flex items-center gap-1.5 font-black text-cyan-300">
-                <Lightbulb className="w-4 h-4 text-cyan-400" />
+            <div className="p-4 sm:p-5 bg-slate-950 rounded-2xl border border-cyan-500/30 space-y-2.5 text-sm sm:text-base">
+              <div className="flex items-center gap-2 font-black text-cyan-300 text-sm sm:text-base">
+                <Lightbulb className="w-5 h-5 text-cyan-400" />
                 <span>Gợi ý chiến lược định hướng từng bước giải từ AI:</span>
               </div>
               <div className="text-slate-200 leading-relaxed font-medium">
@@ -487,9 +487,9 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
 
               {currentEssay.keyFormulas && currentEssay.keyFormulas.length > 0 && (
                 <div className="pt-2 flex flex-wrap gap-2 items-center">
-                  <span className="font-bold text-[11px] text-slate-300">Công thức cần dùng:</span>
+                  <span className="font-bold text-xs sm:text-sm text-slate-300">Công thức cần dùng:</span>
                   {currentEssay.keyFormulas.map((f: string, i: number) => (
-                    <span key={i} className="font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-cyan-500/40 text-cyan-300 font-bold text-[11px]">
+                    <span key={i} className="font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-cyan-500/40 text-cyan-300 font-bold text-xs sm:text-sm">
                       <MathFormula math={f} />
                     </span>
                   ))}
@@ -508,26 +508,26 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
             {/* AI Grading Result */}
             {evaluationResult && (
               <div className="space-y-4">
-                <div className="p-6 bg-slate-950 border-2 border-emerald-400/80 rounded-3xl text-xs space-y-3.5 animate-fade-in shadow-[0_0_25px_rgba(16,185,129,0.3)]">
-                  <div className="flex items-center justify-between font-black text-emerald-300 text-sm">
+                <div className="p-6 bg-slate-950 border-2 border-emerald-400/80 rounded-3xl text-sm sm:text-base space-y-4 animate-fade-in shadow-[0_0_25px_rgba(16,185,129,0.3)]">
+                  <div className="flex items-center justify-between font-black text-emerald-300 text-sm sm:text-base flex-wrap gap-2">
                     <span className="flex items-center gap-2">
                       <Award className="w-5 h-5 text-emerald-400" />
                       <span>Kết Quả Chấm Điểm & Nhận Xét Của Thầy Giáo AI:</span>
                     </span>
-                    <span className="font-mono text-base bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-xl border border-emerald-500/40">
+                    <span className="font-mono text-base sm:text-lg bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-xl border border-emerald-500/40">
                       {evaluationResult.totalScore} / 10 điểm
                     </span>
                   </div>
-                  <div className="text-slate-100 leading-relaxed font-semibold text-xs sm:text-[13px] bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                  <div className="text-slate-100 leading-relaxed font-medium text-sm sm:text-base bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-800">
                     <MathText text={evaluationResult.detailedFeedback} />
                   </div>
                   {evaluationResult.betterStrategy && (
-                    <div className="p-4 bg-slate-900 rounded-2xl border border-emerald-500/40">
-                      <p className="font-bold text-emerald-300 mb-1 flex items-center gap-1.5 text-xs">
-                        <Award className="w-4 h-4 text-emerald-400" />
+                    <div className="p-4 sm:p-5 bg-slate-900 rounded-2xl border border-emerald-500/40">
+                      <p className="font-bold text-emerald-300 mb-1.5 flex items-center gap-2 text-sm sm:text-base">
+                        <Award className="w-5 h-5 text-emerald-400" />
                         <span>Lời khuyên phương pháp & chiến lược tối ưu:</span>
                       </p>
-                      <div className="text-slate-200 leading-relaxed">
+                      <div className="text-slate-200 leading-relaxed text-sm sm:text-base">
                         <MathText text={evaluationResult.betterStrategy} />
                       </div>
                     </div>
@@ -535,7 +535,7 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                 </div>
 
                 {/* Interactive Dialogue with Professor */}
-                <div className="p-6 bg-slate-900/95 border-2 border-cyan-500/40 rounded-3xl space-y-4 text-xs shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                <div className="p-6 bg-slate-900/95 border-2 border-cyan-500/40 rounded-3xl space-y-4 text-sm sm:text-base shadow-[0_0_20px_rgba(6,182,212,0.15)]">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-cyan-300 uppercase tracking-wider text-xs flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-cyan-400" />
