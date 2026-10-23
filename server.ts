@@ -1453,7 +1453,10 @@ QUY TẮC PHẢN HỒI NHANH:
 ${
   type === 'mcq'
     ? `3. Mỗi câu có 4 phương án [A, B, C, D], 1 phương án đúng, explanation súc tích (1-2 câu).`
-    : `3. Mỗi câu tự luận có strategyHint (2 bước ngắn), keyFormulas (công thức KaTeX), expectedAnswerSummary (đáp số ngắn).`
+    : `3. Mỗi câu tự luận BẮT BUỘC CÓ:
+   - "strategyHint": 2-4 bước định hướng giải rõ ràng. MỌI CÔNG THỨC TOÁN, KÝ HIỆU PHẢI BỌC TRONG CẶP DẤU $...$ (ví dụ: $f = \\frac{m}{n}$, $z_{\\alpha/2} = 1.96$, $\\epsilon = z_{\\alpha/2}\\sqrt{\\frac{f(1-f)}{n}}$, $p \\in (f - \\epsilon, f + \\epsilon)$, $E(X) = \\sum x_i p_i$). TUYỆT ĐỐI KHÔNG DÙNG MÃ CODE NHƯ 'p_i * r_i' HAY ĐỂ TRỐNG/UNDEFINED!
+   - "keyFormulas": mảng công thức KaTeX chuẩn.
+   - "expectedAnswerSummary": đáp số ngắn có công thức KaTeX $...$.`
 }
 
 Format JSON array (Đúng ${count} phần tử):
@@ -1467,9 +1470,9 @@ Format JSON array (Đúng ${count} phần tử):
         ? `"options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
     "correctIndex": 0,
     "explanation": "Giải thích ngắn 1-2 câu tại sao đúng"`
-        : `"strategyHint": "Gợi ý 2 bước ngắn gọn",
+        : `"strategyHint": "Bước 1: ..., Bước 2: ... (mọi công thức bọc trong $...$)",
     "keyFormulas": ["Công thức KaTeX"],
-    "expectedAnswerSummary": "Đáp số ngắn"`
+    "expectedAnswerSummary": "Đáp số ngắn $...$"`
     }
   }
 ]`;
@@ -1486,6 +1489,16 @@ Format JSON array (Đúng ${count} phần tử):
 
       const exercises = cleanAndParseJson<any[]>(response.text || '[]', []);
       if (Array.isArray(exercises) && exercises.length > 0) {
+        // Sanitize every exercise to ensure strategyHint is valid and never undefined
+        exercises.forEach((ex: any, idx: number) => {
+          if (!ex.strategyHint || ex.strategyHint === 'undefined' || ex.strategyHint === 'null' || typeof ex.strategyHint !== 'string' || !ex.strategyHint.trim()) {
+            ex.strategyHint = ex.hint || ex.strategy || ex.solutionStrategy || ex.steps ||
+              `Bước 1: Đọc kỹ giả thiết bài toán, xác định các thông số mẫu quan sát. Bước 2: Áp dụng các công thức thống kê cốt lõi đã cho. Bước 3: Thế số liệu, tính toán kết quả và nêu ý nghĩa kinh tế thực tế.`;
+          }
+          if (!ex.keyFormulas || !Array.isArray(ex.keyFormulas) || ex.keyFormulas.length === 0) {
+            ex.keyFormulas = [`E(X) = \\sum x_i p_i`, `\\sigma = \\sqrt{\\text{Var}(X)}`];
+          }
+        });
         return res.json({ success: true, exercises, isAiGenerated: true, model: usedModel });
       }
     } catch (error: any) {
@@ -1519,13 +1532,13 @@ Format JSON array (Đúng ${count} phần tử):
         id: `fb_essay_${i}_${Date.now()}`,
         title: `Bài toán Tự luận ${difficulty} #${i} - ${chapterTitle || 'XSTK'}`,
         question: `Một công ty tài chính công nghệ (Fintech) theo dõi tỷ lệ khách hàng thanh toán dư nợ thẻ tín dụng quá hạn. Khảo sát ngẫu nhiên mẫu ${100 + i * 25} khách hàng, ghi nhận có ${15 + i * 2} trường hợp trễ hạn trên 30 ngày. Hãy ước lượng khoảng tin cậy 95% cho tỷ lệ nợ quá hạn thực tế toàn bộ khách hàng và đưa ra đề xuất quản trị rủi ro cho ban giám đốc.`,
-        strategyHint: `Bước 1: Tính tỷ lệ mẫu f = m/n = ${(15 + i * 2)}/${(100 + i * 25)}. Bước 2: Với độ tin cậy 95% (\\alpha = 0.05), giá trị tới hạn chuẩn tắc là z_{\\alpha/2} = 1.96. Bước 3: Tính sai số ước lượng \\epsilon = 1.96 \\cdot \\sqrt{\\frac{f(1-f)}{n}}. Bước 4: Viết khoảng tin cậy (f - \\epsilon; f + \\epsilon) và nêu kết luận kinh tế.`,
+        strategyHint: `Bước 1: Tính tỷ lệ mẫu $f = \\frac{m}{n} = \\frac{${15 + i * 2}}{${100 + i * 25}} = ${((15 + i * 2) / (100 + i * 25)).toFixed(4)}$. Bước 2: Với độ tin cậy $95\\%$ ($\\alpha = 0.05$), giá trị tới hạn chuẩn tắc là $z_{\\alpha/2} = 1.96$. Bước 3: Tính sai số ước lượng $\\epsilon = 1.96 \\cdot \\sqrt{\\frac{f(1-f)}{n}}$. Bước 4: Viết khoảng tin cậy $p \\in (f - \\epsilon, f + \\epsilon)$ và nêu kết luận kinh tế.`,
         keyFormulas: [
           `f = \\frac{m}{n}`,
           `\\epsilon = z_{\\alpha/2} \\sqrt{\\frac{f(1-f)}{n}}`,
           `p \\in (f - \\epsilon, f + \\epsilon)`,
         ],
-        expectedAnswerSummary: `Tỷ lệ mẫu f = ${((15 + i * 2) / (100 + i * 25)).toFixed(4)}. Khoảng tin cậy 95% là [${(((15 + i * 2) / (100 + i * 25)) - 0.032).toFixed(4)}; ${(((15 + i * 2) / (100 + i * 25)) + 0.032).toFixed(4)}].`,
+        expectedAnswerSummary: `Tỷ lệ mẫu $f = ${((15 + i * 2) / (100 + i * 25)).toFixed(4)}$. Khoảng tin cậy 95% là [${(((15 + i * 2) / (100 + i * 25)) - 0.032).toFixed(4)}; ${(((15 + i * 2) / (100 + i * 25)) + 0.032).toFixed(4)}].`,
       });
     }
   }

@@ -11,8 +11,21 @@ interface MathFormulaProps {
  * Auto-fix LaTeX syntax errors, swallowed control characters, Unicode minus, escaped dollars (\$), missing closing braces, and un-delimited LaTeX commands.
  */
 export function sanitizeAndFixMathText(rawText: string): string {
-  if (!rawText || typeof rawText !== 'string') return rawText || '';
-  let text = rawText;
+  if (!rawText || typeof rawText !== 'string') return '';
+  let text = rawText.trim();
+
+  // Chống lỗi hiển thị "undefined" hoặc "null"
+  if (text === 'undefined' || text === 'null') {
+    return '';
+  }
+  text = text.replace(/:\s*undefined\b/gi, ': ');
+  text = text.replace(/\bundefined\b/gi, '');
+
+  // Tự động chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
+  text = text.replace(/E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
+  text = text.replace(/E\(X_i\)\s*=\s*p_i\s*[*]\s*r_i/g, '$E(X_i) = p_i \\cdot r_i$');
+  text = text.replace(/Var\(X\)\s*=\s*Var\(X_A\)\s*\+\s*Var\(X_B\)\s*\+\s*Var\(X_C\)/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
+  text = text.replace(/\bf\s*=\s*m\s*\/\s*n\b/g, '$f = \\frac{m}{n}$');
 
   // 1. Khôi phục các lệnh LaTeX nếu bị JSON nuốt ký tự điều khiển (\f, \b, \t, \r)
   text = text
@@ -108,9 +121,12 @@ export function cleanLatexString(raw: string): string {
  * Safely render a LaTeX math formula via KaTeX
  */
 export function renderKatexSafe(mathStr: string, isBlock = false): string {
-  if (!mathStr) return '';
+  if (!mathStr || typeof mathStr !== 'string') return '';
+  const trimmed = mathStr.trim();
+  if (trimmed === 'undefined' || trimmed === 'null' || trimmed === '\\undefined') return '';
   try {
-    const clean = cleanLatexString(mathStr);
+    const clean = cleanLatexString(trimmed);
+    if (!clean || clean === 'undefined' || clean === 'null' || clean === '\\undefined') return '';
     return katex.renderToString(clean, {
       displayMode: isBlock,
       throwOnError: false,
