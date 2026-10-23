@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { UserProfile, MascotItem, BadgeItem, WeeklyAchievement } from '../types/xstk';
+import { UserProfile, MascotItem, BadgeItem, WeeklyAchievement, MascotSpecies } from '../types/xstk';
 import { Mascot } from './Mascot';
+import { MASCOT_CATALOG, getMascotById } from '../data/mascotCatalog';
 import {
   Award,
   Flame,
@@ -116,6 +117,20 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
     }
 
     onUpdateProfile({ equippedMascot: currentEquipped });
+  };
+
+  const handleSelectMascotSpecies = (species: MascotSpecies) => {
+    onUpdateProfile({
+      equippedMascot: {
+        ...userProfile.equippedMascot,
+        species,
+      },
+    });
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.6 },
+    });
   };
 
   const handleOpenLootbox = () => {
@@ -651,6 +666,71 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
       {/* TAB 5: Inventory & Lootbox */}
       {activeTab === 'inventory' && (
         <div className="space-y-6">
+          {/* Mascot Companion Selection */}
+          <div className="bg-slate-900/80 border-2 border-cyan-500/30 rounded-2xl p-4 sm:p-5 shadow-[0_0_20px_rgba(6,182,212,0.15)] space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🐾</span>
+                <div>
+                  <h3 className="font-black text-sm text-white flex items-center gap-2">
+                    <span>CHỌN BẠN ĐỒNG HÀNH XSTK (10 LINH VẬT HUB)</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
+                      EDT Mascot Hub
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Linh vật bạn chọn sẽ xuất hiện cổ vũ trong suốt quá trình học và hiển thị trên toàn bộ trang web!
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-mono font-bold bg-cyan-950/80 text-cyan-300 px-3 py-1 rounded-full border border-cyan-500/40">
+                Đang chọn: {getMascotById(userProfile.equippedMascot?.species || 'owl').name}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {MASCOT_CATALOG.map((m) => {
+                const isSelected = (userProfile.equippedMascot?.species || 'owl') === m.species;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => handleSelectMascotSpecies(m.species)}
+                    className={`relative p-3 rounded-xl border-2 text-left transition-all group flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-slate-800 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] ring-2 ring-cyan-400/30'
+                        : 'bg-slate-950/80 border-slate-800 hover:border-cyan-500/40 hover:bg-slate-900'
+                    }`}
+                  >
+                    {isSelected && (
+                      <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">
+                        ✓ Đang chọn
+                      </span>
+                    )}
+                    <div>
+                      <div className="text-3xl sm:text-4xl mb-1 text-center group-hover:scale-110 transition-transform">
+                        {m.emoji}
+                      </div>
+                      <div className="font-black text-xs text-white text-center">{m.name}</div>
+                      <div className="text-[10px] text-cyan-300 font-semibold text-center">{m.role}</div>
+                      <div className="text-[10px] text-slate-400 text-center line-clamp-1 mt-0.5">
+                        {m.personalityTag}
+                      </div>
+                    </div>
+                    <div
+                      className={`mt-2 py-1 text-center text-[10px] font-bold rounded-lg transition-colors ${
+                        isSelected
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                          : 'bg-slate-800 text-slate-400 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                      }`}
+                    >
+                      {isSelected ? 'Đang kích hoạt' : 'Chọn linh vật'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <h3 className="font-black text-xs sm:text-sm text-white">
               TRANG PHỤC & PHỤ KIỆN LINH VẬT ĐÃ THU THẬP:

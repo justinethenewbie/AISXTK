@@ -6,6 +6,10 @@ import { TopNavbar } from './components/TopNavbar';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { BottomPageSwitcher } from './components/BottomPageSwitcher';
 import { Mascot } from './components/Mascot';
+import { HubEdtLogo } from './components/HubEdtLogo';
+import { PixelAmbientBackground } from './components/PixelAmbientBackground';
+import { FloatingPixelMascot } from './components/FloatingPixelMascot';
+import { getMascotById } from './data/mascotCatalog';
 
 // Feature Components
 import { ChapterLearning } from './components/ChapterLearning';
@@ -332,7 +336,7 @@ export default function App() {
     { id: 'mistake_stats', name: '📊 Thống Kê & Phân Tích Lỗi', icon: <BarChart3 className="w-4 h-4 text-rose-400" /> },
     { id: 'charts', name: '📈 Mô Hình Phân Phối Chuẩn', icon: <BarChart3 className="w-4 h-4 text-emerald-300" /> },
     { id: 'forum', name: '💬 Diễn Đàn Học Tập EDT', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
-    { id: 'profile', name: '👤 Hồ Sơ & Linh Vật Cú', icon: <User className="w-4 h-4 text-cyan-300" /> },
+    { id: 'profile', name: '👤 Hồ Sơ & 10 Linh Vật', icon: <User className="w-4 h-4 text-cyan-300" /> },
     ...(currentUser?.role === 'nha_phat_trien'
       ? [{ id: 'developer_db' as ActiveToolType, name: '💾 Kho Dữ Liệu Dev (Vault)', icon: <Database className="w-4 h-4 text-purple-400" />, isNeon: true }]
       : []),
@@ -340,13 +344,16 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col pb-24 overflow-x-hidden w-full selection:bg-cyan-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col pb-24 overflow-x-hidden w-full selection:bg-cyan-500 selection:text-slate-950 relative">
+      {/* Subtle Ambient Pixel Background Art */}
+      <PixelAmbientBackground />
+
       {/* Mandatory Login Wall (Facebook-style Auth Gate) */}
       {!currentUser && (
         <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-slate-900 border-2 border-cyan-500/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.3)] text-center space-y-6">
-            <div className="w-16 h-16 bg-gradient-to-tr from-cyan-500 to-emerald-400 rounded-2xl mx-auto flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-              <span className="text-3xl">🦉</span>
+            <div className="flex justify-center pb-2">
+              <HubEdtLogo size="lg" className="justify-center" />
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-black text-white tracking-wide">EDT - AI Tutor Xác Suất Thống Kê</h1>
@@ -464,7 +471,11 @@ export default function App() {
           {/* Sidebar Mascot Widget */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-500/30 text-white p-4 rounded-3xl shadow-[0_0_20px_rgba(6,182,212,0.15)] text-center space-y-2 relative overflow-hidden">
             <div className="absolute -top-10 -right-10 w-28 h-28 bg-cyan-500/10 rounded-full blur-xl pointer-events-none"></div>
-            <Mascot size="sm" equipped={profile.equippedMascot} speechText="Học XSTK mỗi ngày cùng Cú EDT nhé!" />
+            <Mascot
+              size="sm"
+              equipped={profile.equippedMascot}
+              speechText={`Cùng ${getMascotById(profile.equippedMascot?.species || 'owl').name} chinh phục điểm 10 XSTK nhé!`}
+            />
             <div className="text-xs font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 py-1 px-3 rounded-full inline-block">
               Chuỗi học: {currentUser ? currentUser.streakDays : profile.streakDays} ngày liên tục 🔥
             </div>
@@ -476,6 +487,12 @@ export default function App() {
           {renderToolView(activeTool)}
         </main>
       </div>
+
+      {/* Floating Pixel Mascot Cheerleader (Encourages user, auto-hides during study) */}
+      <FloatingPixelMascot
+        activeTool={activeTool}
+        equippedMascot={profile.equippedMascot}
+      />
 
       {/* Bottom Page Switcher Bar */}
       <BottomPageSwitcher
@@ -491,6 +508,8 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        userProfile={profile}
+        onUpdateProfile={handleUpdateProfile}
       />
 
       {/* Bug Report Modal */}

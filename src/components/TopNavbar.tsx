@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActiveToolType, UserProfile, AppUser } from '../types/xstk';
 import { Award, Flame, Database, LogIn, LogOut, User, ChevronDown, FileCode, Settings, Cloud } from 'lucide-react';
+import { HubEdtLogo } from './HubEdtLogo';
 
 interface TopNavbarProps {
   activeTool: ActiveToolType;
@@ -35,27 +36,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
   return (
     <header className="flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-3 bg-slate-950/95 backdrop-blur-md border-b-2 border-cyan-500/30 sticky top-0 z-40 shadow-[0_4px_25px_rgba(0,0,0,0.7)] text-slate-100 w-full max-w-full overflow-x-hidden box-border">
-      {/* Zone 1: EDT Wordmark & Neon Badge */}
-      <a
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          setActiveTool('learning');
-        }}
-        className="text-lg font-black tracking-wider text-white whitespace-nowrap shrink-0 flex items-center gap-2.5 group"
-      >
-        <span className="p-1.5 px-2.5 bg-gradient-to-br from-cyan-400 via-teal-300 to-emerald-400 text-slate-950 font-black text-sm rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.7)] group-hover:scale-105 transition-transform">
-          EDT
-        </span>
-        <div className="flex flex-col">
-          <span className="text-sm font-black tracking-tight text-white drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]">
-            EDT • XÁC SUẤT THỐNG KÊ
-          </span>
-          <span className="text-[10px] font-extrabold text-cyan-300 tracking-wide">
-            Gia Sư & Vi Xử Lý Casio 580
-          </span>
-        </div>
-      </a>
+      {/* Zone 1: Đại học Ngân hàng TP.HCM (HUB) Logo + EDT in Cyber Neon */}
+      <HubEdtLogo size="md" onClick={() => setActiveTool('learning')} />
 
       {/* Zone 2: Navigation Links (High contrast white & cyan glow) */}
       <nav className="hidden 2xl:flex items-center gap-4 text-xs font-bold text-slate-200">

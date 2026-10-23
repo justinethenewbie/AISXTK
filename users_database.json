@@ -9,16 +9,31 @@
     "university": "ĐH Kinh Tế TP.HCM (UEH)",
     "classGroup": "2026-XSTK",
     "gpa": 3.92,
-    "exp": 1185,
-    "level": 6,
+    "exp": 1275,
+    "level": 7,
     "streakDays": 1,
-    "studyHours": 8,
-    "exercisesSolved": 45,
+    "studyHours": 8.6,
+    "exercisesSolved": 48,
     "accuracyRate": 100,
     "createdAt": "2026-10-20 13:51:18",
     "lastActive": "Vừa xong",
     "status": "active",
     "recentActivity": [
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
       {
         "action": "Học tập & Luyện đề",
         "detail": "Giải toàn diện bài toán cùng Gemini XSTK",
@@ -97,21 +112,6 @@
       {
         "action": "Học tập & Luyện đề",
         "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
         "timestamp": "Vừa xong"
       },
       {

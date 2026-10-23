@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../types/xstk';
+import { UserProfile, MascotSpecies } from '../types/xstk';
 import { Mascot } from './Mascot';
+import { MASCOT_CATALOG, getMascotById } from '../data/mascotCatalog';
+import { HubEdtLogo } from './HubEdtLogo';
 import { Sparkles, ArrowRight, CheckCircle2, User, BookOpen, School, IdCard, SkipForward } from 'lucide-react';
 
 interface OnboardingOverlayProps {
@@ -17,6 +19,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
   const [classGroup, setClassGroup] = useState(userProfile.classGroup || '2026-DHKT01');
   const [major, setMajor] = useState(userProfile.major || 'Khoa học Dữ liệu & AI');
   const [studentId, setStudentId] = useState(userProfile.studentId || '26110293');
+  const [selectedSpecies, setSelectedSpecies] = useState<MascotSpecies>(userProfile.equippedMascot?.species || 'owl');
 
   const handleNextStep1 = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,29 +39,21 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
       classGroup: classGroup.trim() || 'Lớp XSTK',
       major: major.trim() || 'CNTT & Khoa học Dữ liệu',
       studentId: studentId.trim() || 'MSSV2026',
+      equippedMascot: {
+        ...userProfile.equippedMascot,
+        species: selectedSpecies,
+      },
     });
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl relative">
-        {/* Developer Info Header */}
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white font-bold text-lg flex items-center justify-center shadow">
-              AI
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-amber-900 dark:text-amber-300">
-                Đội Ngũ Phát Triển & Cố Vấn AI Studio
-              </h4>
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                Hệ thống Học tập & Giảng dạy Xác Suất Thống Kê Thông Minh (VibeCoding)
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-2 py-1 rounded-md font-semibold">
-            v2.5 PRO
+        {/* University & Developer Header */}
+        <div className="mb-6 p-4 rounded-3xl bg-slate-950/80 border-2 border-cyan-500/40 flex items-center justify-between shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+          <HubEdtLogo size="sm" />
+          <span className="text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 px-2 py-1 rounded-md font-black">
+            EDT AI v2.5 PRO
           </span>
         </div>
 
@@ -66,73 +61,100 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                Chào mừng bạn đến với VibeCoding XSTK
+              <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                Chào mừng bạn đến với EDT • HUB
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">
                 Tạo Hồ Sơ Học Tập Cá Nhân
               </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+              <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
                 Nhập Họ và Tên của bạn để bắt đầu hành trình chinh phục môn Xác Suất Thống Kê cùng AI Tutor!
               </p>
             </div>
 
             <form onSubmit={handleNextStep1} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Họ Và Tên
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                  Họ Và Tên Sinh Viên
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Ví dụ: Nguyễn Văn An"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none text-sm font-medium"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none text-sm font-medium"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
               >
-                <span>Tạo hồ sơ & Nhận Linh vật</span>
+                <span>Tiếp tục chọn Linh vật đồng hành</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           </div>
         )}
 
-        {/* STEP 2: Mascot Appears */}
+        {/* STEP 2: Choose Companion Mascot */}
         {step === 2 && (
-          <div className="text-center space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                Chào mừng {fullName}!
+          <div className="space-y-5">
+            <div className="text-center space-y-1">
+              <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                Bước 2: Chọn Bạn Đồng Hành
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                Chọn Linh Vật Đồng Hành Yêu Thích
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Nhấp đúp chuột (hoặc chạm 2 lần) vào Cú Thông Thái để thiết lập thông tin học phần!
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-300 max-w-md mx-auto">
+                Linh vật sẽ ở bên cổ vũ, động viên và tương tác cùng bạn trong suốt quá trình học!
               </p>
             </div>
 
-            <div className="py-4 flex justify-center">
+            {/* Mascot Grid Selection */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 max-h-56 overflow-y-auto pr-1">
+              {MASCOT_CATALOG.map((m) => {
+                const isSelected = selectedSpecies === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedSpecies(m.id)}
+                    className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 cursor-pointer text-center ${
+                      isSelected
+                        ? `${m.borderColor} bg-slate-950/90 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-105`
+                        : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="text-3xl filter drop-shadow">{m.emoji}</span>
+                    <span className="text-xs font-bold text-white truncate w-full">{m.shortTitle}</span>
+                    <span className="text-[10px] text-cyan-400 truncate w-full">{m.role}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected Mascot Preview with Speech */}
+            <div className="py-2 flex justify-center">
               <Mascot
-                size="lg"
-                equipped={userProfile.equippedMascot}
-                speechText={`Xin chào ${fullName}! Mình là Cú Thông Thái - trợ lý AI đồng hành cùng bạn học tốt môn Xác Suất Thống Kê. Hãy nhấp vào mình nhé!`}
+                size="md"
+                equipped={{ ...userProfile.equippedMascot, species: selectedSpecies }}
+                speechText={`Tuyệt vời ${fullName}! Mình là ${getMascotById(selectedSpecies).name}. Mình sẽ luôn ở bên cổ vũ và đồng hành cùng bạn chinh phục Xác Suất Thống Kê!`}
                 onClick={() => setStep(3)}
-                onDoubleClick={() => setStep(3)}
               />
             </div>
 
             <button
               onClick={() => setStep(3)}
-              className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium rounded-xl transition-colors text-sm"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              Tiếp tục điền thông tin cá nhân →
+              <span>Xác nhận chọn {getMascotById(selectedSpecies).name} & Tiếp tục</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}

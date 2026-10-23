@@ -21,12 +21,16 @@ import {
   getSavedModel,
   setSavedModel,
 } from '../utils/apiHelper';
+import { UserProfile, MascotSpecies } from '../types/xstk';
+import { MASCOT_CATALOG, getMascotById } from '../data/mascotCatalog';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  userProfile?: UserProfile;
+  onUpdateProfile?: (updated: Partial<UserProfile>) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -34,6 +38,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   isDarkMode,
   onToggleDarkMode,
+  userProfile,
+  onUpdateProfile,
 }) => {
   const [bgMusicVol, setBgMusicVol] = useState(50);
   const [sfxVol, setSfxVol] = useState(80);
@@ -390,6 +396,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           </div>
         </div>
+
+        {/* Mascot Companion Selection */}
+        {userProfile && onUpdateProfile && (
+          <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🐾</span>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Linh Vật Đồng Hành (10 Loài)</h4>
+                  <p className="text-[11px] text-slate-400">Chọn người bạn đồng hành cổ vũ bạn học tập</p>
+                </div>
+              </div>
+              <span className="text-[11px] font-mono font-bold bg-cyan-950/80 text-cyan-300 px-2.5 py-0.5 rounded-full border border-cyan-500/40">
+                {getMascotById(userProfile.equippedMascot?.species || 'owl').name}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2 pt-1">
+              {MASCOT_CATALOG.map((m) => {
+                const isSelected = (userProfile.equippedMascot?.species || 'owl') === m.species;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      onUpdateProfile({
+                        equippedMascot: {
+                          ...userProfile.equippedMascot,
+                          species: m.species,
+                        },
+                      });
+                    }}
+                    title={`${m.name} - ${m.role} (${m.personalityTag})`}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-slate-800 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.35)] ring-1 ring-cyan-400/30'
+                        : 'bg-slate-900 border-slate-800 hover:border-cyan-500/30'
+                    }`}
+                  >
+                    <span className="text-2xl">{m.emoji}</span>
+                    <span className="text-[10px] font-bold text-white truncate max-w-full">{m.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Theme Settings */}
         <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-2xl">

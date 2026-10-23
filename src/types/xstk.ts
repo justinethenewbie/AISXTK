@@ -52,7 +52,20 @@ export interface MascotItem {
   isEquipped?: boolean;
 }
 
+export type MascotSpecies =
+  | 'owl'       // 🦉 Cú thông thái
+  | 'panda'     // 🐼 Gấu trúc
+  | 'crocodile' // 🐊 Cá sấu
+  | 'lion'      // 🦁 Sư tử
+  | 'whale'     // 🐋 Cá voi
+  | 'bear'      // 🐻 Bác Gấu
+  | 'fox'       // 🦊 Cáo
+  | 'penguin'   // 🐧 Chim cánh cụt
+  | 'dragon'    // 🐲 Rồng thần
+  | 'cat';      // 🐱 Mèo thần tài
+
 export interface EquippedMascot {
+  species?: MascotSpecies;
   hat?: string;
   outfit?: string;
   accessory?: string;
