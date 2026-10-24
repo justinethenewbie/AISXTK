@@ -25,6 +25,11 @@
         "timestamp": "Vừa xong"
       },
       {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn PENGUIN làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
         "action": "Học tập & Luyện đề",
         "detail": "Hoàn thành phân tích toàn diện Báo Cáo Tài Chính",
         "timestamp": "Vừa xong"
@@ -112,11 +117,6 @@
       {
         "action": "Học tập & Luyện đề",
         "detail": "Hoàn thành bóc tách & giải toàn diện bộ bài tập",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Bóc tách cấu trúc tài liệu Big Size",
         "timestamp": "Vừa xong"
       }
     ],
@@ -311,9 +311,39 @@
     "exercisesSolved": 520,
     "accuracyRate": 99.1,
     "createdAt": "2026-01-20 10:00:00",
-    "lastActive": "Hôm nay",
+    "lastActive": "Vừa xong",
     "status": "active",
     "recentActivity": [
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn OWL làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn CAT làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn FOX làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn BEAR làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn CROCODILE làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Đăng nhập",
+        "detail": "Đăng nhập thành công (Hôm nay đã hoàn thành mục tiêu học tập 🔥)",
+        "timestamp": "Vừa xong"
+      },
       {
         "action": "Tạo đề thi",
         "detail": "Biên soạn đề thi tự luận 5 bước cho kỳ thi giữa kỳ",
@@ -327,7 +357,7 @@
     ],
     "lastStudyDate": "2026-10-24",
     "equippedMascot": {
-      "species": "penguin",
+      "species": "owl",
       "hat": "hat_grad",
       "outfit": "robe_gold",
       "accessory": "glasses_smart"

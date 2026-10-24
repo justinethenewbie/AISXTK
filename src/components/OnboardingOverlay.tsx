@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile, MascotSpecies } from '../types/xstk';
 import { Mascot } from './Mascot';
 import { MASCOT_CATALOG, getMascotById } from '../data/mascotCatalog';
@@ -20,6 +20,16 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
   const [major, setMajor] = useState(userProfile.major || 'Khoa học Dữ liệu & AI');
   const [studentId, setStudentId] = useState(userProfile.studentId || '26110293');
   const [selectedSpecies, setSelectedSpecies] = useState<MascotSpecies>(userProfile.equippedMascot?.species || 'penguin');
+
+  useEffect(() => {
+    if (userProfile.fullName && userProfile.fullName !== 'Sinh viên XSTK') {
+      setFullName(userProfile.fullName);
+    }
+    if (userProfile.classGroup) setClassGroup(userProfile.classGroup);
+    if (userProfile.major) setMajor(userProfile.major);
+    if (userProfile.studentId) setStudentId(userProfile.studentId);
+    if (userProfile.equippedMascot?.species) setSelectedSpecies(userProfile.equippedMascot.species);
+  }, [userProfile]);
 
   const handleNextStep1 = (e: React.FormEvent) => {
     e.preventDefault();

@@ -23,6 +23,7 @@ interface AuthModalProps {
   currentUser: AppUser | null;
   onLoginSuccess: (user: AppUser) => void;
   onOpenDevDatabase?: () => void;
+  isMandatory?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -31,10 +32,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   currentUser,
   onLoginSuccess,
   onOpenDevDatabase,
+  isMandatory = false,
 }) => {
   const [tab, setTab] = useState<'login' | 'register' | 'dev_portal'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [university, setUniversity] = useState('Đại Học Ngân Hàng TP.HCM (HUB)');
 
@@ -180,19 +183,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
-      <div className="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl max-w-md w-full p-6 shadow-[0_0_40px_rgba(6,182,212,0.3)] relative overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto animate-fade-in">
+      {/* Background Campus Blur Image for Full-Screen Gate */}
+      {isMandatory && (
+        <div
+          className="fixed inset-0 bg-cover bg-center filter blur-xs scale-105 pointer-events-none opacity-30"
+          style={{ backgroundImage: `url('/assets/hub-campus.jpg')` }}
+        />
+      )}
+
+      <div className="bg-slate-900/95 border-2 border-cyan-500/50 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-[0_0_50px_rgba(6,182,212,0.35)] relative overflow-hidden text-slate-100 my-auto">
         {/* Glow corner accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Close Button only if NOT mandatory */}
+        {!isMandatory && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
+            aria-label="Đóng"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Header with Authentic HUB University Branding */}
         <div className="text-center space-y-2 mb-5">
@@ -352,12 +366,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs font-medium focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none"
+                  className="w-full pl-9 pr-10 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs font-medium focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white cursor-pointer"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

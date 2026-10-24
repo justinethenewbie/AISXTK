@@ -95,7 +95,17 @@ const INITIAL_PROFILE: UserProfile = {
 };
 
 export default function App() {
-  const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('edt_user_profile');
+      if (saved) {
+        return { ...INITIAL_PROFILE, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_PROFILE;
+  });
   const [activeTool, setActiveTool] = useState<ActiveToolType>('image_grading');
 
   const [currentChapterId, setCurrentChapterId] = useState(1);
@@ -217,13 +227,23 @@ export default function App() {
     setCurrentUser(null);
     try {
       localStorage.removeItem('edt_current_user');
+      localStorage.removeItem('edt_user_profile');
+      setProfile({ ...INITIAL_PROFILE, isOnboarded: false });
     } catch (e) {
       console.error(e);
     }
   };
 
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
-    setProfile((prev) => ({ ...prev, ...updated }));
+    setProfile((prev) => {
+      const nextProfile = { ...prev, ...updated };
+      try {
+        localStorage.setItem('edt_user_profile', JSON.stringify(nextProfile));
+      } catch (e) {
+        console.error(e);
+      }
+      return nextProfile;
+    });
     if (currentUser?.id && updated.equippedMascot) {
       fetch('/api/auth/update-mascot', {
         method: 'POST',
@@ -444,55 +464,43 @@ export default function App() {
   ];
 
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col pb-24 overflow-x-hidden w-full selection:bg-cyan-500 selection:text-slate-950 relative">
-      {/* Subtle Ambient Pixel Background Art */}
-      <PixelAmbientBackground />
+  // BƯỚC 1: Bắt buộc Đăng Nhập / Nhập Mật Khẩu / Đăng Ký Tài Khoản trước tiên
+  // Tuyệt đối không hiển thị Navbar, Sidebar hay bất kỳ tính năng nào khi chưa đăng nhập!
+  if (!currentUser) {
+    return (
+      <div className="fixed inset-0 z-50 min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col justify-center items-center relative overflow-hidden">
+        <PixelAmbientBackground />
+        <AuthModal
+          isOpen={true}
+          onClose={() => {}}
+          currentUser={null}
+          onLoginSuccess={handleLoginSuccess}
+          onOpenDevDatabase={() => setIsDevDbOpen(true)}
+          isMandatory={true}
+        />
+      </div>
+    );
+  }
 
-      {/* Mandatory Login Wall (Facebook-style Auth Gate) */}
-      {!currentUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 relative overflow-hidden">
-          {/* Subtle Campus Blur Backdrop */}
-          <div
-            className="absolute inset-0 bg-cover bg-center filter blur-xs scale-105 pointer-events-none"
-            style={{ backgroundImage: `url('/assets/hub-campus.jpg')` }}
-          />
-          <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md pointer-events-none" />
-
-          <div className="max-w-md w-full bg-slate-900/90 border-2 border-cyan-500/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.3)] text-center space-y-6 relative z-10 backdrop-blur-md">
-            <div className="flex justify-center pb-2">
-              <HubEdtLogo size="lg" className="justify-center" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-black text-white tracking-wide">AI Classroom - AI Tutor Xác Suất Thống Kê</h1>
-              <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                Vui lòng <strong className="text-cyan-300">Đăng nhập hoặc Đăng ký tài khoản</strong> để hệ thống lưu trữ tiến độ học tập, điểm EXP, GPA và lịch sử bài làm cá nhân của bạn lên cơ sở dữ liệu!
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <button
-                onClick={() => setIsAuthOpen(true)}
-                className="w-full py-4 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-2xl text-base shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>🔐 Đăng Nhập / Đăng Ký Tài Khoản Ngay</span>
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-400">
-              Nhà phát hành (Developer Portal) vui lòng đăng nhập bằng mã PIN bảo mật.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Onboarding Overlay Flow */}
-      {!profile.isOnboarded && (
+  // BƯỚC 2: Sau khi đăng nhập, nếu tài khoản chưa hoàn tất thông tin cá nhân (Onboarding)
+  // Hiển thị màn hình lấy thông tin sinh viên, chọn linh vật mascot và xem hướng dẫn
+  if (!profile.isOnboarded) {
+    return (
+      <div className="fixed inset-0 z-50 min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col justify-center items-center relative overflow-hidden">
+        <PixelAmbientBackground />
         <OnboardingOverlay
           userProfile={profile}
           onComplete={(updated) => handleUpdateProfile(updated)}
         />
-      )}
+      </div>
+    );
+  }
+
+  // BƯỚC 3: Giao diện chính của ứng dụng AI Classroom (Đã đăng nhập & Đã hoàn tất thông tin)
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col pb-24 overflow-x-hidden w-full selection:bg-cyan-500 selection:text-slate-950 relative">
+      {/* Subtle Ambient Pixel Background Art */}
+      <PixelAmbientBackground />
 
       {/* Top Navbar */}
       <TopNavbar
