@@ -707,8 +707,17 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
                       </span>
                     )}
                     <div>
-                      <div className="text-3xl sm:text-4xl mb-1 text-center group-hover:scale-110 transition-transform">
-                        {m.emoji}
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-2 flex items-center justify-center rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/80 group-hover:scale-110 transition-transform shadow-md">
+                        {m.imageUrl ? (
+                          <img
+                            src={m.imageUrl}
+                            alt={m.name}
+                            className="w-full h-full object-cover rounded-2xl select-none"
+                            style={{ imageRendering: 'pixelated' }}
+                          />
+                        ) : (
+                          <span className="text-3xl sm:text-4xl">{m.emoji}</span>
+                        )}
                       </div>
                       <div className="font-black text-xs text-white text-center">{m.name}</div>
                       <div className="text-[10px] text-cyan-300 font-semibold text-center">{m.role}</div>

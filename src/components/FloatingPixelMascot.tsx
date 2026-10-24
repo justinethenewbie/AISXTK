@@ -227,13 +227,13 @@ export const FloatingPixelMascot: React.FC<FloatingPixelMascotProps> = ({
 
           {/* Animated Mascot Container */}
           <div
-            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br ${mascot.gradient} p-1 border-3 ${mascot.borderColor} shadow-[0_0_25px_rgba(6,182,212,0.45)] flex items-center justify-center transition-transform duration-200 group-hover:scale-115 active:scale-95 relative ${currentAction.animationClass}`}
+            className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br ${mascot.gradient} p-1 border-3 ${mascot.borderColor} shadow-[0_0_25px_rgba(6,182,212,0.45)] flex items-center justify-center transition-transform duration-200 group-hover:scale-110 active:scale-95 relative ${currentAction.animationClass}`}
           >
             {/* 8-bit Pixel Texture Overlay */}
             <div className="w-full h-full rounded-2xl bg-slate-950/35 backdrop-blur-xs flex items-center justify-center relative overflow-hidden">
               {/* Scanline grid texture */}
               <div
-                className="absolute inset-0 opacity-20 pointer-events-none"
+                className="absolute inset-0 opacity-15 pointer-events-none z-10"
                 style={{
                   backgroundImage:
                     'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.15) 2px, rgba(255,255,255,0.15) 4px)',
@@ -247,13 +247,22 @@ export const FloatingPixelMascot: React.FC<FloatingPixelMascotProps> = ({
                 </div>
               )}
 
-              {/* Main Mascot Emoji Character */}
-              <span className="text-3xl sm:text-4xl filter drop-shadow-md select-none transform transition-transform group-hover:rotate-6">
-                {mascot.emoji}
-              </span>
+              {/* Main Mascot Pixel Character Artwork */}
+              {mascot.imageUrl ? (
+                <img
+                  src={mascot.imageUrl}
+                  alt={mascot.name}
+                  className="w-full h-full object-cover rounded-2xl filter drop-shadow-md select-none transform transition-transform group-hover:scale-105"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+              ) : (
+                <span className="text-3xl sm:text-4xl filter drop-shadow-md select-none transform transition-transform group-hover:rotate-6">
+                  {mascot.emoji}
+                </span>
+              )}
 
               {/* Corner Twinkle Sparkle */}
-              <span className="absolute -top-1 -right-1 text-xs animate-spin">
+              <span className="absolute -top-1 -right-1 text-xs animate-spin z-20">
                 ✨
               </span>
             </div>

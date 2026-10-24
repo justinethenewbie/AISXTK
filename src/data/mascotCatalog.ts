@@ -6,6 +6,7 @@ export interface MascotInfo {
   name: string;
   shortTitle: string;
   emoji: string;
+  imageUrl?: string;
   role: string;
   tagline: string;
   personalityTag: string;
@@ -23,6 +24,7 @@ const RAW_MASCOT_CATALOG: Omit<MascotInfo, 'species' | 'personalityTag'>[] = [
     name: 'Cú Thông Thái',
     shortTitle: 'Cú Học Giả',
     emoji: '🦉',
+    imageUrl: '/assets/mascots/owl.jpg',
     role: 'Chiến Thần Logic & Bayes',
     tagline: 'Soi sáng từng bài toán hóc búa trong màn đêm!',
     description: 'Bậc thầy về công thức xác suất toàn phần, định lý Bayes và giải phẫu các bẫy đề thi kinh điển.',
@@ -37,6 +39,7 @@ const RAW_MASCOT_CATALOG: Omit<MascotInfo, 'species' | 'personalityTag'>[] = [
     name: 'Gấu Trúc Kungfu',
     shortTitle: 'Gấu Trúc Chill',
     emoji: '🐼',
+    imageUrl: '/assets/mascots/panda.jpg',
     role: 'Trùm Chill & Bền Bỉ',
     tagline: 'Vừa nhai lá trúc vừa vượt qua kỳ thi nhẹ tênh!',
     description: 'Chuyên gia biến các công thức tích phân phức tạp thành bài toán nhẹ nhàng, giữ tâm lý luôn thư thái.',
@@ -51,6 +54,7 @@ const RAW_MASCOT_CATALOG: Omit<MascotInfo, 'species' | 'personalityTag'>[] = [
     name: 'Cá Sấu Sát Thủ',
     shortTitle: 'Cá Sấu Sát Thủ',
     emoji: '🐊',
+    imageUrl: '/assets/mascots/crocodile.jpg',
     role: 'Thợ Săn Điểm 10',
     tagline: 'Đã cắn trúng đề thi là không bao giờ buông!',
     description: 'Quyết liệt, tập trung cao độ, xử lý gọn ghẽ các bài toán kiểm định giả thuyết và ước lượng tham số.',
@@ -65,6 +69,7 @@ const RAW_MASCOT_CATALOG: Omit<MascotInfo, 'species' | 'personalityTag'>[] = [
     name: 'Sư Tử Dũng Mãnh',
     shortTitle: 'Sư Tử Chúa Sơn Lâm',
     emoji: '🦁',
+    imageUrl: '/assets/mascots/lion.jpg',
     role: 'Bản Lĩnh Phòng Thi',
     tagline: 'Uy dũng hiên ngang, đánh tan mọi nỗi sợ hãi thi cử!',
     description: 'Truyền lửa tự tin, rèn luyện tư duy kiên định trước những đề thi dài ngoằng và câu hỏi đánh đố.',
@@ -79,6 +84,7 @@ const RAW_MASCOT_CATALOG: Omit<MascotInfo, 'species' | 'personalityTag'>[] = [
     name: 'Cá Voi Đại Dương',
     shortTitle: 'Cá Voi Tri Thức',
     emoji: '🐋',
+    imageUrl: '/assets/mascots/whale.jpg',
     role: 'Đại Dương Kiến Thức',
     tagline: 'Bao la như biển cả, tĩnh lặng mà thấu suốt vạn vật!',
     description: 'Chuyên gia phân tích dữ liệu lớn, phân phối chuẩn Gauss và các định lý hội tụ xác suất vĩ mô.',

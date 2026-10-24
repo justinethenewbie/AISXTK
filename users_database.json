@@ -16,9 +16,19 @@
     "exercisesSolved": 51,
     "accuracyRate": 100,
     "createdAt": "2026-10-20 13:51:18",
-    "lastActive": "Vừa xong",
+    "lastActive": "Đang online",
     "status": "active",
     "recentActivity": [
+      {
+        "action": "Đăng nhập",
+        "detail": "Đăng nhập thành công vào hệ thống AI Classroom",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Đăng nhập",
+        "detail": "Đăng nhập thành công vào hệ thống AI Classroom",
+        "timestamp": "Vừa xong"
+      },
       {
         "action": "Học tập & Luyện đề",
         "detail": "Hoàn thành bài tập & nhận +30 EXP",

@@ -68,9 +68,18 @@ export const Mascot: React.FC<MascotProps> = ({
           </div>
         )}
 
-        {/* Mascot Face */}
-        <div className="relative z-0 flex flex-col items-center justify-center">
-          <span>{mascotInfo.emoji}</span>
+        {/* Mascot Face / Image */}
+        <div className="relative z-0 w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl">
+          {mascotInfo.imageUrl ? (
+            <img
+              src={mascotInfo.imageUrl}
+              alt={mascotInfo.name}
+              className="w-full h-full object-cover rounded-2xl select-none"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          ) : (
+            <span>{mascotInfo.emoji}</span>
+          )}
         </div>
 
         {/* Glasses Accessory */}

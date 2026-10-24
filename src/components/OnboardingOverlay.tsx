@@ -131,8 +131,19 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
                         : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
                     }`}
                   >
-                    <span className="text-3xl filter drop-shadow">{m.emoji}</span>
-                    <span className="text-xs font-bold text-white truncate w-full">{m.shortTitle}</span>
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center border border-slate-700/60 shadow-inner">
+                      {m.imageUrl ? (
+                        <img
+                          src={m.imageUrl}
+                          alt={m.name}
+                          className="w-full h-full object-cover rounded-xl select-none"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
+                      ) : (
+                        <span className="text-2xl filter drop-shadow">{m.emoji}</span>
+                      )}
+                    </div>
+                    <span className="text-xs font-bold text-white truncate w-full mt-1">{m.shortTitle}</span>
                     <span className="text-[10px] text-cyan-400 truncate w-full">{m.role}</span>
                   </button>
                 );

@@ -242,10 +242,10 @@ export const MistakeAnalytics: React.FC<MistakeAnalyticsProps> = ({
                     <span>Phân tích nguyên nhân & Hướng dẫn sư phạm:</span>
                   </p>
                   <p>
-                    <strong className="text-white">Nguyên nhân sai lầm:</strong> {m.rootCauseError}
+                    <strong className="text-white">Nguyên nhân sai lầm:</strong> <MathText text={m.rootCauseError} inline />
                   </p>
                   <p>
-                    <strong className="text-white">Lộ trình bổ trợ:</strong> {m.remediationAdvice}
+                    <strong className="text-white">Lộ trình bổ trợ:</strong> <MathText text={m.remediationAdvice} inline />
                   </p>
                 </div>
 
@@ -302,7 +302,7 @@ export const MistakeAnalytics: React.FC<MistakeAnalyticsProps> = ({
 
               <div className="p-3 bg-cyan-950/50 rounded-xl border border-cyan-500/30">
                 <p className="text-cyan-300 font-bold mb-1">Gợi ý khắc phục từ Thầy AI:</p>
-                <p className="text-slate-200">{retryModalItem.remediationAdvice}</p>
+                <div className="text-slate-200"><MathText text={retryModalItem.remediationAdvice} /></div>
               </div>
 
               <div className="space-y-1.5">

@@ -43,6 +43,7 @@ import {
 } from 'recharts';
 import katex from 'katex';
 import { aiFetch } from '../utils/apiHelper';
+import { renderMathToHtml, MathText, MathFormula } from './MathFormula';
 
 // --- DATA TYPES ---
 export interface SpreadsheetItem {
@@ -261,31 +262,6 @@ const ACADEMIC_SOURCES_DIRECTORY: AcademicSource[] = [
     description: 'Tuyển tập các bài báo bình duyệt học thuật về ứng dụng phân phối Chuẩn, chuỗi thời gian ARIMA và kiểm định độ nhạy rủi ro.',
   },
 ];
-
-// Helper to render math text via KaTeX
-function renderMathToHtml(text: string): string {
-  if (!text) return '';
-  let out = text;
-  // Replace $$...$$ block KaTeX
-  out = out.replace(/\$\$([\s\S]+?)\$\$/g, (_match, expr) => {
-    try {
-      return `<div class="my-2 overflow-x-auto py-1 text-center font-serif text-cyan-300 font-semibold">${katex.renderToString(expr.trim(), { displayMode: true, throwOnError: false })}</div>`;
-    } catch {
-      return expr;
-    }
-  });
-  // Replace $...$ inline KaTeX
-  out = out.replace(/\$([^\$\n]+?)\$/g, (_match, expr) => {
-    try {
-      return `<span class="inline-block px-1 font-serif text-cyan-200 font-medium">${katex.renderToString(expr.trim(), { displayMode: false, throwOnError: false })}</span>`;
-    } catch {
-      return expr;
-    }
-  });
-  // Convert newlines to br if not inside tags
-  out = out.replace(/\n/g, '<br />');
-  return out;
-}
 
 export const ChartVisualization: React.FC = () => {
   // Active Tab: spreadsheet_charts | report_analysis | ai_chat | open_sources

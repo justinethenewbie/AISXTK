@@ -868,7 +868,9 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                                 : 'bg-slate-900/60 border-slate-800 text-slate-300'
                             }`}
                           >
-                            <span className="font-bold">{opt}</span>
+                            <span className="font-bold flex-1">
+                              <MathText text={opt} inline />
+                            </span>
                           </div>
                         );
                       })}
@@ -906,7 +908,7 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                             Mẹo Bấm Máy Casio fx-580VN X (20 Giây):
                           </div>
                           <div className="text-xs text-slate-300 leading-relaxed font-mono">
-                            {activeItem.solution.casioGuide}
+                            <MathText text={activeItem.solution.casioGuide} inline />
                           </div>
                         </div>
                       </div>
@@ -916,7 +918,7 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                     {activeItem.solution.trapAlert && (
                       <div className="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/30 flex items-center gap-2.5 text-xs text-amber-200">
                         <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span><strong>Cảnh báo bẫy:</strong> {activeItem.solution.trapAlert}</span>
+                        <span><strong>Cảnh báo bẫy: </strong><MathText text={activeItem.solution.trapAlert} inline /></span>
                       </div>
                     )}
                   </div>
@@ -994,8 +996,12 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                           key={mIdx}
                           className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-1.5 shadow-md"
                         >
-                          <div className="text-xs font-bold text-slate-400">{met.label}</div>
-                          <div className="text-lg font-black text-emerald-300">{met.value}</div>
+                          <div className="text-xs font-bold text-slate-400">
+                            <MathText text={met.label} inline />
+                          </div>
+                          <div className="text-lg font-black text-emerald-300">
+                            <MathText text={met.value} inline />
+                          </div>
                           {met.formula && (
                             <div className="text-xs text-cyan-300 font-mono">
                               <MathFormula math={met.formula} />
@@ -1031,7 +1037,7 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                           {activeSection.analysis.recommendations.map((rec, rIdx) => (
                             <li key={rIdx} className="flex items-start gap-2">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                              <span>{rec}</span>
+                              <span><MathText text={rec} inline /></span>
                             </li>
                           ))}
                         </ul>

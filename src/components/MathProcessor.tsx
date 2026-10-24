@@ -314,9 +314,9 @@ export const MathProcessor: React.FC = () => {
               </div>
 
               {solutionData.step4Summary && (
-                <p className="text-center font-bold text-slate-200 text-xs sm:text-sm pt-1">
-                  {solutionData.step4Summary}
-                </p>
+                <div className="text-center font-bold text-slate-200 text-xs sm:text-sm pt-1">
+                  <MathText text={solutionData.step4Summary} inline />
+                </div>
               )}
             </div>
 
@@ -331,7 +331,7 @@ export const MathProcessor: React.FC = () => {
                 <ul className="space-y-1.5 text-slate-100 font-semibold text-xs list-disc list-inside">
                   {solutionData.casioGuide.keySequence?.map((step: string, sIdx: number) => (
                     <li key={sIdx} className="leading-relaxed">
-                      {step}
+                      <MathText text={step} inline />
                     </li>
                   ))}
                 </ul>
@@ -339,7 +339,7 @@ export const MathProcessor: React.FC = () => {
                 {solutionData.casioGuide.infinityNote && (
                   <div className="p-3 bg-cyan-950/80 rounded-xl border border-cyan-400/50 text-cyan-200 font-bold text-xs flex items-center gap-2 shadow-xs">
                     <span className="text-base">⚠️</span>
-                    <span>{solutionData.casioGuide.infinityNote}</span>
+                    <span><MathText text={solutionData.casioGuide.infinityNote} inline /></span>
                   </div>
                 )}
               </div>

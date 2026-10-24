@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { InteractiveCanvas } from './InteractiveCanvas';
-import { MathText } from './MathFormula';
+import { MathText, MathFormula } from './MathFormula';
 import { aiFetch } from '../utils/apiHelper';
 import { normalizeSpokenMath } from '../utils/mathSpeechParser';
 
@@ -879,8 +879,8 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
                                     <MathText text={mc.stepByStepSolution} />
                                   </div>
                                   {mc.mathFormulaKatex && (
-                                    <div className="p-3 bg-slate-950 rounded-xl border border-cyan-500/30 overflow-x-auto text-cyan-200 font-mono text-base sm:text-lg">
-                                      <MathText text={`$$${mc.mathFormulaKatex}$$`} />
+                                    <div className="overflow-x-auto">
+                                      <MathFormula math={mc.mathFormulaKatex} block />
                                     </div>
                                   )}
                                 </div>
@@ -909,6 +909,40 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
                           </div>
                         )}
 
+                        {/* B. Detailed Steps for Essay Questions */}
+                        {msg.solutionData.detailedSteps?.length > 0 && (
+                          <div className="bg-slate-950 border border-cyan-500/30 p-4 sm:p-5 rounded-2xl space-y-4">
+                            <div className="flex items-center gap-2.5 text-cyan-400 font-bold text-sm sm:text-base">
+                              <ListOrdered className="w-5 h-5 text-cyan-400" />
+                              <span>Lời Giải Chi Tiết Tự Luận Từng Bước:</span>
+                            </div>
+
+                            <div className="space-y-3">
+                              {msg.solutionData.detailedSteps.map((st: any, stIdx: number) => (
+                                <div key={stIdx} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+                                  <div className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-black text-xs flex items-center justify-center shrink-0 border border-cyan-500/40">
+                                      {st.stepNumber || stIdx + 1}
+                                    </span>
+                                    <span>{st.stepTitle}</span>
+                                  </div>
+                                  <div className="text-sm text-slate-200 leading-relaxed font-sans">
+                                    <MathText text={st.explanation} />
+                                  </div>
+                                  {st.mathFormulaKatex && (
+                                    <MathFormula math={st.mathFormulaKatex} block />
+                                  )}
+                                  {st.resultNote && (
+                                    <div className="text-xs text-slate-400 italic">
+                                      💡 {st.resultNote}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* C. Sub-Questions (Ý a, b, c, d... / Yêu cầu 1, 2...) */}
                         {msg.solutionData.subQuestions?.length > 0 && (
                           <div className="bg-slate-950 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4">
@@ -934,8 +968,8 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
                                   </div>
 
                                   {sq.mathFormulaKatex && (
-                                    <div className="p-3 sm:p-4 bg-slate-950 rounded-xl border border-cyan-500/30 overflow-x-auto text-cyan-200 font-mono text-base sm:text-lg">
-                                      <MathText text={`$$${sq.mathFormulaKatex}$$`} />
+                                    <div className="overflow-x-auto">
+                                      <MathFormula math={sq.mathFormulaKatex} block />
                                     </div>
                                   )}
 

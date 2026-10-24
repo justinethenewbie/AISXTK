@@ -24,6 +24,48 @@ export function sanitizeAndFixMathText(rawText: string): string {
   // 0. Thu gọn các chuỗi lặp dấu $ (ví dụ $$$ hoặc $$$$) thành dấu $ hợp lệ
   text = text.replace(/\${3,}/g, '$');
 
+  // A. Khắc phục lỗi dính chữ (Sticky text):
+  // - Tách dòng và khoảng cách rõ ràng trước Bước / Câu / Bài
+  text = text.replace(/(?<!\n)\s*(?:[.]\s*)?(\b(?:Bước|Bài|Câu)\s*\d+\s*:)/gi, '\n\n$1 ');
+  // - Tự động giãn cách sau dấu phẩy, chấm phẩy nếu bị dính chữ (ví dụ: "i,kỳ vọng" -> "i, kỳ vọng")
+  text = text.replace(/([,;])([A-ZÀ-Ỹa-zà-ỹ])/gu, '$1 $2');
+  // - Tự động giãn cách sau dấu hai chấm nếu bị dính chữ (ví dụ: "Ví dụ:Tính" -> "Ví dụ: Tính"), bỏ qua URL
+  text = text.replace(/(?<!https?|ftp):([A-ZÀ-Ỹa-zà-ỹ0-9])/gu, ': $1');
+  // - Tự động giãn cách sau dấu đóng ngoặc đơn nếu dính chữ (ví dụ: "(X)là" -> "(X) là")
+  text = text.replace(/\)([A-ZÀ-Ỹa-zà-ỹ])/gu, ') $1');
+  // - Tự động giãn cách sau dấu chấm câu nếu bị dính chữ trước chữ hoa (ví dụ: "5.Ta có" -> "5. Ta có", bảo toàn 3.14 hay 0.05)
+  text = text.replace(/\.([A-ZÀ-Ỹ])/gu, '. $1');
+
+  // B. Đưa các từ tiếng Việt và đơn vị đo lường bị kẹp nhầm bên trong dấu $ ra ngoài văn bản thường:
+  // (KaTeX trong math mode không có dấu cách sẽ làm dính chặt các chữ tiếng Việt lại với nhau)
+  text = text.replace(/\$([^$]+?)\s+([a-zA-ZÀ-ỹ()]+(?:[\s]+[a-zA-ZÀ-ỹ()0-9^/]+)*)\$/g, (match, mathPart, textPart) => {
+    if (/[À-ỹ]|\b(?:triệu|đồng|nghìn|tỷ|sản phẩm|khách|người|chi tiết|chiếc|vé|bóng|phế phẩm|chính phẩm|đơn vị)\b/i.test(textPart)) {
+      return `$${mathPart}$ ${textPart}`;
+    }
+    return match;
+  });
+
+  // Đưa các tiêu đề tiếng Việt ở đầu khối $ ra ngoài: ví dụ "$Bước 1: E(X) = 1$" -> "Bước 1: $E(X) = 1$"
+  text = text.replace(/\$([A-Za-zÀ-ỹ0-9\s,.:]+?[:.-]\s*)([A-Za-z0-9_\\].*?)\$/g, (match, prefix, math) => {
+    if (/[À-ỹ]|\b(?:Bước|Bài|Câu|Phần|Giả sử|Xét|Với)\b/i.test(prefix)) {
+      return `${prefix.trim()} $${math.trim()}$`;
+    }
+    return match;
+  });
+
+  // Gỡ bỏ dấu $ cho các đoạn văn bản thuần tiếng Việt bị kẹp nhầm trong $ mà không hề chứa công thức toán
+  text = text.replace(/(?<!\$)\$([A-Za-zÀ-ỹ\s,.:!?()]+)\$(?!\$)/g, (match, inner) => {
+    if (/[À-ỹ]/.test(inner) && !/[=+\-*/\\^_{}<>]/.test(inner)) {
+      return ` ${inner.trim()} `;
+    }
+    return match;
+  });
+
+  // Khắc phục lỗi gõ nhầm `=/sqrt` hoặc `=/\sqrt` hoặc `/sqrt`
+  text = text.replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/g, '$1 \\sqrt');
+  text = text.replace(/(^|\s)\/\s*\\?sqrt\b/g, '$1\\sqrt');
+  text = text.replace(/(?<!\\)\bsqrt\s*\(/g, '\\sqrt(');
+
   // 1. Tự động chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
   // Dùng \${0,2} để nếu đã có dấu $ hoặc $$ bao quanh thì chuẩn hóa về đúng 1 cặp $ duy nhất, không nhân đôi $
   text = text.replace(/\${0,2}E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\${0,2}/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
@@ -85,9 +127,10 @@ export function sanitizeAndFixMathText(rawText: string): string {
     return balanced;
   }
 
-  // - Chỉ khi chuỗi HOÀN TOÀN CHƯA CÓ dấu $ nào mà lại chứa lệnh LaTeX trần (\frac, \sqrt, \int, \sum, \implies...) thì mới bọc $...$:
-  const hasNakedLatex = /\\(frac|tfrac|sqrt|int|iint|sum|prod|left|right|implies|iff|bar|hat|vec|mathbf|text|rightarrow|Rightarrow)/.test(text);
-  if (hasNakedLatex) {
+  // - Chỉ khi chuỗi là MỘT CÔNG THỨC TOÁN TRẦN ĐƠN LẺ KHÔNG CHỨA TIẾNG VIỆT (ví dụ "\frac{a}{b}" hoặc "\int_0^1 x dx") thì mới bọc $...$.
+  // Nếu là đoạn văn tiếng Việt có chứa công thức trần bên trong thì KHÔNG bọc $ toàn bộ chuỗi (để parseMathSegments tự bóc tách từng công thức mà không làm dính chữ văn bản).
+  const isPureMathFormula = !/[À-ỹ]/.test(text) && /^(\s*(\\[a-zA-Z]+|[0-9a-zA-Z_()=+\-*/^.]+\s*=\s*\\[a-zA-Z]+))/i.test(text);
+  if (isPureMathFormula) {
     return '$' + balanceBraces(text.trim()) + '$';
   }
 
@@ -105,6 +148,63 @@ export function cleanLatexString(raw: string): string {
     .replace(/\\?\\?ellipsis/gi, '\\dots')
     .replace(/…/g, '\\dots')
     .replace(/\\\\/g, '\\');
+
+  // 1. Gỡ bỏ toàn bộ dấu bao quanh ($...$, $$...$$, \(...\), \[...\]) vì KaTeX renderToString nhận chuỗi thuần
+  while (/^\s*(\${1,2}|\\\[|\\\()/.test(cleaned) && /(\${1,2}|\\\]|\\\))\s*$/.test(cleaned)) {
+    cleaned = cleaned
+      .replace(/^\s*(\${1,2}|\\\[|\\\()/, '')
+      .replace(/(\${1,2}|\\\]|\\\))\s*$/, '')
+      .trim();
+  }
+  // Gỡ bỏ các dấu $ đơn lẻ còn sót ở đầu hoặc đuôi
+  cleaned = cleaned.replace(/^\${1,2}/, '').replace(/\${1,2}$/, '').trim();
+
+  // 2. Thoát dấu % bên trong công thức KaTeX (trong LaTeX, % là ghi chú dẫn tới mất phần còn lại)
+  cleaned = cleaned.replace(/(?<!\\)%/g, '\\%');
+
+  // 3. Khắc phục lỗi gõ nhầm `=/sqrt` hoặc `=/\sqrt` hoặc `/sqrt`
+  cleaned = cleaned
+    .replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/g, '$1 \\sqrt')
+    .replace(/(^|\s)\/\s*\\?sqrt\b/g, '$1\\sqrt')
+    .replace(/\bsqrt\s*\(/g, '\\sqrt(');
+
+  // 4. Chuyển đổi các ký tự toán học Unicode về lệnh LaTeX chuẩn
+  cleaned = cleaned
+    .replace(/≤/g, '\\le ')
+    .replace(/≥/g, '\\ge ')
+    .replace(/≠/g, '\\ne ')
+    .replace(/≈/g, '\\approx ')
+    .replace(/±/g, '\\pm ')
+    .replace(/×/g, '\\times ')
+    .replace(/·/g, '\\cdot ')
+    .replace(/∞/g, '\\infty ')
+    .replace(/√/g, '\\sqrt ');
+
+  // 5. Chuẩn hóa các ký tự Hy Lạp Unicode thường gặp trong XSTK
+  cleaned = cleaned
+    .replace(/μ/g, '\\mu ')
+    .replace(/σ/g, '\\sigma ')
+    .replace(/α/g, '\\alpha ')
+    .replace(/β/g, '\\beta ')
+    .replace(/λ/g, '\\lambda ')
+    .replace(/θ/g, '\\theta ')
+    .replace(/ε|ϵ/g, '\\varepsilon ')
+    .replace(/Φ/g, '\\Phi ')
+    .replace(/φ/g, '\\phi ')
+    .replace(/π/g, '\\pi ')
+    .replace(/χ/g, '\\chi ')
+    .replace(/Ω/g, '\\Omega ')
+    .replace(/δ/g, '\\delta ');
+
+  // 6. Chuẩn hóa toán tử thống kê sang \text{...}
+  cleaned = cleaned
+    .replace(/(?<!\\text\{)Var\(/g, '\\text{Var}(')
+    .replace(/(?<!\\text\{)Cov\(/g, '\\text{Cov}(')
+    .replace(/(?<!\\text\{)Mod\(/g, '\\text{Mod}(')
+    .replace(/(?<!\\text\{)Med\(/g, '\\text{Med}(');
+
+  // 7. Chuẩn hóa lệnh \sqrt chưa có ngoặc nhọn
+  cleaned = cleaned.replace(/\\sqrt\s+([A-Za-z0-9_()]+)(?![a-zA-Z0-9_{])/g, '\\sqrt{$1}');
 
   // Balance curly braces { and }
   let openBraces = 0;
@@ -139,14 +239,30 @@ export function renderKatexSafe(mathStr: string, isBlock = false): string {
   try {
     const clean = cleanLatexString(trimmed);
     if (!clean || clean === 'undefined' || clean === 'null' || clean === '\\undefined') return '';
-    return katex.renderToString(clean, {
+    const rendered = katex.renderToString(clean, {
       displayMode: isBlock,
       throwOnError: false,
       strict: false,
     });
+    // Nếu KaTeX gặp lỗi cú pháp và trả về span đỏ katex-error, thử gỡ dấu câu cuối câu hoặc hiển thị font toán đẹp mắt
+    if (rendered.includes('katex-error') || rendered.includes('color:#cc0000')) {
+      const strippedPunct = clean.replace(/[.,;:]$/, '').trim();
+      if (strippedPunct !== clean) {
+        const retry = katex.renderToString(strippedPunct, {
+          displayMode: isBlock,
+          throwOnError: false,
+          strict: false,
+        });
+        if (!retry.includes('katex-error') && !retry.includes('color:#cc0000')) {
+          return retry + clean.slice(-1);
+        }
+      }
+      return `<span class="font-mono text-cyan-300 font-semibold">${clean}</span>`;
+    }
+    return rendered;
   } catch (err) {
-    // Fallback on unexpected syntax failure
-    return `<span class="font-mono text-cyan-300 font-bold">${cleanLatexString(mathStr)}</span>`;
+    // Fallback an toàn khi có lỗi ngoại lệ
+    return `<span class="font-mono text-cyan-300 font-semibold">${cleanLatexString(mathStr)}</span>`;
   }
 }
 
@@ -270,7 +386,7 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
     return [{ type: 'text', content: text }];
   }
 
-  const regex = /(?:(?:\b[A-Za-z](?:_[A-Za-z0-9]+)?(?:\([A-Za-z0-9_]+\))?\s*=\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text)\b)/g;
+  const regex = /(?:(?<![a-zA-ZÀ-ỹ])(?:[A-Za-z](?:_[A-Za-z0-9]+)?(?:\([A-Za-z0-9_]+\))?\s*=\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text)\b)/gu;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -295,7 +411,7 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
       let finalEndIndex = extracted.endIndex;
 
       while (finalEndIndex < text.length) {
-        const chainMatch = text.slice(finalEndIndex).match(/^\s*([+\-*/=·]|\\cdot|\\times)\s*/);
+        const chainMatch = text.slice(finalEndIndex).match(/^\s*([+\-*/=·]|\\cdot|\\times|\\approx|\\le|\\ge|\\ne|\\sim)\s*/);
         if (!chainMatch) break;
 
         const nextStart = finalEndIndex + chainMatch[0].length;
@@ -308,7 +424,7 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
           }
         }
 
-        const symbolMatch = text.slice(nextStart).match(/^[a-zA-Z0-9_().]+(?:\^[0-9]+)?/);
+        const symbolMatch = text.slice(nextStart).match(/^[a-zA-Z0-9_().%]+(?:\^[0-9]+)?/);
         if (symbolMatch) {
           formula += text.slice(finalEndIndex, nextStart + symbolMatch[0].length);
           finalEndIndex = nextStart + symbolMatch[0].length;

@@ -435,7 +435,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         : 'bg-slate-900 border-slate-800 hover:border-cyan-500/30'
                     }`}
                   >
-                    <span className="text-2xl">{m.emoji}</span>
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-950 flex items-center justify-center border border-slate-700/60 shadow-xs">
+                      {m.imageUrl ? (
+                        <img
+                          src={m.imageUrl}
+                          alt={m.name}
+                          className="w-full h-full object-cover rounded-lg select-none"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
+                      ) : (
+                        <span className="text-xl">{m.emoji}</span>
+                      )}
+                    </div>
                     <span className="text-[10px] font-bold text-white truncate max-w-full">{m.name}</span>
                   </button>
                 );
