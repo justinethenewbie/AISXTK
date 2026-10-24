@@ -26,6 +26,7 @@ import { ChartVisualization } from './components/ChartVisualization';
 import { CasioCalculator } from './components/CasioCalculator';
 import { MathProcessor } from './components/MathProcessor';
 import { WysiwygMathChatEditor } from './components/WysiwygMathChatEditor';
+import { BigSizeDocumentProcessor } from './components/BigSizeDocumentProcessor';
 
 // Modals
 import { SettingsModal } from './components/SettingsModal';
@@ -52,6 +53,7 @@ import {
   FileCode,
   Cloud,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 
 const INITIAL_PROFILE: UserProfile = {
@@ -288,6 +290,8 @@ export default function App() {
         );
       case 'charts':
         return <ChartVisualization />;
+      case 'big_doc_processor':
+        return <BigSizeDocumentProcessor onAddExp={handleAddExp} />;
       case 'developer_db':
         return (
           <div className="space-y-4">
@@ -331,6 +335,7 @@ export default function App() {
   const ALL_NAVIGATION_ITEMS: Array<{ id: ActiveToolType; name: string; icon: React.ReactNode; isNeon?: boolean }> = [
     { id: 'learning', name: '📖 Lý thuyết 5 bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
     { id: 'image_grading', name: '⚡ Gia Sư AI 1-1 & Giải Toán Toàn Diện', icon: <Sparkles className="w-4 h-4 text-cyan-300" />, isNeon: true },
+    { id: 'big_doc_processor', name: '🚀 Xử Lý Bài Tập & BCTC Big Size (100MB)', icon: <Layers className="w-4 h-4 text-amber-300" />, isNeon: true },
     { id: 'casio_calc', name: '🧮 Máy tính Casio XSTK', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
     { id: 'mcq_generator', name: '✅ Đề Trắc Nghiệm (Word/PDF)', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
     { id: 'essay_generator', name: '✍️ Đề Tự Luận (Word/PDF)', icon: <FileText className="w-4 h-4 text-blue-400" /> },

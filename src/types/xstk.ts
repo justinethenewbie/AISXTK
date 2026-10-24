@@ -262,4 +262,5 @@ export type ActiveToolType =
   | 'casio_calc'
   | 'math_processor'
   | 'developer_db'
-  | 'wysiwyg_math';
+  | 'wysiwyg_math'
+  | 'big_doc_processor';

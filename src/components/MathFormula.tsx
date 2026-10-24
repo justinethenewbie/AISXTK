@@ -21,11 +21,20 @@ export function sanitizeAndFixMathText(rawText: string): string {
   text = text.replace(/:\s*undefined\b/gi, ': ');
   text = text.replace(/\bundefined\b/gi, '');
 
-  // Tự động chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
-  text = text.replace(/E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
-  text = text.replace(/E\(X_i\)\s*=\s*p_i\s*[*]\s*r_i/g, '$E(X_i) = p_i \\cdot r_i$');
-  text = text.replace(/Var\(X\)\s*=\s*Var\(X_A\)\s*\+\s*Var\(X_B\)\s*\+\s*Var\(X_C\)/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
-  text = text.replace(/\bf\s*=\s*m\s*\/\s*n\b/g, '$f = \\frac{m}{n}$');
+  // 0. Thu gọn các chuỗi lặp dấu $ (ví dụ $$$ hoặc $$$$) thành dấu $ hợp lệ
+  text = text.replace(/\${3,}/g, '$');
+
+  // 1. Tự động chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
+  // Dùng \${0,2} để nếu đã có dấu $ hoặc $$ bao quanh thì chuẩn hóa về đúng 1 cặp $ duy nhất, không nhân đôi $
+  text = text.replace(/\${0,2}E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\${0,2}/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
+  text = text.replace(/\${0,2}E\(X_i\)\s*=\s*p_i\s*[*·\u00B7]\s*r_i\${0,2}/g, '$E(X_i) = p_i \\cdot r_i$');
+  text = text.replace(/\${0,2}(?:\\text\{Var\}|Var)\(X\)\s*=\s*(?:\\text\{Var\}|Var)\(X_A\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_B\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_C\)\${0,2}/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
+  text = text.replace(/\${0,2}\bf\s*=\s*m\s*\/\s*n\b\${0,2}/g, '$f = \\frac{m}{n}$');
+  text = text.replace(/\${0,2}\\sigma\(X\)\s*=\s*\\sqrt\{?\\text\{Var\}\(X\)\}?\${0,2}/g, '$\\sigma(X) = \\sqrt{\\text{Var}(X)}$');
+
+  // Chuẩn hóa \sqrt Var(X) trần hoặc \sqrt {Var(X)}
+  text = text.replace(/\\sqrt\s*\{?\s*(?:\\text\{)?Var\}?\(([A-Za-z0-9_]+)\)\s*\}?/g, '\\sqrt{\\text{Var}($1)}');
+  text = text.replace(/\\sqrt\s+([A-Za-z0-9_()]+)(?![a-zA-Z0-9_{])/g, '\\sqrt{$1}');
 
   // 1. Khôi phục các lệnh LaTeX nếu bị JSON nuốt ký tự điều khiển (\f, \b, \t, \r)
   text = text
@@ -67,10 +76,13 @@ export function sanitizeAndFixMathText(rawText: string): string {
   }
 
   // 6. NGUYÊN TẮC AN TOÀN:
-  // - Nếu chuỗi ĐÃ CÓ SẴN dấu $ hoặc \( hoặc \[, TUYỆT ĐỐI KHÔNG tự ý bọc thêm dấu $ nữa (để không làm hỏng Bản đồ tư duy và các công thức đang hiển thị đúng). Chỉ cân bằng ngoặc { } bên trong các cặp $...$ hiện có.
+  // - Nếu chuỗi ĐÃ CÓ SẴN dấu $ hoặc \( hoặc \[, TUYỆT ĐỐI KHÔNG tự ý bọc thêm dấu $ nữa.
+  // Cân bằng ngoặc { } bên trong các khối math đã delimit ($$ trước, sau đó là $)
   const hasDelimiters = /(\$|\\\(|\\\[)/.test(text);
   if (hasDelimiters) {
-    return text.replace(/\$([^$]+)\$/g, (_, inner) => '$' + balanceBraces(inner) + '$');
+    let balanced = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, inner) => '$$' + balanceBraces(inner) + '$$');
+    balanced = balanced.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, inner) => '$' + balanceBraces(inner) + '$');
+    return balanced;
   }
 
   // - Chỉ khi chuỗi HOÀN TOÀN CHƯA CÓ dấu $ nào mà lại chứa lệnh LaTeX trần (\frac, \sqrt, \int, \sum, \implies...) thì mới bọc $...$:
@@ -176,32 +188,181 @@ export interface MathSegment {
 }
 
 /**
- * Parse any mixed Vietnamese text containing LaTeX math formulas (with or without $ delimiters)
- * Keeps complete equations like "\epsilon = 1.96 \cdot \sqrt{\frac{p(1-p)}{n}}" intact.
+ * Trích xuất an toàn một lệnh LaTeX trần cùng đầy đủ tham số ngoặc nhọn { }, ngoặc vuông [ ],
+ * hỗ trợ lồng nhau nhiều cấp (ví dụ \sqrt{\text{Var}(X)} hoặc \frac{\sum (x-\mu)^2}{n})
+ */
+function extractLatexCommandWithArgs(text: string, startIndex: number): { math: string; endIndex: number } | null {
+  if (text[startIndex] !== '\\') return null;
+  const cmdMatch = text.slice(startIndex).match(/^\\[a-zA-Z]+/);
+  if (!cmdMatch) return null;
+
+  let pos = startIndex + cmdMatch[0].length;
+
+  while (pos < text.length) {
+    let tempPos = pos;
+    while (tempPos < text.length && (text[tempPos] === ' ' || text[tempPos] === '\t')) {
+      tempPos++;
+    }
+
+    if (tempPos < text.length && (text[tempPos] === '{' || text[tempPos] === '[')) {
+      const openChar = text[tempPos];
+      const closeChar = openChar === '{' ? '}' : ']';
+      let depth = 1;
+      let scanPos = tempPos + 1;
+      while (scanPos < text.length && depth > 0) {
+        if (text[scanPos] === openChar && text[scanPos - 1] !== '\\') depth++;
+        else if (text[scanPos] === closeChar && text[scanPos - 1] !== '\\') depth--;
+        scanPos++;
+      }
+      if (depth === 0) {
+        pos = scanPos;
+        continue;
+      }
+    }
+
+    if (pos < text.length && (text[pos] === '_' || text[pos] === '^')) {
+      pos++;
+      if (pos < text.length && text[pos] === '{') {
+        let depth = 1;
+        pos++;
+        while (pos < text.length && depth > 0) {
+          if (text[pos] === '{' && text[pos - 1] !== '\\') depth++;
+          else if (text[pos] === '}' && text[pos - 1] !== '\\') depth--;
+          pos++;
+        }
+      } else if (pos < text.length && /[a-zA-Z0-9]/.test(text[pos])) {
+        pos++;
+      }
+      continue;
+    }
+
+    if (tempPos < text.length && text[tempPos] === '(') {
+      let depth = 1;
+      let scanPos = tempPos + 1;
+      while (scanPos < text.length && depth > 0) {
+        if (text[scanPos] === '(' && text[scanPos - 1] !== '\\') depth++;
+        else if (text[scanPos] === ')' && text[scanPos - 1] !== '\\') depth--;
+        scanPos++;
+      }
+      if (depth === 0) {
+        pos = scanPos;
+        continue;
+      }
+    }
+
+    break;
+  }
+
+  return {
+    math: text.slice(startIndex, pos),
+    endIndex: pos,
+  };
+}
+
+/**
+ * Quét các phân đoạn văn bản thường (không có $) để phát hiện công thức LaTeX trần
+ */
+function parseNakedLatexInTextSegment(text: string): MathSegment[] {
+  const segments: MathSegment[] = [];
+  if (!text) return segments;
+
+  if (!text.includes('\\')) {
+    return [{ type: 'text', content: text }];
+  }
+
+  const regex = /(?:(?:\b[A-Za-z](?:_[A-Za-z0-9]+)?(?:\([A-Za-z0-9_]+\))?\s*=\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text)\b)/g;
+
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    const matchStart = match.index;
+    if (matchStart > lastIndex) {
+      segments.push({
+        type: 'text',
+        content: text.slice(lastIndex, matchStart),
+      });
+    }
+
+    const fullMatchStr = match[0];
+    const slashIdx = fullMatchStr.indexOf('\\');
+    const lhs = fullMatchStr.slice(0, slashIdx);
+    const cmdStartInText = matchStart + slashIdx;
+
+    const extracted = extractLatexCommandWithArgs(text, cmdStartInText);
+    if (extracted) {
+      let formula = lhs + extracted.math;
+      let finalEndIndex = extracted.endIndex;
+
+      while (finalEndIndex < text.length) {
+        const chainMatch = text.slice(finalEndIndex).match(/^\s*([+\-*/=·]|\\cdot|\\times)\s*/);
+        if (!chainMatch) break;
+
+        const nextStart = finalEndIndex + chainMatch[0].length;
+        if (nextStart < text.length && text[nextStart] === '\\') {
+          const nextExtracted = extractLatexCommandWithArgs(text, nextStart);
+          if (nextExtracted) {
+            formula += text.slice(finalEndIndex, nextExtracted.endIndex);
+            finalEndIndex = nextExtracted.endIndex;
+            continue;
+          }
+        }
+
+        const symbolMatch = text.slice(nextStart).match(/^[a-zA-Z0-9_().]+(?:\^[0-9]+)?/);
+        if (symbolMatch) {
+          formula += text.slice(finalEndIndex, nextStart + symbolMatch[0].length);
+          finalEndIndex = nextStart + symbolMatch[0].length;
+          continue;
+        }
+        break;
+      }
+
+      segments.push({
+        type: 'math',
+        content: formula,
+        isBlock: false,
+        html: renderKatexSafe(formula, false),
+      });
+
+      lastIndex = finalEndIndex;
+      regex.lastIndex = finalEndIndex;
+    } else {
+      segments.push({
+        type: 'text',
+        content: text.slice(matchStart, matchStart + match[0].length),
+      });
+      lastIndex = matchStart + match[0].length;
+    }
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({
+      type: 'text',
+      content: text.slice(lastIndex),
+    });
+  }
+
+  return segments;
+}
+
+/**
+ * Phân tích cú pháp chuỗi văn bản hỗn hợp (tiếng Việt & công thức toán học KaTeX).
+ * Ưu tiên các khối chuẩn ($$...$$, \[...\], \(...\), $...$), sau đó quét an toàn công thức trần.
  */
 export function parseMathSegments(text: string): MathSegment[] {
   if (!text) return [];
   const sanitizedText = sanitizeAndFixMathText(text);
 
-  // Regex pattern matching:
-  // 1. $$...$$ block math
-  // 2. \[...\] block math
-  // 3. $...$ inline math
-  // 4. \(...\) inline math
-  // 5. Unescaped math equations containing LaTeX commands:
-  //    Matches equations starting with optional LHS or standalone commands like \epsilon, \dots, \frac, \sqrt, \int, \sum, \mu, \sigma, etc.
-  const mathPattern = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^\$\n]+?\$|\\\(.*?\\\)|(?:\b[A-Za-z0-9_().,|+\-\/*\^\s]+\s*=\s*)?\\(?:epsilon|dots|ldots|cdots|mu|sigma|alpha|beta|lambda|theta|Phi|phi|chi|Omega|frac|sqrt|int|sum|cdot|times|pm|le|ge|ne|approx|sim|bar|hat|vec|infty|in|forall|exists|Rightarrow|Leftrightarrow)\b(?:[^{}\s,;.!?]|(?:\{[^{}]*\}))*)/g;
+  const delimiterPattern = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|(?<!\\)\$([^\$\n]+?)(?<!\\)\$|\\\(.*?\\\))/g;
 
   const segments: MathSegment[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = mathPattern.exec(sanitizedText)) !== null) {
+  while ((match = delimiterPattern.exec(sanitizedText)) !== null) {
     if (match.index > lastIndex) {
-      segments.push({
-        type: 'text',
-        content: sanitizedText.slice(lastIndex, match.index),
-      });
+      const textChunk = sanitizedText.slice(lastIndex, match.index);
+      segments.push(...parseNakedLatexInTextSegment(textChunk));
     }
 
     const raw = match[0];
@@ -214,12 +375,12 @@ export function parseMathSegments(text: string): MathSegment[] {
     } else if (raw.startsWith('\\[') && raw.endsWith('\\]')) {
       isBlock = true;
       mathContent = raw.slice(2, -2);
-    } else if (raw.startsWith('$') && raw.endsWith('$')) {
-      isBlock = false;
-      mathContent = raw.slice(1, -1);
     } else if (raw.startsWith('\\(') && raw.endsWith('\\)')) {
       isBlock = false;
       mathContent = raw.slice(2, -2);
+    } else if (raw.startsWith('$') && raw.endsWith('$')) {
+      isBlock = false;
+      mathContent = raw.slice(1, -1);
     }
 
     segments.push({
@@ -233,10 +394,8 @@ export function parseMathSegments(text: string): MathSegment[] {
   }
 
   if (lastIndex < sanitizedText.length) {
-    segments.push({
-      type: 'text',
-      content: sanitizedText.slice(lastIndex),
-    });
+    const textChunk = sanitizedText.slice(lastIndex);
+    segments.push(...parseNakedLatexInTextSegment(textChunk));
   }
 
   return segments;

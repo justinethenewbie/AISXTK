@@ -71,6 +71,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </button>
 
         <button
+          onClick={() => setActiveTool('big_doc_processor')}
+          className={`hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 ${
+            activeTool === 'big_doc_processor' ? 'text-amber-300 font-black border-b-2 border-amber-400 pb-0.5 shadow-[0_4px_12px_rgba(251,191,36,0.5)]' : ''
+          }`}
+        >
+          🚀 Xử Lý Big Size (100MB)
+        </button>
+
+        <button
           onClick={() => setActiveTool('casio_calc')}
           className={`hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0 ${
             activeTool === 'casio_calc' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5 shadow-[0_4px_12px_rgba(6,182,212,0.5)]' : ''

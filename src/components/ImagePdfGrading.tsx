@@ -174,12 +174,19 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
     if (!file) return;
     setAttachedFile(file);
 
-    if (file.type.startsWith('image/')) {
+    if (file.type.startsWith('image/') || file.type === 'application/pdf') {
       const reader = new FileReader();
       reader.onloadend = () => setAttachedPreviewUrl(reader.result as string);
       reader.readAsDataURL(file);
     } else {
-      setAttachedPreviewUrl(null);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const text = reader.result as string;
+        if (text) {
+          setInputText((prev) => (prev ? `${prev}\n\n${text}` : text));
+        }
+      };
+      reader.readAsText(file);
     }
     e.target.value = '';
   };

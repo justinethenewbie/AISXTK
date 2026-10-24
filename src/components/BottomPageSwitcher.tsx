@@ -34,6 +34,7 @@ export const BottomPageSwitcher: React.FC<BottomPageSwitcherProps> = ({
   const PRIMARY_TOOLS: Array<{ id: ActiveToolType; label: string; icon: React.ReactNode }> = [
     { id: 'learning', label: 'Lý Thuyết 5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
     { id: 'image_grading', label: '⚡ Gia Sư AI 1-1 & Giải Toán', icon: <Sparkles className="w-4 h-4 text-cyan-300" /> },
+    { id: 'big_doc_processor', label: '🚀 Xử Lý Big Size (100MB)', icon: <FileText className="w-4 h-4 text-amber-300" /> },
     { id: 'charts', label: '📊 Phân Tích Dữ Liệu & BCTC', icon: <BarChart3 className="w-4 h-4 text-emerald-400" /> },
     { id: 'casio_calc', label: 'Máy Tính Casio', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
     { id: 'mcq_generator', label: 'Đề Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },

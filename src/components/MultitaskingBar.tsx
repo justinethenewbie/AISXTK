@@ -36,12 +36,14 @@ export const MultitaskingBar: React.FC<MultitaskingBarProps> = ({
     casio_calc: { name: '🧮 Máy tính Casio', icon: <Calculator className="w-3.5 h-3.5" /> },
     math_processor: { name: '⚡ Bộ Vi Xử Lý Tích Phân', icon: <Calculator className="w-3.5 h-3.5" /> },
     wysiwyg_math: { name: '📐 Soạn Thảo Word & Equation', icon: <FileText className="w-3.5 h-3.5 text-cyan-400" /> },
+    big_doc_processor: { name: '🚀 Xử Lý Big Size (100MB)', icon: <Layers className="w-3.5 h-3.5 text-amber-400" /> },
     developer_db: { name: '💾 Kho Dữ Liệu Dev', icon: <Database className="w-3.5 h-3.5 text-purple-400" /> },
   };
 
   const ALL_ADDABLE_TOOLS: ActiveToolType[] = [
     'learning',
     'image_grading',
+    'big_doc_processor',
     'essay_generator',
     'mcq_generator',
     'mindmap',
