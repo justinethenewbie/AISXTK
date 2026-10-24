@@ -9,17 +9,37 @@
     "university": "ĐH Kinh Tế TP.HCM (UEH)",
     "classGroup": "2026-XSTK",
     "gpa": 3.92,
-    "exp": 1385,
-    "level": 7,
+    "exp": 1625,
+    "level": 9,
     "streakDays": 1,
-    "studyHours": 9.2,
-    "exercisesSolved": 51,
+    "studyHours": 10,
+    "exercisesSolved": 55,
     "accuracyRate": 100,
     "createdAt": "2026-10-20 13:51:18",
-    "lastActive": "Đang online",
+    "lastActive": "Vừa xong",
     "status": "active",
     "recentActivity": [
       {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bóc tách & giải toàn diện bộ bài tập",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Bóc tách cấu trúc tài liệu Big Size",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bóc tách & giải toàn diện bộ bài tập",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Bóc tách cấu trúc tài liệu Big Size",
+        "timestamp": "Vừa xong"
+      },
+      {
         "action": "Đăng nhập",
         "detail": "Đăng nhập thành công vào hệ thống AI Classroom",
         "timestamp": "Vừa xong"
@@ -102,26 +122,6 @@
       {
         "action": "Học tập & Luyện đề",
         "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
         "timestamp": "Vừa xong"
       },
       {

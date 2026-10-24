@@ -37,6 +37,36 @@ import {
   SYMBOL_CATEGORIES,
 } from '../data/wordEquationData';
 
+// =========================================================================
+// WORD EQUATION ENGINE HELPERS: SELECTION WRAPPING & FOCUS RESOLUTION
+// =========================================================================
+const wrapStructureWithSelection = (template: string, selectedText: string): string => {
+  if (!selectedText) return template;
+  const clean = selectedText.trim();
+  if (!clean) return template;
+  if (template.includes('{#?}_{#?}')) return template.replace('{#?}_{#?}', `{${clean}}_{#?}`);
+  if (template.includes('{}_{#?}')) return template.replace('{}_{#?}', `{${clean}}_{#?}`);
+  if (template.includes('{#?}^{#?}')) return template.replace('{#?}^{#?}', `{${clean}}^{#?}`);
+  if (template.includes('{}^{#?}')) return template.replace('{}^{#?}', `{${clean}}^{#?}`);
+  if (template.includes('{#?}_{#?}^{#?}')) return template.replace('{#?}_{#?}^{#?}', `{${clean}}_{#?}^{#?}`);
+  if (template.includes('\\frac{#?}{#?}')) return template.replace('\\frac{#?}{#?}', `\\frac{${clean}}{#?}`);
+  if (template.includes('\\sqrt{#?}')) return template.replace('\\sqrt{#?}', `\\sqrt{${clean}}`);
+  if (template.includes('\\left(#?\\right)')) return template.replace('\\left(#?\\right)', `\\left(${clean}\\right)`);
+  if (template.includes('\\bar{#?}')) return template.replace('\\bar{#?}', `\\bar{${clean}}`);
+  if (template.includes('\\hat{#?}')) return template.replace('\\hat{#?}', `\\hat{${clean}}`);
+  if (template.includes('{#?}')) return template.replace('{#?}', `{${clean}}`);
+  return template;
+};
+
+const isMathFieldActuallyFocused = (mf: any): boolean => {
+  if (!mf || !document.contains(mf)) return false;
+  const activeEl = document.activeElement;
+  if (activeEl === mf) return true;
+  if (mf.contains && mf.contains(activeEl)) return true;
+  if (typeof mf.hasFocus === 'function' && mf.hasFocus()) return true;
+  return false;
+};
+
 export interface WordStyleMathEditorProps {
   initialText?: string;
   placeholder?: string;
@@ -126,88 +156,134 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Helper: Find parent editor line div
+  const findCurrentLineDiv = useCallback((startNode: Node | null): HTMLDivElement | null => {
+    if (!startNode || !editorRef.current) return null;
+    let curr: Node | null = startNode;
+    while (curr && curr !== editorRef.current) {
+      if (curr.nodeType === Node.ELEMENT_NODE && (curr as HTMLElement).classList?.contains('editor-line')) {
+        return curr as HTMLDivElement;
+      }
+      if (curr.parentNode === editorRef.current && curr.nodeType === Node.ELEMENT_NODE) {
+        return curr as HTMLDivElement;
+      }
+      curr = curr.parentNode;
+    }
+    return null;
+  }, []);
+
   // Keyboard navigation helpers into / out of a math-field
-  const moveCaretAfterElement = useCallback((element: HTMLElement) => {
-    const parent = element.parentNode;
-    if (!parent) return;
+  const moveCaretAfterElement = useCallback(
+    (element: HTMLElement) => {
+      const parent = element.parentNode;
+      if (!parent) return;
 
-    let nextNode = element.nextSibling;
-    if (!nextNode || nextNode.nodeType !== Node.TEXT_NODE) {
-      const space = document.createTextNode('\u00A0');
-      parent.insertBefore(space, element.nextSibling);
-      nextNode = space;
-    }
+      let nextNode = element.nextSibling;
+      if (!nextNode || nextNode.nodeType !== Node.TEXT_NODE) {
+        const space = document.createTextNode('\u00A0');
+        parent.insertBefore(space, element.nextSibling);
+        nextNode = space;
+      }
 
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.setStart(nextNode, 1);
-    range.collapse(true);
-    if (sel) {
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  }, []);
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.setStart(nextNode, 1);
+      range.collapse(true);
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      setActiveMathField(null);
+      if (editorRef.current) {
+        editorRef.current.focus();
+      }
+      saveCaretPosition();
+    },
+    [saveCaretPosition]
+  );
 
-  const moveCaretBeforeElement = useCallback((element: HTMLElement) => {
-    const parent = element.parentNode;
-    if (!parent) return;
+  const moveCaretBeforeElement = useCallback(
+    (element: HTMLElement) => {
+      const parent = element.parentNode;
+      if (!parent) return;
 
-    let prevNode = element.previousSibling;
-    if (!prevNode || prevNode.nodeType !== Node.TEXT_NODE) {
-      const space = document.createTextNode('\u00A0');
-      parent.insertBefore(space, element);
-      prevNode = space;
-    }
+      let prevNode = element.previousSibling;
+      if (!prevNode || prevNode.nodeType !== Node.TEXT_NODE) {
+        const space = document.createTextNode('\u00A0');
+        parent.insertBefore(space, element);
+        prevNode = space;
+      }
 
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.setStart(prevNode, (prevNode.nodeValue || '').length);
-    range.collapse(true);
-    if (sel) {
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  }, []);
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.setStart(prevNode, (prevNode.nodeValue || '').length);
+      range.collapse(true);
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      setActiveMathField(null);
+      if (editorRef.current) {
+        editorRef.current.focus();
+      }
+      saveCaretPosition();
+    },
+    [saveCaretPosition]
+  );
 
-  const insertLineBreakAfterElement = useCallback((element: HTMLElement) => {
-    const parent = element.parentNode;
-    if (!parent) return;
+  // Split line when Enter is pressed inside or at a math-field
+  const handleMathFieldEnter = useCallback(
+    (mf: HTMLElement) => {
+      const lineDiv = findCurrentLineDiv(mf) || (mf.parentElement as HTMLDivElement) || editorRef.current;
+      if (!lineDiv || !editorRef.current) return;
 
-    const br = document.createElement('br');
-    const space = document.createTextNode('\u00A0');
+      const newLine = document.createElement('div');
+      newLine.className = 'editor-line';
 
-    if (element.nextSibling) {
-      parent.insertBefore(br, element.nextSibling);
-      parent.insertBefore(space, br.nextSibling);
-    } else {
-      parent.appendChild(br);
-      parent.appendChild(space);
-    }
+      let nextSibling = mf.nextSibling;
+      const toMove: Node[] = [];
+      while (nextSibling) {
+        const next = nextSibling.nextSibling;
+        toMove.push(nextSibling);
+        nextSibling = next;
+      }
 
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.setStart(space, 0);
-    range.collapse(true);
-    if (sel) {
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  }, []);
+      if (toMove.length > 0) {
+        toMove.forEach((node) => newLine.appendChild(node));
+      } else {
+        newLine.appendChild(document.createElement('br'));
+      }
+
+      if (lineDiv.childNodes.length === 0) {
+        lineDiv.appendChild(document.createElement('br'));
+      }
+
+      if (lineDiv !== editorRef.current && lineDiv.nextSibling) {
+        lineDiv.parentNode?.insertBefore(newLine, lineDiv.nextSibling);
+      } else {
+        editorRef.current.appendChild(newLine);
+      }
+
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.setStart(newLine, 0);
+      range.collapse(true);
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      setActiveMathField(null);
+      if (editorRef.current) {
+        editorRef.current.focus();
+      }
+      saveCaretPosition();
+    },
+    [findCurrentLineDiv, saveCaretPosition]
+  );
 
   // Configure a MathLive <math-field> element with full Word-style behavior
   const setupMathFieldElement = useCallback(
     (mf: any) => {
-      // NOTE: Do NOT set contenteditable="false"! MathLive requires contenteditable !== "false"
-      // so that its internal keyboard sink is active and keystrokes/numbers can be typed into placeholders.
       mf.className = 'word-equation-inline';
       mf.setAttribute('placeholder', 'Type equation here.');
 
@@ -225,6 +301,15 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
         setActiveMathField(mf);
       });
 
+      mf.addEventListener('focusout', () => {
+        setTimeout(() => {
+          const activeEl = document.activeElement;
+          if (!activeEl || activeEl.tagName.toLowerCase() !== 'math-field') {
+            setActiveMathField((prev: any) => (prev === mf ? null : prev));
+          }
+        }, 60);
+      });
+
       // MathLive's native move-out event handles caret stepping out to text at formula boundaries
       mf.addEventListener('move-out', (ev: any) => {
         if (ev.detail?.direction === 'forward' || ev.detail?.direction === 'downward') {
@@ -237,17 +322,52 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
       mf.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          insertLineBreakAfterElement(mf);
+          e.stopPropagation();
+          handleMathFieldEnter(mf);
         } else if (e.key === 'Backspace' && (!mf.value || mf.value.trim() === '')) {
           e.preventDefault();
           moveCaretBeforeElement(mf);
           mf.remove();
+        } else if (e.key === 'ArrowRight' && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
+          // 1. If at outer right boundary of math-field, step out to contenteditable text
+          if (mf.position >= mf.lastOffset) {
+            e.preventDefault();
+            moveCaretAfterElement(mf);
+            return;
+          }
+          // 2. If at the end of a child branch (subscript, superscript, fraction numerator/denom), step out to parent
+          const model = mf.model;
+          const currentAtom = model?.at ? model.at(mf.position) : null;
+          if (currentAtom && currentAtom.isLastSibling && currentAtom.parent?.parent) {
+            e.preventDefault();
+            const moved = typeof mf.executeCommand === 'function' ? mf.executeCommand('moveAfterParent') : false;
+            if (!moved && typeof mf.executeCommand === 'function') {
+              mf.executeCommand('moveToNextChar');
+            }
+            return;
+          }
+        } else if (e.key === 'ArrowLeft' && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
+          if (mf.position <= 0) {
+            e.preventDefault();
+            moveCaretBeforeElement(mf);
+            return;
+          }
+          const model = mf.model;
+          const currentAtom = model?.at ? model.at(mf.position) : null;
+          if (currentAtom && currentAtom.isFirstSibling && currentAtom.parent?.parent) {
+            e.preventDefault();
+            const moved = typeof mf.executeCommand === 'function' ? mf.executeCommand('moveBeforeParent') : false;
+            if (!moved && typeof mf.executeCommand === 'function') {
+              mf.executeCommand('moveToPreviousChar');
+            }
+            return;
+          }
         }
       });
 
       return mf;
     },
-    [paperTheme, moveCaretAfterElement, moveCaretBeforeElement, insertLineBreakAfterElement]
+    [paperTheme, moveCaretAfterElement, moveCaretBeforeElement, handleMathFieldEnter]
   );
 
   // Update math formula color whenever paper theme changes
@@ -261,36 +381,63 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
     });
   }, [paperTheme]);
 
+  // Keep activeMathField updated on selection change
+  useEffect(() => {
+    const handleDocSelectionChange = () => {
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.tagName.toLowerCase() === 'math-field') {
+        setActiveMathField(activeEl);
+      } else {
+        if (activeMathField && !activeMathField.contains?.(activeEl)) {
+          setActiveMathField(null);
+        }
+      }
+    };
+    document.addEventListener('selectionchange', handleDocSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleDocSelectionChange);
+    };
+  }, [activeMathField]);
+
   // Initialize editor content from initialText if provided
   useEffect(() => {
     if (!editorRef.current) return;
     if (!initialText) {
-      // empty editor
+      if (editorRef.current.childNodes.length === 0) {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'editor-line';
+        lineDiv.appendChild(document.createElement('br'));
+        editorRef.current.appendChild(lineDiv);
+      }
       return;
     }
 
-    // Parse potential $...$ or $$...$$ formulas in initialText into live <math-field> elements
     editorRef.current.innerHTML = '';
     const lines = initialText.split('\n');
 
-    lines.forEach((line, lineIdx) => {
+    lines.forEach((line) => {
       const lineDiv = document.createElement('div');
+      lineDiv.className = 'editor-line';
       const parts = line.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
 
       parts.forEach((part) => {
         if (!part) return;
-        if (part.startsWith('$$') && part.endsWith('$$')) {
+        if (part.startsWith('$$') && part.endsWith('$$') && part.length > 4) {
           const rawLatex = part.slice(2, -2).trim();
           const mf = document.createElement('math-field') as any;
           setupMathFieldElement(mf);
           mf.value = rawLatex;
+          lineDiv.appendChild(document.createTextNode('\u00A0'));
           lineDiv.appendChild(mf);
-        } else if (part.startsWith('$') && part.endsWith('$')) {
+          lineDiv.appendChild(document.createTextNode('\u00A0'));
+        } else if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
           const rawLatex = part.slice(1, -1).trim();
           const mf = document.createElement('math-field') as any;
           setupMathFieldElement(mf);
           mf.value = rawLatex;
+          lineDiv.appendChild(document.createTextNode('\u00A0'));
           lineDiv.appendChild(mf);
+          lineDiv.appendChild(document.createTextNode('\u00A0'));
         } else {
           lineDiv.appendChild(document.createTextNode(part));
         }
@@ -332,10 +479,8 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
       range.deleteContents();
 
       const frag = document.createDocumentFragment();
-      // Leading zero-width or non-breaking space
       frag.appendChild(document.createTextNode('\u00A0'));
       frag.appendChild(mf);
-      // Trailing non-breaking space so user can click right after to continue typing words
       const spaceAfter = document.createTextNode('\u00A0');
       frag.appendChild(spaceAfter);
 
@@ -344,8 +489,9 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
     }
 
     if (!inserted) {
-      // Append to the end of the editor
       const p = document.createElement('div');
+      p.className = 'editor-line';
+      p.appendChild(document.createTextNode('\u00A0'));
       p.appendChild(mf);
       p.appendChild(document.createTextNode('\u00A0'));
       editor.appendChild(p);
@@ -367,28 +513,279 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
     }, 40);
   };
 
+  // --- CLIPBOARD & RICH CONTENT PASTING HELPERS ---
+  const insertMixedContentAtCaret = useCallback(
+    (rawContent: string) => {
+      if (!rawContent) return;
+      if (editorRef.current) {
+        editorRef.current.focus();
+      }
+      restoreCaretPosition();
+
+      // Check if rawContent is a LaTeX fragment without $
+      let prepared = rawContent;
+      if (
+        !prepared.includes('$') &&
+        (/\\(frac|sqrt|bar|sum|int|lim|alpha|beta|sigma|mu|chi|phi|pi|times|le|ge|neq|partial)/.test(prepared) ||
+          (/^[A-Za-z0-9_^{}()+=\-*/\s\\]+$/.test(prepared) && (prepared.includes('_') || prepared.includes('^'))))
+      ) {
+        prepared = `$${prepared.trim()}$`;
+      }
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || !editorRef.current) return;
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+
+      const frag = document.createDocumentFragment();
+      const parts = prepared.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
+      let lastNode: Node | null = null;
+
+      parts.forEach((part) => {
+        if (!part) return;
+        if (
+          (part.startsWith('$$') && part.endsWith('$$') && part.length > 4) ||
+          (part.startsWith('$') && part.endsWith('$') && part.length > 2)
+        ) {
+          const isDouble = part.startsWith('$$');
+          const latex = isDouble ? part.slice(2, -2).trim() : part.slice(1, -1).trim();
+          const mf = document.createElement('math-field') as any;
+          setupMathFieldElement(mf);
+          mf.value = latex;
+          frag.appendChild(document.createTextNode('\u00A0'));
+          frag.appendChild(mf);
+          const trailingSpace = document.createTextNode('\u00A0');
+          frag.appendChild(trailingSpace);
+          lastNode = trailingSpace;
+        } else {
+          const lines = part.split('\n');
+          lines.forEach((lineText, lIdx) => {
+            if (lIdx > 0) {
+              const br = document.createElement('br');
+              frag.appendChild(br);
+              lastNode = br;
+            }
+            if (lineText) {
+              const tn = document.createTextNode(lineText);
+              frag.appendChild(tn);
+              lastNode = tn;
+            }
+          });
+        }
+      });
+
+      range.insertNode(frag);
+
+      if (lastNode) {
+        const nextRange = document.createRange();
+        nextRange.setStartAfter(lastNode);
+        nextRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(nextRange);
+      }
+
+      setActiveMathField(null);
+      saveCaretPosition();
+    },
+    [restoreCaretPosition, saveCaretPosition, setupMathFieldElement]
+  );
+
+  const handleCopy = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editorRef.current) return;
+    const range = sel.getRangeAt(0);
+    if (!editorRef.current.contains(range.commonAncestorContainer)) return;
+
+    const cloned = range.cloneContents();
+    const container = document.createElement('div');
+    container.appendChild(cloned);
+
+    const mathFields = container.querySelectorAll('math-field');
+    mathFields.forEach((mf: any) => {
+      const latex = (mf.getValue ? mf.getValue('latex') : mf.value) || '';
+      const textNode = document.createTextNode(`$${latex}$`);
+      mf.parentNode?.replaceChild(textNode, mf);
+    });
+
+    const plainText = container.textContent || '';
+    const html = container.innerHTML;
+
+    e.clipboardData.setData('text/plain', plainText);
+    e.clipboardData.setData('text/html', html);
+    e.clipboardData.setData('application/x-word-math-latex', plainText);
+    e.preventDefault();
+  }, []);
+
+  const handleCut = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      handleCopy(e);
+      document.execCommand('delete');
+    },
+    [handleCopy]
+  );
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      if (activeMathField && isMathFieldActuallyFocused(activeMathField)) {
+        return;
+      }
+      const text = e.clipboardData.getData('text/plain');
+      if (text) {
+        e.preventDefault();
+        insertMixedContentAtCaret(text);
+      }
+    },
+    [activeMathField, insertMixedContentAtCaret]
+  );
+
+  // Contenteditable keydown & click handlers for independent lines
+  const handleEditorKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || !editorRef.current) return;
+        const range = sel.getRangeAt(0);
+
+        const currentLine = findCurrentLineDiv(range.startContainer) || editorRef.current;
+        const newLine = document.createElement('div');
+        newLine.className = 'editor-line';
+
+        if (currentLine !== editorRef.current) {
+          const splitRange = document.createRange();
+          splitRange.setStart(range.startContainer, range.startOffset);
+          splitRange.setEndAfter(currentLine.lastChild || currentLine);
+          const frag = splitRange.extractContents();
+
+          if (frag.childNodes.length > 0) {
+            newLine.appendChild(frag);
+          } else {
+            newLine.appendChild(document.createElement('br'));
+          }
+
+          if (currentLine.childNodes.length === 0) {
+            currentLine.appendChild(document.createElement('br'));
+          }
+
+          if (currentLine.nextSibling) {
+            currentLine.parentNode?.insertBefore(newLine, currentLine.nextSibling);
+          } else {
+            editorRef.current.appendChild(newLine);
+          }
+        } else {
+          newLine.appendChild(document.createElement('br'));
+          editorRef.current.appendChild(newLine);
+        }
+
+        const newRange = document.createRange();
+        newRange.setStart(newLine, 0);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        setActiveMathField(null);
+        saveCaretPosition();
+      }
+    },
+    [findCurrentLineDiv, saveCaretPosition]
+  );
+
+  const handleEditorClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === editorRef.current) {
+        if (!editorRef.current) return;
+
+        const lines = editorRef.current.querySelectorAll('.editor-line');
+        let targetLine: HTMLElement | null = null;
+
+        if (lines.length > 0) {
+          const lastLine = lines[lines.length - 1] as HTMLElement;
+          const isLastEmpty = !lastLine.textContent?.trim() && !lastLine.querySelector('math-field');
+          if (isLastEmpty) {
+            targetLine = lastLine;
+          } else {
+            const newLine = document.createElement('div');
+            newLine.className = 'editor-line';
+            newLine.appendChild(document.createElement('br'));
+            editorRef.current.appendChild(newLine);
+            targetLine = newLine;
+          }
+        } else {
+          const newLine = document.createElement('div');
+          newLine.className = 'editor-line';
+          newLine.appendChild(document.createElement('br'));
+          editorRef.current.appendChild(newLine);
+          targetLine = newLine;
+        }
+
+        if (targetLine) {
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.setStart(targetLine, 0);
+          range.collapse(true);
+          if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+          setActiveMathField(null);
+          saveCaretPosition();
+        }
+      } else {
+        const target = e.target as HTMLElement;
+        if (target && target.tagName.toLowerCase() !== 'math-field' && !target.closest('math-field')) {
+          setActiveMathField(null);
+          saveCaretPosition();
+        }
+      }
+    },
+    [saveCaretPosition]
+  );
+
   // --- ACTIONS: EXECUTE STRUCTURE TEMPLATE INTO ACTIVE EQUATION ---
   const handleExecuteStructure = (structureLatex: string) => {
     setOpenStructureMenu(null);
 
-    // If an active MathLive field is currently focused and in the DOM, execute command directly into it!
-    if (activeMathField && document.contains(activeMathField)) {
+    // If an active MathLive field is currently focused, execute command directly into it!
+    if (activeMathField && isMathFieldActuallyFocused(activeMathField)) {
       activeMathField.focus();
+
+      let selectedLatex = '';
+      try {
+        if (typeof activeMathField.getValue === 'function' && activeMathField.selection) {
+          selectedLatex = activeMathField.getValue(activeMathField.selection, 'latex') || '';
+        }
+      } catch {
+        selectedLatex = '';
+      }
+
+      const finalLatex = selectedLatex
+        ? wrapStructureWithSelection(structureLatex, selectedLatex)
+        : structureLatex;
+
       if (typeof activeMathField.insert === 'function') {
-        activeMathField.insert(structureLatex, { selectionMode: 'placeholder' });
+        activeMathField.insert(finalLatex, { selectionMode: 'placeholder' });
       } else if (typeof activeMathField.executeCommand === 'function') {
-        activeMathField.executeCommand(['insert', structureLatex, { selectionMode: 'placeholder' }]);
+        activeMathField.executeCommand(['insert', finalLatex, { selectionMode: 'placeholder' }]);
       }
       return;
     }
 
-    // Otherwise, insert a new "Type equation here." box with this structure
-    handleInsertNewEquation(structureLatex);
+    // Otherwise, check if user selected text in contenteditable
+    const sel = window.getSelection();
+    const selectedText =
+      sel && editorRef.current && editorRef.current.contains(sel.anchorNode)
+        ? sel.toString().trim()
+        : '';
+
+    const finalLatex = selectedText
+      ? wrapStructureWithSelection(structureLatex, selectedText)
+      : structureLatex;
+
+    handleInsertNewEquation(finalLatex);
   };
 
   // --- ACTIONS: INSERT SYMBOL INTO ACTIVE EQUATION ---
   const handleInsertSymbol = (symbolLatex: string) => {
-    if (activeMathField && document.contains(activeMathField)) {
+    if (activeMathField && isMathFieldActuallyFocused(activeMathField)) {
       activeMathField.focus();
       if (typeof activeMathField.insert === 'function') {
         activeMathField.insert(symbolLatex);
@@ -398,8 +795,42 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
       return;
     }
 
-    // If no math field active, create one or insert into text at caret
     handleInsertNewEquation(symbolLatex);
+  };
+
+  // Dedicated handlers for ribbon Subscript & Superscript buttons
+  const handleSubscriptButton = () => {
+    if (activeMathField && isMathFieldActuallyFocused(activeMathField)) {
+      handleExecuteStructure('{#?}_{#?}');
+    } else {
+      const sel = window.getSelection();
+      const selText =
+        sel && editorRef.current && editorRef.current.contains(sel.anchorNode)
+          ? sel.toString().trim()
+          : '';
+      if (selText) {
+        handleInsertNewEquation(`{${selText}}_{#?}`);
+      } else {
+        executeFormattingCommand('subscript');
+      }
+    }
+  };
+
+  const handleSuperscriptButton = () => {
+    if (activeMathField && isMathFieldActuallyFocused(activeMathField)) {
+      handleExecuteStructure('{#?}^{#?}');
+    } else {
+      const sel = window.getSelection();
+      const selText =
+        sel && editorRef.current && editorRef.current.contains(sel.anchorNode)
+          ? sel.toString().trim()
+          : '';
+      if (selText) {
+        handleInsertNewEquation(`{${selText}}^{#?}`);
+      } else {
+        executeFormattingCommand('superscript');
+      }
+    }
   };
 
   // Text Formatting Commands
@@ -599,25 +1030,28 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
               onClick={async () => {
                 try {
                   const text = await navigator.clipboard.readText();
-                  if (text && editorRef.current) {
-                    editorRef.current.focus();
-                    restoreCaretPosition();
-                    document.execCommand('insertText', false, text);
-                    saveCaretPosition();
+                  if (text) {
+                    insertMixedContentAtCaret(text);
                   }
                 } catch {
                   // clipboard fallback
                 }
               }}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-200 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
-              title="Dán văn bản (Paste)"
+              title="Dán văn bản & công thức (Paste)"
             >
               <ClipboardPaste className="w-4 h-4 text-cyan-400" />
               <span className="text-[11px] font-semibold hidden sm:inline">Paste</span>
             </button>
             <button
               type="button"
-              onClick={() => executeFormattingCommand('cut')}
+              onClick={() => {
+                if (editorRef.current) {
+                  editorRef.current.focus();
+                  restoreCaretPosition();
+                  document.execCommand('cut');
+                }
+              }}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-cyan-300 transition-colors cursor-pointer"
               title="Cắt (Cut)"
             >
@@ -625,7 +1059,13 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => executeFormattingCommand('copy')}
+              onClick={() => {
+                if (editorRef.current) {
+                  editorRef.current.focus();
+                  restoreCaretPosition();
+                  document.execCommand('copy');
+                }
+              }}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-cyan-300 transition-colors cursor-pointer"
               title="Sao chép (Copy)"
             >
@@ -707,7 +1147,7 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => executeFormattingCommand('subscript')}
+              onClick={handleSubscriptButton}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-cyan-300 cursor-pointer"
               title="Chỉ số dưới (x₂)"
             >
@@ -715,7 +1155,7 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => executeFormattingCommand('superscript')}
+              onClick={handleSuperscriptButton}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-cyan-300 cursor-pointer"
               title="Chỉ số trên (x²)"
             >
@@ -1114,8 +1554,13 @@ export const WordStyleMathEditor: React.FC<WordStyleMathEditorProps> = ({
             suppressContentEditableWarning={true}
             onKeyUp={saveCaretPosition}
             onMouseUp={saveCaretPosition}
+            onKeyDown={handleEditorKeyDown}
+            onClick={handleEditorClick}
+            onCopy={handleCopy}
+            onCut={handleCut}
+            onPaste={handlePaste}
             data-placeholder={placeholder}
-            className="word-sheet-editor w-full min-h-[380px] p-6 sm:p-8 outline-none text-sm sm:text-base selection:bg-cyan-500/30 font-medium"
+            className="word-sheet-editor w-full min-h-[380px] p-6 sm:p-8 outline-none text-sm sm:text-base selection:bg-cyan-500/30 font-medium cursor-text"
             style={{
               fontFamily: fontFamily.includes('Aptos')
                 ? 'system-ui, -apple-system, sans-serif'

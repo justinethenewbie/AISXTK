@@ -221,6 +221,14 @@ math-field .ML__placeholder {
   text-shadow: 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
+.editor-line {
+  min-height: 1.6em;
+  line-height: 1.8;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
 .paper-theme-white .word-sheet-editor {
   color: #0f172a !important;
   text-shadow: none;
