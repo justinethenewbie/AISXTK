@@ -589,13 +589,20 @@ export default function App() {
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-3">
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40 inline-block mb-1">
-                    🏛️ I ❤️ HUB 1976
-                  </span>
-                  <p className="text-xs font-black text-white leading-tight drop-shadow">
-                    Đại Học Ngân Hàng TP.HCM
-                  </p>
+                <div className="flex items-center gap-2">
+                  <img
+                    src="/assets/hub-logo.png"
+                    alt="HUB Logo"
+                    className="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.8)] shrink-0"
+                  />
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40 inline-flex items-center gap-1 mb-0.5">
+                      <span>I ❤️ HUB 1976</span>
+                    </span>
+                    <p className="text-xs font-black text-white leading-tight drop-shadow">
+                      Đại Học Ngân Hàng TP.HCM
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -717,13 +724,21 @@ export default function App() {
               >
                 ✕
               </button>
-              <div className="absolute bottom-4 left-5 right-5 text-white">
-                <span className="text-[11px] font-black uppercase tracking-wider text-cyan-300 bg-cyan-950/90 px-3 py-1 rounded-full border border-cyan-500/50 inline-block mb-1.5 backdrop-blur-sm">
-                  🏛️ TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB)
-                </span>
-                <h3 className="text-lg sm:text-2xl font-black drop-shadow">
-                  Nơi Khởi Nguồn Ước Mơ & Chinh Phục Điểm 10 Xác Suất Thống Kê
-                </h3>
+              <div className="absolute bottom-4 left-5 right-5 text-white flex items-center gap-3.5">
+                <img
+                  src="/assets/hub-logo.png"
+                  alt="HUB Crest"
+                  className="w-12 h-12 object-contain drop-shadow-[0_0_12px_rgba(6,182,212,0.8)] shrink-0 hidden sm:block"
+                />
+                <div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-cyan-300 bg-cyan-950/90 px-3 py-1 rounded-full border border-cyan-500/50 inline-flex items-center gap-1.5 mb-1.5 backdrop-blur-sm">
+                    <img src="/assets/hub-logo.png" alt="HUB" className="w-3.5 h-3.5 object-contain sm:hidden" />
+                    <span>TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB)</span>
+                  </span>
+                  <h3 className="text-lg sm:text-2xl font-black drop-shadow">
+                    Nơi Khởi Nguồn Ước Mơ & Chinh Phục Điểm 10 Xác Suất Thống Kê
+                  </h3>
+                </div>
               </div>
             </div>
 
@@ -739,11 +754,14 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="p-3.5 bg-cyan-950/40 border border-cyan-500/30 rounded-2xl text-xs space-y-1">
-                <span className="font-black text-cyan-300 block">📚 Khoa Hệ Thống Thông Tin & Bộ Môn Toán Kinh Tế HUB</span>
-                <p className="text-slate-300 leading-relaxed">
-                  Ứng dụng AI Classroom được thiết kế bám sát chuẩn chương trình giảng dạy, đề thi và barem điểm Xác Suất Thống Kê của Đại học Ngân hàng TP.HCM (HUB), đồng hành cùng sinh viên HUB học tập và đạt kết quả xuất sắc!
-                </p>
+              <div className="p-3.5 bg-cyan-950/40 border border-cyan-500/30 rounded-2xl text-xs space-y-1 flex items-start gap-3">
+                <img src="/assets/hub-logo.png" alt="HUB" className="w-9 h-9 object-contain shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-black text-cyan-300 block">📚 Khoa Hệ Thống Thông Tin & Bộ Môn Toán Kinh Tế HUB</span>
+                  <p className="text-slate-300 leading-relaxed">
+                    Ứng dụng AI Classroom được thiết kế bám sát chuẩn chương trình giảng dạy, đề thi và barem điểm Xác Suất Thống Kê của Đại học Ngân hàng TP.HCM (HUB), đồng hành cùng sinh viên HUB học tập và đạt kết quả xuất sắc!
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end pt-1">

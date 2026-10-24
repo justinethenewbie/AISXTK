@@ -206,8 +206,8 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-cyan-950/80 backdrop-blur-[1px] pointer-events-none" />
 
         {/* Official University Watermark Badge */}
-        <div className="absolute top-3.5 right-4 hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-950/80 border border-cyan-500/30 rounded-full text-[11px] font-bold text-cyan-300 shadow-sm z-10 backdrop-blur-md">
-          <span>🏛️</span>
+        <div className="absolute top-3.5 right-4 hidden sm:flex items-center gap-2 px-3 py-1 bg-slate-950/85 border border-cyan-500/40 rounded-full text-[11px] font-bold text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)] z-10 backdrop-blur-md">
+          <img src="/assets/hub-logo.png" alt="HUB" className="w-4 h-4 object-contain drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
           <span>Trường ĐH Ngân Hàng TP.HCM (HUB)</span>
         </div>
 
@@ -224,6 +224,10 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
               <h2 className="text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]">
                 {userProfile.fullName}
               </h2>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-950/80 border border-amber-500/50 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]">
+                <img src="/assets/hub-logo.png" alt="HUB" className="w-3.5 h-3.5 object-contain" />
+                <span>Sinh viên HUB 1976</span>
+              </span>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-black border ${rankInfo.color} flex items-center gap-1 shadow-xs`}>
                 <span>{rankInfo.badge}</span>
                 <span>{rankInfo.tier}</span>
@@ -669,6 +673,10 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`font-bold text-xs sm:text-sm ${isMe ? 'text-cyan-300 font-black' : 'text-white'}`}>
                             {u.fullName}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-300 bg-amber-950/70 border border-amber-500/40 px-1.5 py-0.2 rounded-md">
+                            <img src="/assets/hub-logo.png" alt="HUB" className="w-2.5 h-2.5 object-contain" />
+                            HUB
                           </span>
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${uRank.color}`}>
                             {uRank.badge} {uRank.tier}

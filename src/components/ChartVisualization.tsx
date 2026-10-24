@@ -679,10 +679,11 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
         </style>
       </head>
       <body>
-        <div class="header-box">
-          <p><strong>BỘ GIÁO DỤC VÀ ĐÀO TẠO — TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB)</strong></p>
-          <p><strong>HỆ THỐNG AI TUTOR XÁC SUẤT THỐNG KÊ & PHÂN TÍCH TÀI CHÍNH AI CLASSROOM</strong></p>
-          <h1>BÁO CÁO PHÂN TÍCH KẾ HOẠCH KINH TẾ & ĐỊNH LƯỢNG RỦI RO</h1>
+        <div class="header-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <img src="/assets/hub-logo.png" alt="HUB" style="width: 50px; height: 50px; object-fit: contain; margin-bottom: 8px;" />
+          <p style="margin: 2px 0;"><strong>BỘ GIÁO DỤC VÀ ĐÀO TẠO — TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB 1976)</strong></p>
+          <p style="margin: 2px 0;"><strong>HỆ THỐNG AI TUTOR XÁC SUẤT THỐNG KÊ & PHÂN TÍCH TÀI CHÍNH AI CLASSROOM</strong></p>
+          <h1 style="margin: 10px 0 4px;">BÁO CÁO PHÂN TÍCH KẾ HOẠCH KINH TẾ & ĐỊNH LƯỢNG RỦI RO</h1>
           <p><em>Đối tượng: ${plan?.title} | Ngày lập: ${new Date().toLocaleDateString('vi-VN')}</em></p>
         </div>
 

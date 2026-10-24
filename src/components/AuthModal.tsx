@@ -36,7 +36,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [university, setUniversity] = useState('ĐH Bách Khoa TP.HCM');
+  const [university, setUniversity] = useState('Đại Học Ngân Hàng TP.HCM (HUB)');
 
   // Secret Developer Portal PIN
   const [adminPin, setAdminPin] = useState('');
@@ -194,11 +194,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header */}
-        <div className="text-center space-y-1.5 mb-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-950/70 border border-cyan-500/40 rounded-full text-[11px] font-black text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>HỆ THỐNG CƠ SỞ DỮ LIỆU BỀN VỮNG AI CLASSROOM</span>
+        {/* Header with Authentic HUB University Branding */}
+        <div className="text-center space-y-2 mb-5">
+          <div className="flex justify-center">
+            <div className="p-2 bg-slate-950/90 rounded-2xl border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] inline-flex items-center gap-2.5">
+              <img
+                src="/assets/hub-logo.png"
+                alt="HUB Logo"
+                className="w-8 h-8 object-contain drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]"
+              />
+              <div className="text-left leading-none">
+                <span className="text-[10px] font-black tracking-wide text-amber-300 uppercase block">
+                  ĐẠI HỌC NGÂN HÀNG TP.HCM
+                </span>
+                <span className="text-[9px] font-extrabold text-cyan-300 font-mono">
+                  HUB 1976 • AI CLASSROOM
+                </span>
+              </div>
+            </div>
           </div>
           <h2 className="text-xl font-black text-white tracking-tight">
             {tab === 'login'
@@ -357,7 +370,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type="text"
                     value={university}
                     onChange={(e) => setUniversity(e.target.value)}
-                    placeholder="Đại học Quốc Gia / Bách Khoa / Kinh Tế"
+                    placeholder="Đại Học Ngân Hàng TP.HCM (HUB)"
                     className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs font-medium focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none"
                   />
                 </div>

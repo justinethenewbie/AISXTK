@@ -394,8 +394,9 @@ export const ChapterLearning: React.FC<ChapterLearningProps> = ({
               <GraduationCap className="w-4 h-4 text-cyan-400" />
               <span>Chương {chapter.id} / 7 • Tiết Học Trực Tiếp Với Giảng Viên AI</span>
             </div>
-            <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-300 bg-slate-950/80 px-2.5 py-0.5 rounded-full border border-cyan-500/30 backdrop-blur-xs">
-              🏛️ ĐH Ngân Hàng TP.HCM (HUB)
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold text-cyan-200 bg-slate-950/85 px-3 py-1 rounded-full border border-cyan-500/40 backdrop-blur-md shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+              <img src="/assets/hub-logo.png" alt="HUB" className="w-3.5 h-3.5 object-contain" />
+              <span>ĐH Ngân Hàng TP.HCM (HUB)</span>
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]">

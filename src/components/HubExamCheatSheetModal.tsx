@@ -78,19 +78,27 @@ export const HubExamCheatSheetModal: React.FC<HubExamCheatSheetModalProps> = ({
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/80 to-transparent pointer-events-none" />
           <div className="flex items-center gap-3 relative z-10">
-            <div className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-2xl border border-cyan-500/40 font-black text-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              📜
+            <div className="p-1.5 bg-slate-950/80 rounded-2xl border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0 flex items-center justify-center">
+              <img
+                src="/assets/hub-logo.png"
+                alt="HUB Logo"
+                className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.7)]"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2 relative z-10">
-                <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase inline-flex items-center gap-1">
+                  <img src="/assets/hub-logo.png" alt="HUB" className="w-3 h-3 object-contain" />
                   ĐƯỢC PHÉP MANG VÀO PHÒNG THI HUB
                 </span>
                 <span className="text-[10px] font-mono text-cyan-400 font-bold">2026 EDITION</span>
               </div>
-              <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2 mt-0.5">
+              <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex flex-wrap items-center gap-2 mt-0.5">
                 <span>Tờ Công Thức Xác Suất Thống Kê & Bảng Laplace</span>
-                <span className="text-xs text-slate-400 font-normal hidden sm:inline">(Bộ Môn Toán Kinh Tế HUB)</span>
+                <span className="text-xs text-amber-300 font-bold px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/30 hidden sm:inline-flex items-center gap-1">
+                  <img src="/assets/hub-logo.png" alt="HUB" className="w-3 h-3 object-contain" />
+                  Bộ Môn Toán Kinh Tế HUB
+                </span>
               </h2>
             </div>
           </div>

@@ -401,10 +401,13 @@ export function exportExercisesToPdf({
         <button onclick="window.print()">In hoặc Lưu thành PDF 🖨️</button>
       </div>
 
-      <div class="header">
-        <div>
-          <div class="brand">NỀN TẢNG HỌC TẬP THÔNG MINH AI CLASSROOM</div>
-          <div style="font-size: 11px; color: #64748b;">Hệ thống Biên soạn Đề thi Xác Suất Thống Kê</div>
+      <div class="header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 15px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="/assets/hub-logo.png" alt="HUB" style="width: 44px; height: 44px; object-fit: contain;" />
+          <div>
+            <div class="brand">TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB 1976)</div>
+            <div style="font-size: 11px; color: #64748b;">AI Classroom • Bộ Môn Toán Kinh Tế & Khoa Hệ Thống Thông Tin</div>
+          </div>
         </div>
         <div style="text-align: right; font-size: 11px;">
           <div><strong>${subject}</strong></div>

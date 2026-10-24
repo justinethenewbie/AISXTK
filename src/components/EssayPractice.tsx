@@ -395,12 +395,17 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
       <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-500/40 p-6 rounded-3xl space-y-3 shadow-[0_0_25px_rgba(6,182,212,0.15)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="p-2.5 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-black text-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              🏛️ HUB
-            </span>
+            <div className="p-2 rounded-2xl bg-slate-950/80 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0 flex items-center justify-center">
+              <img
+                src="/assets/hub-logo.png"
+                alt="HUB Logo"
+                className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.7)]"
+              />
+            </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                <span className="text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase inline-flex items-center gap-1.5">
+                  <img src="/assets/hub-logo.png" alt="HUB" className="w-3.5 h-3.5 object-contain" />
                   ĐẠI HỌC NGÂN HÀNG TP.HCM
                 </span>
                 <span className="text-[10px] font-mono text-cyan-400 font-bold">CHUẨN 75 PHÚT</span>
@@ -501,8 +506,15 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
 
           {/* Official Exam Paper Header */}
           <div className="p-5 bg-slate-950 border-2 border-slate-800 rounded-3xl space-y-2 text-center relative overflow-hidden">
-            <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              TRƯỜNG ĐẠI HỌC NGÂN HÀNG THÀNH PHỐ HỒ CHÍ MINH (HUB)
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <img
+                src="/assets/hub-logo.png"
+                alt="HUB"
+                className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]"
+              />
+              <span className="text-xs font-black uppercase tracking-widest text-slate-200">
+                TRƯỜNG ĐẠI HỌC NGÂN HÀNG THÀNH PHỐ HỒ CHÍ MINH (HUB)
+              </span>
             </div>
             <div className="text-sm font-extrabold text-cyan-300">
               {currentHubExam.faculty}

@@ -25,99 +25,18 @@ export const HubEdtLogo: React.FC<HubEdtLogoProps> = ({
       className={`inline-flex items-center ${dimensions.gap} select-none group cursor-pointer ${className}`}
       title="Đại học Ngân hàng TP.HCM (HUB) • AI Classroom Tutor"
     >
-      {/* HUB Emblem Container with Neon Glow */}
+      {/* Official HUB Emblem Container with Neon Glow */}
       <div className="relative shrink-0 flex items-center justify-center">
         {/* Neon Ambient Pulse Halo */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/30 via-amber-500/30 to-emerald-500/30 blur-md group-hover:blur-lg group-hover:scale-110 transition-all duration-300 pointer-events-none" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-600/30 via-red-600/20 to-cyan-500/30 blur-md group-hover:blur-lg group-hover:scale-110 transition-all duration-300 pointer-events-none" />
 
-        {/* High-Resolution HUB Crest SVG */}
-        <svg
-          width={dimensions.icon}
-          height={dimensions.icon}
-          viewBox="0 0 120 120"
-          className="relative z-10 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.6)] transition-transform duration-300 group-hover:scale-105"
-        >
-          <defs>
-            {/* Outer Cyber Neon Ring Gradient */}
-            <linearGradient id="hubNeonRing" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#00f0ff" />
-              <stop offset="50%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#f59e0b" />
-            </linearGradient>
-
-            {/* Traditional HUB Deep Ruby Red Background Gradient */}
-            <radialGradient id="hubRubyRed" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#b91c1c" />
-              <stop offset="70%" stopColor="#7f1d1d" />
-              <stop offset="100%" stopColor="#450a0a" />
-            </radialGradient>
-
-            {/* Imperial Gold Coin & Lettering Gradient */}
-            <linearGradient id="hubGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="50%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#d97706" />
-            </linearGradient>
-          </defs>
-
-          {/* Outer Cyber Ring with Neon ticks */}
-          <circle cx="60" cy="60" r="57" fill="none" stroke="url(#hubNeonRing)" strokeWidth="2.5" opacity="0.9" />
-          <circle cx="60" cy="60" r="53" fill="none" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
-
-          {/* HUB Ruby Shield Base */}
-          <circle cx="60" cy="60" r="50" fill="url(#hubRubyRed)" stroke="#f59e0b" strokeWidth="2" />
-
-          {/* Golden Circular Seal Arc Text Guides (Representation of HUB) */}
-          <path id="hubTextArcTop" d="M 22 60 A 38 38 0 0 1 98 60" fill="none" />
-          <path id="hubTextArcBottom" d="M 98 60 A 38 38 0 0 1 22 60" fill="none" />
-
-          {/* HUB Ribbon / Banking Coin Motifs */}
-          <g filter="drop-shadow(0 0 3px rgba(245,158,11,0.5))">
-            {/* Ancient Coin Symbol in center with rounded square */}
-            <circle cx="60" cy="55" r="23" fill="none" stroke="url(#hubGoldGrad)" strokeWidth="2.5" />
-            <rect x="53" y="48" width="14" height="14" rx="2" fill="none" stroke="url(#hubGoldGrad)" strokeWidth="2" />
-
-            {/* Stylized Torch of Knowledge Rising from Coin */}
-            <path
-              d="M 60 22 C 57 28, 56 32, 60 36 C 64 32, 63 28, 60 22 Z"
-              fill="url(#hubGoldGrad)"
-            />
-            <circle cx="60" cy="27" r="2.5" fill="#fef08a" />
-
-            {/* Laurel Wreath of Academic Excellence */}
-            <path
-              d="M 33 62 C 34 76, 46 86, 60 86 C 74 86, 86 76, 87 62"
-              fill="none"
-              stroke="url(#hubGoldGrad)"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            />
-            {/* Laurel Leaves */}
-            <circle cx="36" cy="68" r="2" fill="#f59e0b" />
-            <circle cx="43" cy="76" r="2.2" fill="#f59e0b" />
-            <circle cx="51" cy="82" r="2.2" fill="#f59e0b" />
-            <circle cx="69" cy="82" r="2.2" fill="#f59e0b" />
-            <circle cx="77" cy="76" r="2.2" fill="#f59e0b" />
-            <circle cx="84" cy="68" r="2" fill="#f59e0b" />
-
-            {/* HUB Distinctive Lettering */}
-            <text
-              x="60"
-              y="74"
-              textAnchor="middle"
-              fill="#ffffff"
-              fontFamily="sans-serif"
-              fontWeight="900"
-              fontSize="12"
-              letterSpacing="2"
-            >
-              HUB
-            </text>
-          </g>
-
-          {/* University Motto Star */}
-          <polygon points="60,11 61.5,14 65,14 62,16.5 63,20 60,17.5 57,20 58,16.5 55,14 58.5,14" fill="#00f0ff" />
-        </svg>
+        {/* Official High-Resolution HUB Crest Image */}
+        <img
+          src="/assets/hub-logo.png"
+          alt="Trường Đại học Ngân hàng TP.HCM (HUB)"
+          style={{ width: `${dimensions.icon}px`, height: `${dimensions.icon}px` }}
+          className="relative z-10 object-contain drop-shadow-[0_0_12px_rgba(6,182,212,0.65)] transition-transform duration-300 group-hover:scale-105"
+        />
       </div>
 
       {/* Typography: HUB Logo Brand on Top & AI Classroom Directly Underneath */}
