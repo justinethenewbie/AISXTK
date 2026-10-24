@@ -1514,149 +1514,368 @@ export const CasioCalculator: React.FC = () => {
                 </span>
               </div>
 
-              {/* Sub-modes for MENU 7 */}
-              <div className="grid grid-cols-2 gap-1.5">
+              {/* Sub-modes for MENU 7 - Toàn bộ tên phân phối được Việt hóa chuẩn mực */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { id: 'normal_cd', label: '2: Normal CD (Tích lũy)' },
-                  { id: 'inv_normal', label: '3: Inverse Normal (Nghịch đảo)' },
-                  { id: 'normal_pd', label: '1: Normal PD (Mật độ)' },
-                  { id: 'binom_pd', label: '4: Binomial PD (Nhị thức)' },
-                  { id: 'binom_cd', label: '▼1: Binomial CD' },
-                  { id: 'poisson_pd', label: '▼2: Poisson PD' },
-                  { id: 'poisson_cd', label: '▼3: Poisson CD' },
+                  {
+                    id: 'normal_cd',
+                    title: 'Xác suất phân phối chuẩn tích lũy',
+                    casioCode: '2: Normal CD',
+                    formula: 'P(a ≤ X ≤ b)',
+                    desc: 'Tính xác suất biến ngẫu nhiên liên tục rơi vào khoảng [a, b]',
+                    badgeColor: 'border-cyan-500/40 text-cyan-300 bg-cyan-950/50',
+                  },
+                  {
+                    id: 'inv_normal',
+                    title: 'Phân vị nghịch đảo phân phối chuẩn',
+                    casioCode: '3: Inverse Normal',
+                    formula: 'P(X ≤ x₀) = Area ⇒ x₀',
+                    desc: 'Tìm giá trị x₀ tương ứng mức diện tích (bài toán bảo hành, định mức)',
+                    badgeColor: 'border-indigo-500/40 text-indigo-300 bg-indigo-950/50',
+                  },
+                  {
+                    id: 'normal_pd',
+                    title: 'Mật độ phân phối chuẩn',
+                    casioCode: '1: Normal PD',
+                    formula: 'f(x)',
+                    desc: 'Tính tung độ hàm mật độ xác suất Gauss tại điểm x',
+                    badgeColor: 'border-blue-500/40 text-blue-300 bg-blue-950/50',
+                  },
+                  {
+                    id: 'binom_pd',
+                    title: 'Xác suất phân phối nhị thức',
+                    casioCode: '4: Binomial PD',
+                    formula: 'P(X = k)',
+                    desc: 'Xác suất xảy ra chính xác k lần thành công trong n phép thử độc lập',
+                    badgeColor: 'border-emerald-500/40 text-emerald-300 bg-emerald-950/50',
+                  },
+                  {
+                    id: 'binom_cd',
+                    title: 'Xác suất tích lũy phân phối nhị thức',
+                    casioCode: '▼1: Binomial CD',
+                    formula: 'P(X ≤ k)',
+                    desc: 'Xác suất xảy ra tối đa k lần thành công (cộng dồn từ 0 đến k)',
+                    badgeColor: 'border-teal-500/40 text-teal-300 bg-teal-950/50',
+                  },
+                  {
+                    id: 'poisson_pd',
+                    title: 'Xác suất phân phối Poisson',
+                    casioCode: '▼2: Poisson PD',
+                    formula: 'P(X = k)',
+                    desc: 'Xác suất xuất hiện đúng k biến cố với tham số trung bình λ',
+                    badgeColor: 'border-amber-500/40 text-amber-300 bg-amber-950/50',
+                  },
+                  {
+                    id: 'poisson_cd',
+                    title: 'Xác suất tích lũy phân phối Poisson',
+                    casioCode: '▼3: Poisson CD',
+                    formula: 'P(X ≤ k)',
+                    desc: 'Xác suất xuất hiện tối đa k biến cố (cộng dồn từ 0 đến k)',
+                    badgeColor: 'border-orange-500/40 text-orange-300 bg-orange-950/50',
+                  },
                 ].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setDistType(item.id as any)}
-                    className={`p-2 rounded-xl text-left font-bold transition-colors ${
+                    className={`p-3 rounded-2xl text-left transition-all border flex flex-col justify-between gap-1.5 ${
                       distType === item.id
-                        ? 'bg-cyan-500 text-black'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        ? 'bg-gradient-to-r from-cyan-950/80 to-slate-900 border-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/50'
+                        : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-850 hover:border-slate-700'
                     }`}
                   >
-                    {item.label}
+                    <div className="flex items-start justify-between gap-2">
+                      <span className={`text-xs font-bold leading-snug ${distType === item.id ? 'text-cyan-300 font-black' : 'text-slate-100'}`}>
+                        {item.title}
+                      </span>
+                      <span className={`shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${item.badgeColor}`}>
+                        {item.casioCode}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-800/70 text-[11px]">
+                      <span className="font-mono text-cyan-400 font-semibold">{item.formula}</span>
+                      <span className="text-[10px] text-slate-400 truncate text-right max-w-[190px]" title={item.desc}>
+                        {item.desc}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
 
               {/* Parameters Inputs */}
-              <div className="p-3.5 bg-slate-950/70 rounded-2xl border border-slate-800 space-y-2">
+              <div className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span className="text-xs font-bold text-slate-200">
+                      Tham số đầu vào máy tính Casio:
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    fx-580VN X Menu 7
+                  </span>
+                </div>
+
                 {distType.startsWith('normal') || distType === 'inv_normal' ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {distType === 'normal_cd' && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-0.5">Lower (Cận dưới)</label>
+                          <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                            Cận dưới (Lower - Cận nhỏ nhất):
+                          </label>
                           <input
                             type="text"
                             value={distInputs.lower}
                             onChange={(e) => setDistInputs({ ...distInputs, lower: e.target.value })}
-                            className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                            placeholder="VD: 26 (hoặc -10^9 nếu -∞)"
+                            className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
                           />
+                          <span className="text-[10px] text-slate-500 mt-0.5 block">Nếu đề cho X &gt; a thì cận trên là 10⁹</span>
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-0.5">Upper (Cận trên)</label>
+                          <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                            Cận trên (Upper - Cận lớn nhất):
+                          </label>
                           <input
                             type="text"
                             value={distInputs.upper}
                             onChange={(e) => setDistInputs({ ...distInputs, upper: e.target.value })}
-                            className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                            placeholder="VD: 1000000 (hoặc 10^9 nếu +∞)"
+                            className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
                           />
+                          <span className="text-[10px] text-slate-500 mt-0.5 block">Nếu đề cho X &lt; b thì cận dưới là -10⁹</span>
                         </div>
+                      </div>
+                    )}
+
+                    {distType === 'normal_pd' && (
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Điểm tính mật độ (x):
+                        </label>
+                        <input
+                          type="text"
+                          value={distInputs.upper}
+                          onChange={(e) => setDistInputs({ ...distInputs, upper: e.target.value })}
+                          placeholder="VD: 24"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-cyan-300 focus:border-cyan-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">Tính tung độ hàm f(x) tại giá trị x</span>
                       </div>
                     )}
 
                     {distType === 'inv_normal' && (
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-0.5">Area (Diện tích / Xác suất tích lũy)</label>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Diện tích / Xác suất tích lũy (Area = P(X ≤ x₀)):
+                        </label>
                         <input
                           type="text"
                           value={distInputs.area}
                           onChange={(e) => setDistInputs({ ...distInputs, area: e.target.value })}
-                          className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-cyan-300"
+                          placeholder="VD: 0.05 (tương ứng 5%)"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-cyan-300 focus:border-cyan-400 focus:outline-none"
                         />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">Phần diện tích đuôi bên trái của phân phối chuẩn</span>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-0.5">Độ lệch chuẩn σ</label>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Độ lệch chuẩn σ (Sigma &gt; 0):
+                        </label>
                         <input
                           type="text"
                           value={distInputs.sd}
                           onChange={(e) => setDistInputs({ ...distInputs, sd: e.target.value })}
-                          className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                          placeholder="VD: 2 (Nếu đề cho σ²=4 thì nhập √4 = 2)"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
                         />
+                        <span className="text-[10px] text-amber-400/90 mt-0.5 block">⚠️ Bẫy HUB: Đề cho σ² phải khai căn lấy σ!</span>
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-0.5">Kỳ vọng μ</label>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Kỳ vọng μ (Mean / Giá trị trung bình):
+                        </label>
                         <input
                           type="text"
                           value={distInputs.mean}
                           onChange={(e) => setDistInputs({ ...distInputs, mean: e.target.value })}
-                          className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                          placeholder="VD: 24"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
                         />
                       </div>
                     </div>
                   </div>
                 ) : distType.startsWith('binom') ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Số lần k</label>
-                      <input
-                        type="text"
-                        value={distInputs.k}
-                        onChange={(e) => setDistInputs({ ...distInputs, k: e.target.value })}
-                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Số phép thử n</label>
-                      <input
-                        type="text"
-                        value={distInputs.n}
-                        onChange={(e) => setDistInputs({ ...distInputs, n: e.target.value })}
-                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Xác suất p</label>
-                      <input
-                        type="text"
-                        value={distInputs.p}
-                        onChange={(e) => setDistInputs({ ...distInputs, p: e.target.value })}
-                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
-                      />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          {distType === 'binom_pd' ? 'Số lần thành công (k):' : 'Số lần tối đa (k):'}
+                        </label>
+                        <input
+                          type="text"
+                          value={distInputs.k}
+                          onChange={(e) => setDistInputs({ ...distInputs, k: e.target.value })}
+                          placeholder="VD: 3"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">{distType === 'binom_pd' ? 'Đúng k lần' : 'Tối đa k lần (≤ k)'}</span>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Tổng số phép thử (n):
+                        </label>
+                        <input
+                          type="text"
+                          value={distInputs.n}
+                          onChange={(e) => setDistInputs({ ...distInputs, n: e.target.value })}
+                          placeholder="VD: 10"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">Số phép thử Bernoulli</span>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Xác suất mỗi lần (p):
+                        </label>
+                        <input
+                          type="text"
+                          value={distInputs.p}
+                          onChange={(e) => setDistInputs({ ...distInputs, p: e.target.value })}
+                          placeholder="VD: 0.5"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">0 ≤ p ≤ 1</span>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Số lần k</label>
-                      <input
-                        type="text"
-                        value={distInputs.k}
-                        onChange={(e) => setDistInputs({ ...distInputs, k: e.target.value })}
-                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Tham số λ (Lambda)</label>
-                      <input
-                        type="text"
-                        value={distInputs.lambda}
-                        onChange={(e) => setDistInputs({ ...distInputs, lambda: e.target.value })}
-                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
-                      />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          {distType === 'poisson_pd' ? 'Số lần biến cố xảy ra (k):' : 'Số lần biến cố tối đa (k):'}
+                        </label>
+                        <input
+                          type="text"
+                          value={distInputs.k}
+                          onChange={(e) => setDistInputs({ ...distInputs, k: e.target.value })}
+                          placeholder="VD: 2"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">
+                          {distType === 'poisson_pd' ? 'Đúng k biến cố: P(X = k)' : 'Tối đa k biến cố: P(X ≤ k)'}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">
+                          Tham số trung bình λ (Lambda):
+                        </label>
+                        <input
+                          type="text"
+                          value={distInputs.lambda}
+                          onChange={(e) => setDistInputs({ ...distInputs, lambda: e.target.value })}
+                          placeholder="VD: 4"
+                          className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">Kỳ vọng E(X) = λ = Var(X)</span>
+                      </div>
                     </div>
                   </div>
                 )}
 
+                {/* Kết quả tính toán & Hướng dẫn bấm máy thực tế */}
                 {distResult !== null && (
-                  <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-center">
-                    <span className="text-[11px] text-emerald-300 font-bold">Kết quả xác suất tính toán:</span>
-                    <div className="text-2xl font-mono font-black text-emerald-400 mt-0.5">
+                  <div className="p-4 bg-gradient-to-r from-emerald-950/60 to-slate-950 border-2 border-emerald-500/50 rounded-2xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-emerald-300 font-extrabold flex items-center gap-1.5">
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span>Kết quả xác suất tính toán:</span>
+                      </span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-700/50 font-bold">
+                        {(distResult * 100).toFixed(3)}%
+                      </span>
+                    </div>
+
+                    <div className="text-3xl font-mono font-black text-emerald-400 tracking-wider">
                       {distResult}
+                    </div>
+
+                    {/* Công thức toán học tương ứng */}
+                    <div className="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs font-mono text-slate-200">
+                      {distType === 'poisson_pd' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Công thức phân phối Poisson:</span>
+                          <MathFormula math={`P(X = ${distInputs.k || 'k'}) = \\frac{${distInputs.lambda || '\\lambda'}^{${distInputs.k || 'k'}} \\cdot e^{-${distInputs.lambda || '\\lambda'}}}{${distInputs.k || 'k'}!} \\approx ${distResult}`} />
+                        </div>
+                      )}
+                      {distType === 'poisson_cd' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Công thức Poisson tích lũy:</span>
+                          <MathFormula math={`P(X \\le ${distInputs.k || 'k'}) = \\sum_{i=0}^{${distInputs.k || 'k'}} \\frac{${distInputs.lambda || '\\lambda'}^i \\cdot e^{-${distInputs.lambda || '\\lambda'}}}{i!} \\approx ${distResult}`} />
+                        </div>
+                      )}
+                      {distType === 'normal_cd' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Công thức xác suất phân phối chuẩn:</span>
+                          <MathFormula math={`P(${distInputs.lower} \\le X \\le ${distInputs.upper}) = \\Phi\\left(\\frac{${distInputs.upper} - ${distInputs.mean}}{${distInputs.sd}}\\right) - \\Phi\\left(\\frac{${distInputs.lower} - ${distInputs.mean}}{${distInputs.sd}}\\right) \\approx ${distResult}`} />
+                        </div>
+                      )}
+                      {distType === 'inv_normal' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Công thức nghịch đảo phân phối chuẩn:</span>
+                          <MathFormula math={`P(X \\le x_0) = ${distInputs.area} \\implies x_0 \\approx ${distResult}`} />
+                        </div>
+                      )}
+                      {distType === 'normal_pd' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Hàm mật độ Gauss:</span>
+                          <MathFormula math={`f(${distInputs.upper}) = \\frac{1}{${distInputs.sd}\\sqrt{2\\pi}} e^{-\\frac{(${distInputs.upper}-${distInputs.mean})^2}{2(${distInputs.sd})^2}} \\approx ${distResult}`} />
+                        </div>
+                      )}
+                      {distType === 'binom_pd' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Công thức Bernoulli:</span>
+                          <MathFormula math={`P(X = ${distInputs.k}) = C_{${distInputs.n}}^{${distInputs.k}} \\cdot (${distInputs.p})^{${distInputs.k}} \\cdot (1 - ${distInputs.p})^{${Math.max(0, Number(distInputs.n || 0) - Number(distInputs.k || 0))}} \\approx ${distResult}`} />
+                        </div>
+                      )}
+                      {distType === 'binom_cd' && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans mb-1">Công thức tích lũy nhị thức:</span>
+                          <MathFormula math={`P(X \\le ${distInputs.k}) = \\sum_{i=0}^{${distInputs.k}} C_{${distInputs.n}}^i \\cdot (${distInputs.p})^i \\cdot (1 - ${distInputs.p})^{${distInputs.n} - i} \\approx ${distResult}`} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Trình tự phím bấm Casio fx-580VN X */}
+                    <div className="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-amber-300">
+                      <span className="font-bold text-amber-400 block font-sans mb-0.5">
+                        ⌨️ Trình tự bấm phím thực tế trên Casio fx-580VN X:
+                      </span>
+                      {distType === 'poisson_pd' && (
+                        <span>Bấm <code>[MENU] [7] [▼] [2]</code> (Poisson PD) &rarr; Bấm <code>[1]</code> (Variable) &rarr; Nhập x = <strong>{distInputs.k}</strong>, &lambda; = <strong>{distInputs.lambda}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
+                      {distType === 'poisson_cd' && (
+                        <span>Bấm <code>[MENU] [7] [▼] [3]</code> (Poisson CD) &rarr; Bấm <code>[1]</code> (Variable) &rarr; Nhập x = <strong>{distInputs.k}</strong>, &lambda; = <strong>{distInputs.lambda}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
+                      {distType === 'normal_cd' && (
+                        <span>Bấm <code>[MENU] [7] [2]</code> (Normal CD) &rarr; Nhập Lower = <strong>{distInputs.lower}</strong>, Upper = <strong>{distInputs.upper}</strong>, &sigma; = <strong>{distInputs.sd}</strong>, &mu; = <strong>{distInputs.mean}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
+                      {distType === 'inv_normal' && (
+                        <span>Bấm <code>[MENU] [7] [3]</code> (Inverse Normal) &rarr; Nhập Area = <strong>{distInputs.area}</strong>, &sigma; = <strong>{distInputs.sd}</strong>, &mu; = <strong>{distInputs.mean}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
+                      {distType === 'normal_pd' && (
+                        <span>Bấm <code>[MENU] [7] [1]</code> (Normal PD) &rarr; Nhập x = <strong>{distInputs.upper}</strong>, &sigma; = <strong>{distInputs.sd}</strong>, &mu; = <strong>{distInputs.mean}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
+                      {distType === 'binom_pd' && (
+                        <span>Bấm <code>[MENU] [7] [4]</code> (Binomial PD) &rarr; Bấm <code>[1]</code> (Variable) &rarr; Nhập x = <strong>{distInputs.k}</strong>, N = <strong>{distInputs.n}</strong>, p = <strong>{distInputs.p}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
+                      {distType === 'binom_cd' && (
+                        <span>Bấm <code>[MENU] [7] [▼] [1]</code> (Binomial CD) &rarr; Bấm <code>[1]</code> (Variable) &rarr; Nhập x = <strong>{distInputs.k}</strong>, N = <strong>{distInputs.n}</strong>, p = <strong>{distInputs.p}</strong> &rarr; Bấm <code>[=]</code></span>
+                      )}
                     </div>
                   </div>
                 )}
