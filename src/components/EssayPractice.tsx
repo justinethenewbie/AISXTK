@@ -586,8 +586,15 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                     Xem tờ phao ➔
                   </button>
                 </div>
-                <div className="text-slate-200 text-xs font-mono leading-relaxed bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-                  <MathText text={currentHubQuestion.camScannerFormulaRef} />
+                <div className="text-slate-200 text-xs font-mono leading-relaxed bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-2">
+                  {currentHubQuestion.camScannerFormulaRef.split(/\s*&\s*/).map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-cyan-400 font-bold shrink-0 mt-0.5">•</span>
+                      <div className="min-w-0 flex-1">
+                        <MathText text={item} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
