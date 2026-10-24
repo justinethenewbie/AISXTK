@@ -409,13 +409,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
               <span className="text-[11px] font-mono font-bold bg-cyan-950/80 text-cyan-300 px-2.5 py-0.5 rounded-full border border-cyan-500/40">
-                {getMascotById(userProfile.equippedMascot?.species || 'owl').name}
+                {getMascotById(userProfile.equippedMascot?.species || 'penguin').name}
               </span>
             </div>
 
             <div className="grid grid-cols-5 gap-2 pt-1">
               {MASCOT_CATALOG.map((m) => {
-                const isSelected = (userProfile.equippedMascot?.species || 'owl') === m.species;
+                const isSelected = (userProfile.equippedMascot?.species || 'penguin') === m.species;
                 return (
                   <button
                     key={m.id}

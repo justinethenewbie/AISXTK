@@ -3040,6 +3040,12 @@ interface DevUserRecord {
   createdAt: string;
   lastActive: string;
   status: 'active' | 'suspended';
+  equippedMascot?: {
+    species?: string;
+    hat?: string;
+    outfit?: string;
+    accessory?: string;
+  };
   recentActivity: Array<{
     action: string;
     detail: string;
@@ -3422,7 +3428,7 @@ app.post('/api/auth/login', (req, res) => {
 // AUTH: Cập nhật tiến độ học tập & TÍCH LŨY STREAK THỜI GIAN THỰC vào users_database.json
 // Streak CHỈ ĐƯỢC TÍNH VÀ GIA HẠN khi người dùng thực sự tương tác học tập!
 app.post('/api/auth/save-progress', (req, res) => {
-  const { userId, expGained, exercisesCount, gpa, studyHours, activityDetail, isStudyInteraction = true } = req.body;
+  const { userId, expGained, exercisesCount, gpa, studyHours, activityDetail, isStudyInteraction = true, equippedMascot } = req.body;
   if (!userId) {
     return res.status(400).json({ success: false, error: 'Thiếu userId!' });
   }
@@ -3431,6 +3437,9 @@ app.post('/api/auth/save-progress', (req, res) => {
   const user = users.find(u => u.id === userId);
 
   if (user) {
+    if (equippedMascot) {
+      user.equippedMascot = equippedMascot;
+    }
     if (expGained) {
       user.exp += Number(expGained);
       user.level = Math.floor(user.exp / 200) + 1;
@@ -3481,6 +3490,39 @@ app.post('/api/auth/save-progress', (req, res) => {
       user,
       streakResult,
       message: 'Tiến độ học tập và chuỗi Streak đã được lưu bền vững vào users_database.json!',
+    });
+  }
+
+  return res.json({ success: false, error: 'Không tìm thấy người dùng trong users_database.json' });
+});
+
+// AUTH: Cập nhật Linh vật đồng hành (Mascot Companion) vào users_database.json
+app.post('/api/auth/update-mascot', (req, res) => {
+  const { userId, equippedMascot } = req.body;
+  if (!userId || !equippedMascot) {
+    return res.status(400).json({ success: false, error: 'Thiếu userId hoặc equippedMascot!' });
+  }
+
+  const users = getUsersDatabase();
+  const user = users.find(u => u.id === userId);
+
+  if (user) {
+    user.equippedMascot = equippedMascot;
+    user.lastActive = 'Vừa xong';
+    if (!user.recentActivity) user.recentActivity = [];
+    user.recentActivity.unshift({
+      action: 'Linh vật đồng hành 🐾',
+      detail: `Chọn ${equippedMascot.species ? equippedMascot.species.toUpperCase() : 'Linh vật'} làm bạn đồng hành nhảy nhót học tập!`,
+      timestamp: 'Vừa xong',
+    });
+    if (user.recentActivity.length > 20) {
+      user.recentActivity = user.recentActivity.slice(0, 20);
+    }
+    saveUsersDatabase(users);
+    return res.json({
+      success: true,
+      user,
+      message: 'Linh vật đã được nạp và lưu bền vững vào users_database.json!',
     });
   }
 

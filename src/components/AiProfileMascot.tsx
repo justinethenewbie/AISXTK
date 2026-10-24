@@ -760,8 +760,14 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
                     }`}
                   >
                     {isSelected && (
-                      <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">
+                      <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow z-10">
                         ✓ Đang chọn
+                      </span>
+                    )}
+                    {['penguin', 'crocodile', 'bear', 'fox', 'cat'].includes(m.species) && (
+                      <span className="absolute top-2 left-2 bg-slate-950/90 text-amber-300 border border-red-500/60 text-[9px] font-black px-1.5 py-0.2 rounded-md shadow flex items-center gap-1 z-10">
+                        <img src="/assets/hub-logo.png" alt="HUB" className="w-2.5 h-2.5 object-contain" />
+                        HUB 1976
                       </span>
                     )}
                     <div>

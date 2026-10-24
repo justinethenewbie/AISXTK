@@ -19,7 +19,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
   const [classGroup, setClassGroup] = useState(userProfile.classGroup || '2026-DHKT01');
   const [major, setMajor] = useState(userProfile.major || 'Khoa học Dữ liệu & AI');
   const [studentId, setStudentId] = useState(userProfile.studentId || '26110293');
-  const [selectedSpecies, setSelectedSpecies] = useState<MascotSpecies>(userProfile.equippedMascot?.species || 'owl');
+  const [selectedSpecies, setSelectedSpecies] = useState<MascotSpecies>(userProfile.equippedMascot?.species || 'penguin');
 
   const handleNextStep1 = (e: React.FormEvent) => {
     e.preventDefault();

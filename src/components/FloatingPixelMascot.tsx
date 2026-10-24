@@ -15,16 +15,7 @@ interface FloatingPixelMascotProps {
  * List of core study tools where the user needs 100% focused concentration.
  */
 const STUDY_TOOLS: ActiveToolType[] = [
-  'image_grading',
-  'essay_generator',
-  'mcq_generator',
-  'learning',
-  'casio_calc',
-  'charts',
-  'math_processor',
   'viva_exam',
-  'voice_chat',
-  'wysiwyg_math',
 ];
 
 export const FloatingPixelMascot: React.FC<FloatingPixelMascotProps> = ({

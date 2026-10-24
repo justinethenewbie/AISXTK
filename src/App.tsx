@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActiveToolType, UserProfile, MistakeRecord, AppUser } from './types/xstk';
+import { ActiveToolType, UserProfile, MistakeRecord, AppUser, MascotSpecies } from './types/xstk';
 import { CHAPTERS_DATA, INITIAL_MASCOT_ITEMS, INITIAL_BADGES, INITIAL_WEEKLY_ACHIEVEMENTS } from './data/curriculumData';
 
 import { TopNavbar } from './components/TopNavbar';
@@ -84,6 +84,7 @@ const INITIAL_PROFILE: UserProfile = {
   unlockedLootboxes: 2,
   inventory: INITIAL_MASCOT_ITEMS,
   equippedMascot: {
+    species: 'penguin',
     hat: 'hat_grad',
     outfit: 'robe_gold',
     accessory: 'glasses_smart',
@@ -223,6 +224,29 @@ export default function App() {
 
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
+    if (currentUser?.id && updated.equippedMascot) {
+      fetch('/api/auth/update-mascot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          equippedMascot: updated.equippedMascot,
+        }),
+      }).catch(console.error);
+    }
+  };
+
+  const handleCycleMascot = () => {
+    const hubSpecies: MascotSpecies[] = ['penguin', 'crocodile', 'bear', 'fox', 'cat', 'owl', 'panda', 'lion', 'whale', 'dragon'];
+    const currentSpecies = profile.equippedMascot?.species || 'penguin';
+    const currentIdx = hubSpecies.indexOf(currentSpecies);
+    const nextSpecies = hubSpecies[(currentIdx + 1) % hubSpecies.length];
+
+    const updatedMascot = {
+      ...profile.equippedMascot,
+      species: nextSpecies,
+    };
+    handleUpdateProfile({ equippedMascot: updatedMascot });
   };
 
   const handleAddExp = (amount: number, activityDetail?: string, exercisesCount = 1, gpaValue?: number) => {
@@ -536,14 +560,37 @@ export default function App() {
             </div>
           </div>
 
-          {/* Sidebar Mascot Widget */}
+          {/* Sidebar Mascot Widget (Nhảy Nhót & Giải Trí) */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-500/30 text-white p-4 rounded-3xl shadow-[0_0_20px_rgba(6,182,212,0.15)] text-center space-y-2 relative overflow-hidden">
             <div className="absolute -top-10 -right-10 w-28 h-28 bg-cyan-500/10 rounded-full blur-xl pointer-events-none"></div>
-            <Mascot
-              size="sm"
-              equipped={profile.equippedMascot}
-              speechText={`Cùng ${getMascotById(profile.equippedMascot?.species || 'owl').name} chinh phục điểm 10 XSTK nhé!`}
-            />
+            
+            {/* Live Interactive Dancing Mascot */}
+            <div className="flex justify-center">
+              <Mascot
+                size="sm"
+                equipped={profile.equippedMascot}
+                speechText={`Cùng ${getMascotById(profile.equippedMascot?.species || 'penguin').name} chinh phục điểm 10 XSTK nhé!`}
+                showDanceBadge={true}
+              />
+            </div>
+
+            {/* Quick Interactive Mascot Actions */}
+            <div className="flex items-center justify-center gap-1.5 pt-1">
+              <button
+                onClick={handleCycleMascot}
+                className="px-2.5 py-1 rounded-xl bg-slate-950/80 hover:bg-cyan-950 text-cyan-300 hover:text-white border border-cyan-500/40 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                title="Đổi nhanh giữa 5 Linh Vật Pixel HUB 1976"
+              >
+                <span>🔄 Đổi Bé HUB</span>
+              </button>
+              <button
+                onClick={() => setActiveTool('profile')}
+                className="px-2.5 py-1 rounded-xl bg-slate-950/80 hover:bg-amber-950 text-amber-300 hover:text-white border border-amber-500/40 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                title="Mở Kho Linh Vật & Tùy Chỉnh"
+              >
+                <span>🎒 Kho Linh Vật</span>
+              </button>
+            </div>
             <div
               className={`text-xs font-bold py-2 px-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all ${
                 hasStudiedToday

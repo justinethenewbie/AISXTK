@@ -20,6 +20,11 @@
     "status": "active",
     "recentActivity": [
       {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn PENGUIN làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
         "action": "Học tập & Luyện đề",
         "detail": "Nắm vững bản chất Bước 4: Ví Dụ Mẫu Của Giáo Viên (Bài 1: Xác Suất và Công Thức Tính Xác Suất)",
         "timestamp": "Vừa xong"
@@ -113,14 +118,13 @@
         "action": "Học tập & Luyện đề",
         "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
         "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
       }
     ],
-    "lastStudyDate": "2026-10-24"
+    "lastStudyDate": "2026-10-24",
+    "equippedMascot": {
+      "species": "penguin",
+      "hat": "hat_grad"
+    }
   },
   {
     "id": "USR-DEV-001",
@@ -163,7 +167,13 @@
         "timestamp": "30 phút trước"
       }
     ],
-    "lastStudyDate": "2026-10-24"
+    "lastStudyDate": "2026-10-24",
+    "equippedMascot": {
+      "species": "cat",
+      "hat": "hat_grad",
+      "outfit": "robe_gold",
+      "accessory": "glasses_smart"
+    }
   },
   {
     "id": "USR-2026-089",
@@ -196,7 +206,13 @@
         "timestamp": "Hôm qua"
       }
     ],
-    "lastStudyDate": "2026-10-23"
+    "lastStudyDate": "2026-10-23",
+    "equippedMascot": {
+      "species": "crocodile",
+      "hat": "hat_grad",
+      "outfit": "robe_gold",
+      "accessory": "glasses_smart"
+    }
   },
   {
     "id": "USR-2026-112",
@@ -229,7 +245,13 @@
         "timestamp": "Hôm qua"
       }
     ],
-    "lastStudyDate": "2026-10-24"
+    "lastStudyDate": "2026-10-24",
+    "equippedMascot": {
+      "species": "bear",
+      "hat": "hat_grad",
+      "outfit": "robe_gold",
+      "accessory": "glasses_smart"
+    }
   },
   {
     "id": "USR-2026-205",
@@ -262,7 +284,13 @@
         "timestamp": "Hôm qua"
       }
     ],
-    "lastStudyDate": "2026-10-23"
+    "lastStudyDate": "2026-10-23",
+    "equippedMascot": {
+      "species": "fox",
+      "hat": "hat_grad",
+      "outfit": "robe_gold",
+      "accessory": "glasses_smart"
+    }
   },
   {
     "id": "USR-2026-301",
@@ -295,6 +323,12 @@
         "timestamp": "Hôm qua"
       }
     ],
-    "lastStudyDate": "2026-10-24"
+    "lastStudyDate": "2026-10-24",
+    "equippedMascot": {
+      "species": "penguin",
+      "hat": "hat_grad",
+      "outfit": "robe_gold",
+      "accessory": "glasses_smart"
+    }
   }
 ]
