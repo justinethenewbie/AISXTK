@@ -67,7 +67,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setErrorMsg(data.error || 'Đăng nhập không thành công');
       }
     } catch (err) {
-      setErrorMsg('Không thể kết nối máy chủ EDT');
+      setErrorMsg('Không thể kết nối máy chủ AI Classroom');
     } finally {
       setIsLoading(false);
     }
@@ -198,11 +198,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="text-center space-y-1.5 mb-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-950/70 border border-cyan-500/40 rounded-full text-[11px] font-black text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>HỆ THỐNG CƠ SỞ DỮ LIỆU BỀN VỮNG EDT</span>
+            <span>HỆ THỐNG CƠ SỞ DỮ LIỆU BỀN VỮNG AI CLASSROOM</span>
           </div>
           <h2 className="text-xl font-black text-white tracking-tight">
             {tab === 'login'
-              ? 'Đăng Nhập Tài Khoản EDT'
+              ? 'Đăng Nhập Tài Khoản AI Classroom'
               : tab === 'register'
               ? 'Đăng Ký Tài Khoản Học Tập'
               : 'Cổng Quản Trị Bí Mật (Developer Portal)'}

@@ -125,7 +125,7 @@ export function exportExercisesToWord({
           <td style="width: 50%;">
             <div class="school-name">
               BỘ GIÁO DỤC VÀ ĐÀO TẠO<br>
-              <strong>HỆ THỐNG HỌC TẬP THÔNG MINH EDT</strong>
+              <strong>HỆ THỐNG HỌC TẬP THÔNG MINH AI CLASSROOM</strong>
             </div>
           </td>
           <td style="width: 50%;">
@@ -138,7 +138,7 @@ export function exportExercisesToWord({
       </table>
 
       <div class="title">${title}</div>
-      <div class="subtitle">Độ khó: ${difficulty} • Số lượng: ${exercises.length} câu • Hệ thống EDT tự động trích xuất</div>
+      <div class="subtitle">Độ khó: ${difficulty} • Số lượng: ${exercises.length} câu • Hệ thống AI Classroom tự động trích xuất</div>
 
       <div class="student-fields">
         Họ và tên sinh viên: ............................................................................ Mã sinh viên: ................................ Lớp: ........................
@@ -188,7 +188,7 @@ export function exportExercisesToWord({
   contentHtml += `
       </div>
       <div style="margin-top: 30px; text-align: center; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 8px;">
-        --- HẾT (Tài liệu biên soạn từ Hệ thống Trợ lý Học tập EDT - Bản quyền 2026) ---
+        --- HẾT (Tài liệu biên soạn từ Hệ thống Trợ lý Học tập AI Classroom - Bản quyền 2026) ---
       </div>
     </body>
     </html>
@@ -202,7 +202,7 @@ export function exportExercisesToWord({
   const link = document.createElement('a');
   link.href = url;
   const fileNameClean = title.replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
-  link.download = `${fileNameClean}_EDT.doc`;
+  link.download = `${fileNameClean}_AI_Classroom.doc`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -283,7 +283,7 @@ export function exportExercisesToPdf({
     <html lang="vi">
     <head>
       <meta charset="utf-8">
-      <title>${title} - EDT</title>
+      <title>${title} - AI Classroom</title>
       <style>
         @page {
           size: A4;
@@ -403,7 +403,7 @@ export function exportExercisesToPdf({
 
       <div class="header">
         <div>
-          <div class="brand">NỀN TẢNG HỌC TẬP THÔNG MINH EDT</div>
+          <div class="brand">NỀN TẢNG HỌC TẬP THÔNG MINH AI CLASSROOM</div>
           <div style="font-size: 11px; color: #64748b;">Hệ thống Biên soạn Đề thi Xác Suất Thống Kê</div>
         </div>
         <div style="text-align: right; font-size: 11px;">
@@ -413,7 +413,7 @@ export function exportExercisesToPdf({
       </div>
 
       <div class="title">${title}</div>
-      <div class="subtitle">Mức độ: ${difficulty} • Tổng số: ${exercises.length} câu • Xuất bản bởi EDT</div>
+      <div class="subtitle">Mức độ: ${difficulty} • Tổng số: ${exercises.length} câu • Xuất bản bởi AI Classroom</div>
 
       <div class="meta-strip">
         <span>Họ và tên: ............................................................................</span>
@@ -481,7 +481,7 @@ export function exportPromptsToPdf(prompts: any[]) {
     <html lang="vi">
     <head>
       <meta charset="utf-8">
-      <title>Tài Liệu Tổng Hợp Prompt & Kiến Trúc Hệ Thống EDT (${totalSteps} Giai Đoạn)</title>
+      <title>Tài Liệu Tổng Hợp Prompt & Kiến Trúc Hệ Thống AI Classroom (${totalSteps} Giai Đoạn)</title>
       <style>
         @page {
           size: A4;
@@ -696,7 +696,7 @@ export function exportPromptsToPdf(prompts: any[]) {
 
       <div class="header">
         <div>
-          <div class="brand">EDT AI STUDIO BUILD</div>
+          <div class="brand">AI CLASSROOM STUDIO BUILD</div>
           <div class="subbrand">Hệ Thống Gia Sư & Máy Tính Casio Xác Suất Thống Kê Chuẩn Đại Học</div>
         </div>
         <div style="text-align: right; font-size: 11px; color: #64748b;">
@@ -705,7 +705,7 @@ export function exportPromptsToPdf(prompts: any[]) {
         </div>
       </div>
 
-      <div class="title">BẢN TỔNG HỢP TOÀN BỘ PROMPT & HƯỚNG DẪN XÂY DỰNG ỨNG DỤNG EDT</div>
+      <div class="title">BẢN TỔNG HỢP TOÀN BỘ PROMPT & HƯỚNG DẪN XÂY DỰNG ỨNG DỤNG AI CLASSROOM</div>
       <div class="subtitle">
         Trình tự hệ thống hóa đầy đủ ${totalSteps} Giai đoạn (Phases) từ khởi tạo kiến trúc, vi xử lý toán học, Casio ảo, xuất Word/PDF, giao diện Cyber Neon, CSDL Dev, Bảo mật Server-side API Key, Khởi động Dev Server đến Tự động hóa Prompt
       </div>
@@ -780,14 +780,14 @@ export function exportPromptsToPdf(prompts: any[]) {
 
   html += `
       <div style="margin-top: 30px; padding: 15px; border-top: 2px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b;">
-        <p><strong>EDT - AI Tutor Xác Suất Thống Kê Đại Học</strong> • Bản quyền tài liệu kỹ thuật & Prompt Blueprint</p>
+        <p><strong>AI Classroom - AI Tutor Xác Suất Thống Kê Đại Học</strong> • Bản quyền tài liệu kỹ thuật & Prompt Blueprint</p>
         <p>Tự động tổng hợp và đồng bộ bởi Google AI Studio Build System • Bao gồm đầy đủ ${totalSteps} Giai đoạn</p>
       </div>
     </body>
     </html>
   `;
 
-  printOrDownloadHtml(html, 'EDT_Tong_Hop_Prompt_He_Thong_A4.html');
+  printOrDownloadHtml(html, 'AI_Classroom_Tong_Hop_Prompt_He_Thong_A4.html');
 }
 
 /**
@@ -799,7 +799,7 @@ export function exportPromptsToWord(prompts: any[]) {
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
       <meta charset='utf-8'>
-      <title>Tong_Hop_Prompt_EDT_${totalSteps}_Giai_Doan</title>
+      <title>Tong_Hop_Prompt_AI_Classroom_${totalSteps}_Giai_Doan</title>
       <style>
         body {
           font-family: 'Times New Roman', Times, serif;
@@ -846,8 +846,8 @@ export function exportPromptsToWord(prompts: any[]) {
       </style>
     </head>
     <body>
-      <div class="title">BẢN TỔNG HỢP TOÀN BỘ PROMPT & HƯỚNG DẪN XÂY DỰNG ỨNG DỤNG EDT</div>
-      <div class="subtitle">Trình tự hệ thống hóa đầy đủ ${totalSteps} Giai đoạn tái lập ứng dụng EDT - AI Tutor & Casio Calculator</div>
+      <div class="title">BẢN TỔNG HỢP TOÀN BỘ PROMPT & HƯỚNG DẪN XÂY DỰNG ỨNG DỤNG AI CLASSROOM</div>
+      <div class="subtitle">Trình tự hệ thống hóa đầy đủ ${totalSteps} Giai đoạn tái lập ứng dụng AI Classroom - AI Tutor & Casio Calculator</div>
   `;
 
   prompts.forEach((item) => {
@@ -882,7 +882,7 @@ export function exportPromptsToWord(prompts: any[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `EDT_Tong_Hop_Prompt_He_Thong_${totalSteps}_Giai_Doan.doc`;
+  link.download = `AI_Classroom_Tong_Hop_Prompt_He_Thong_${totalSteps}_Giai_Doan.doc`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

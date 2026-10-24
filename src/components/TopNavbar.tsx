@@ -38,7 +38,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
   return (
     <header className="flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-3 bg-slate-950/95 backdrop-blur-md border-b-2 border-cyan-500/30 sticky top-0 z-40 shadow-[0_4px_25px_rgba(0,0,0,0.7)] text-slate-100 w-full max-w-full overflow-x-hidden box-border">
-      {/* Zone 1: Đại học Ngân hàng TP.HCM (HUB) Logo + EDT in Cyber Neon */}
+      {/* Zone 1: Đại học Ngân hàng TP.HCM (HUB) Logo + AI Classroom in Cyber Neon */}
       <HubEdtLogo size="md" onClick={() => setActiveTool('learning')} />
 
       {/* Zone 2: Navigation Links (High contrast white & cyan glow) */}

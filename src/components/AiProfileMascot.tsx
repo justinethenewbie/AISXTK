@@ -369,7 +369,7 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
           <div className="bg-slate-900 border-2 border-cyan-500/30 p-5 rounded-2xl space-y-2">
             <h4 className="font-black text-cyan-300 text-xs flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span>Nhận Định Năng Lực Toàn Diện Từ Giảng Viên AI EDT</span>
+              <span>Nhận Định Năng Lực Toàn Diện Từ Giảng Viên AI Classroom</span>
             </h4>
             <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-medium">
               Bạn đạt phong độ rất vững vàng ở <strong className="text-cyan-300">Bài 1 (Bayes & Xác suất đầy đủ)</strong> và <strong className="text-cyan-300">Bài 3 (Phân phối Chuẩn & Casio fx-580VN X)</strong>. Hãy duy trì giải bài tập thường xuyên và ôn lại <strong className="text-emerald-300">Sổ Tay Câu Sai</strong> để bảo toàn mức GPA 4.0 tuyệt đối!
@@ -675,7 +675,7 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
                   <h3 className="font-black text-sm text-white flex items-center gap-2">
                     <span>CHỌN BẠN ĐỒNG HÀNH XSTK (10 LINH VẬT HUB)</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
-                      EDT Mascot Hub
+                      AI Classroom Mascot Hub
                     </span>
                   </h3>
                   <p className="text-xs text-slate-300">

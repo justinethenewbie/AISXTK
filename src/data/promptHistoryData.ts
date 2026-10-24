@@ -1,5 +1,5 @@
 // Complete systematic compilation of all prompts and technical blueprints
-// for building the EDT - AI Tutor & Casio Calculator Probability & Statistics Application
+// for building the AI Classroom - AI Tutor & Casio Calculator Probability & Statistics Application
 // Automatically synchronized with Google AI Studio prompt versions
 
 export interface PromptStepItem {
@@ -103,13 +103,13 @@ Vì người dùng nhập liệu trên bàn phím máy tính thông thường ho
   },
   {
     stepNumber: 5,
-    phaseTitle: 'Đổi Tên Thành EDT & Đồng Bộ Giao Diện Cyber Neon Độ Tương Phản Cao',
+    phaseTitle: 'Đổi Tên Thành AI Classroom & Đồng Bộ Giao Diện Cyber Neon Độ Tương Phản Cao',
     category: 'UI/UX & Modern Neon Harmonization',
-    goal: 'Đổi tên toàn bộ thương hiệu ứng dụng thành EDT, thiết lập bảng màu Cyber Neon Cyan và Emerald hiện đại với độ tương phản văn bản cao, sắc nét.',
-    fullPromptText: `Giao diện đổi thành màu neon hiện đại hài hòa, đổi tên app thành EDT, đảm bảo độ tương phản văn bản sắc nét trên nền obsidian slate-950.`,
+    goal: 'Đổi tên toàn bộ thương hiệu ứng dụng thành AI Classroom, thiết lập bảng màu Cyber Neon Cyan và Emerald hiện đại với độ tương phản văn bản cao, sắc nét.',
+    fullPromptText: `Giao diện đổi thành màu neon hiện đại hài hòa, đổi tên app thành AI Classroom, đảm bảo độ tương phản văn bản sắc nét trên nền obsidian slate-950.`,
     systemInstructionsPrompt: `Sử dụng tone màu chủ đạo là Cyber Neon Cyan (#06b6d4) và Neon Emerald (#10b981) trên nền obsidian slate-950.`,
     technicalImplementation: [
-      'Cập nhật metadata.json, index.html title và OpenGraph tags sang thương hiệu EDT.'
+      'Cập nhật metadata.json, index.html title và OpenGraph tags sang thương hiệu AI Classroom.'
     ],
     keyOutputs: [
       'metadata.json',
@@ -122,7 +122,7 @@ Vì người dùng nhập liệu trên bàn phím máy tính thông thường ho
     phaseTitle: 'Sơ Đồ Tư Duy AI Phân Nhánh, Tích Hợp Google Drive & Tốc Độ Siêu Tốc < 3 Giây',
     category: 'AI Mindmap & Google Drive Workspace Integration',
     goal: 'Xây dựng công cụ tạo sơ đồ tư duy phân nhánh thông minh với central topic input, đồng bộ Google Workspace OAuth & Google Drive, chuẩn hóa model gemini-2.5-flash.',
-    fullPromptText: `Hãy cập nhật và tối ưu hóa toàn diện ứng dụng EDT theo các yêu cầu kỹ thuật:
+    fullPromptText: `Hãy cập nhật và tối ưu hóa toàn diện ứng dụng AI Classroom theo các yêu cầu kỹ thuật:
 1. Tối ưu tốc độ phản hồi siêu tốc (< 3 giây) bằng model gemini-2.5-flash.
 2. Natural Textbook Display trên máy tính Casio và Vi Xử Lý Tích Phân.
 3. Sơ đồ tư duy AI phân nhánh (MindmapViewer.tsx) với central topic input, ghi chú cá nhân và đồng bộ Google Drive.`,

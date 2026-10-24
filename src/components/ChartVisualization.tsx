@@ -101,7 +101,7 @@ const SAMPLE_PLANS = [
       { id: '5', code: 'CP_01', item: 'Thuê mặt bằng gần cơ sở HUB Thủ Đức', category: 'opex' as const, amount: -18, probability: 1.0, riskWeight: 0.1 },
       { id: '6', code: 'CP_02', item: 'Lương nhân viên sinh viên Part-time', category: 'opex' as const, amount: -14, probability: 1.0, riskWeight: 0.15 },
       { id: '7', code: 'CP_03', item: 'Điện nước, WiFi tốc độ cao & Tiện ích', category: 'opex' as const, amount: -5, probability: 0.95, riskWeight: 0.2 },
-      { id: '8', code: 'CP_04', item: 'Marketing số & Thẻ tích điểm thành viên EDT', category: 'opex' as const, amount: -4, probability: 0.9, riskWeight: 0.3 },
+      { id: '8', code: 'CP_04', item: 'Marketing số & Thẻ tích điểm thành viên AI Classroom', category: 'opex' as const, amount: -4, probability: 0.9, riskWeight: 0.3 },
     ],
   },
   {
@@ -314,7 +314,7 @@ export const ChartVisualization: React.FC = () => {
     {
       id: 'init_1',
       sender: 'ai',
-      text: 'Xin chào bạn! Tôi là Chuyên gia Phân Tích Kinh Tế Lượng & Quản Trị Rủi Ro Tài Chính (HUB & EDT). Bạn có thể hỏi tôi bất kỳ câu hỏi nào về bản kế hoạch kinh doanh, tính toán phân phối Chuẩn, chỉ số VaR 95%, kiểm định giả thuyết hoặc đối chiếu với dữ liệu vĩ mô từ World Bank, IMF và Ngân hàng Nhà nước Việt Nam!',
+      text: 'Xin chào bạn! Tôi là Chuyên gia Phân Tích Kinh Tế Lượng & Quản Trị Rủi Ro Tài Chính (HUB & AI Classroom). Bạn có thể hỏi tôi bất kỳ câu hỏi nào về bản kế hoạch kinh doanh, tính toán phân phối Chuẩn, chỉ số VaR 95%, kiểm định giả thuyết hoặc đối chiếu với dữ liệu vĩ mô từ World Bank, IMF và Ngân hàng Nhà nước Việt Nam!',
       timestamp: 'Vừa xong',
     },
   ]);
@@ -488,7 +488,7 @@ export const ChartVisualization: React.FC = () => {
           distributionComment: `Dữ liệu phù hợp với mô hình Phân phối Chuẩn Gauss N(${calculatedStats.mean.toFixed(1)}, ${Math.pow(calculatedStats.stdDev, 2).toFixed(1)}).`,
         },
         riskMatrix: [
-          { type: 'Rủi ro Thị trường & Cạnh tranh', level: 'Trung bình', impact: 'Áp lực giảm giá bán và biến động cầu', mitigation: 'Áp dụng thẻ hội viên EDT và chiến lược cá nhân hóa ưu đãi' },
+          { type: 'Rủi ro Thị trường & Cạnh tranh', level: 'Trung bình', impact: 'Áp lực giảm giá bán và biến động cầu', mitigation: 'Áp dụng thẻ hội viên AI Classroom và chiến lược cá nhân hóa ưu đãi' },
           { type: 'Rủi ro Chi phí Nguyên liệu', level: 'Cao', impact: 'Lạm phát giá vốn theo báo cáo GSO', mitigation: 'Ký hợp đồng bao tiêu kỳ hạn dài với nhà cung ứng uy tín' },
           { type: 'Rủi ro Thanh khoản & Thu nợ', level: 'Thấp', impact: 'Thâm hụt vốn lưu động đột xuất', mitigation: 'Duy trì dự phòng tiền mặt tương đương 1.645 sigma' },
           { type: 'Rủi ro Vận hành & Dự báo', level: 'Trung bình', impact: 'Dự báo sai nhu cầu mùa vụ', mitigation: 'Ứng dụng định lý giới hạn trung tâm và kiểm định t-Student' },
@@ -527,7 +527,7 @@ export const ChartVisualization: React.FC = () => {
         ],
         fullDetailedReport: `### BÁO CÁO PHÂN TÍCH TÀI CHÍNH TOÀN DIỆN & MÔ HÌNH HÓA XSTK
 
-**Đơn vị thực hiện:** AI Tutor EDT & Viện Nghiên cứu Kinh tế HUB
+**Đơn vị thực hiện:** AI Tutor AI Classroom & Viện Nghiên cứu Kinh tế HUB
 **Bản kế hoạch:** ${SAMPLE_PLANS.find((p) => p.id === selectedPlanId)?.title}
 
 ---
@@ -647,7 +647,7 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
   // --- EXPORT FUNCTIONS (EXCEL, WORD, PDF) ---
   const handleExportExcel = () => {
     const csvRows = [
-      ['ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB) - HỆ THỐNG AI TUTOR EDT'],
+      ['ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB) - HỆ THỐNG AI TUTOR AI CLASSROOM'],
       ['BẢNG TÍNH TÀI CHÍNH & CHỈ SỐ XÁC SUẤT THỐNG KÊ KINH TẾ LƯỢNG'],
       ['Kế hoạch:', `"${SAMPLE_PLANS.find((p) => p.id === selectedPlanId)?.title}"`],
       ['Ngày xuất file:', new Date().toLocaleDateString('vi-VN')],
@@ -705,7 +705,7 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
       <body>
         <div class="header-box">
           <p><strong>BỘ GIÁO DỤC VÀ ĐÀO TẠO — TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB)</strong></p>
-          <p><strong>HỆ THỐNG AI TUTOR XÁC SUẤT THỐNG KÊ & PHÂN TÍCH TÀI CHÍNH EDT</strong></p>
+          <p><strong>HỆ THỐNG AI TUTOR XÁC SUẤT THỐNG KÊ & PHÂN TÍCH TÀI CHÍNH AI CLASSROOM</strong></p>
           <h1>BÁO CÁO PHÂN TÍCH KẾ HOẠCH KINH TẾ & ĐỊNH LƯỢNG RỦI RO</h1>
           <p><em>Đối tượng: ${plan?.title} | Ngày lập: ${new Date().toLocaleDateString('vi-VN')}</em></p>
         </div>
@@ -832,7 +832,7 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
                   MỤC 1: KINH TẾ LƯỢNG & TÀI CHÍNH ĐỊNH LƯỢNG
                 </span>
                 <span className="text-[10px] font-mono uppercase bg-emerald-950/80 text-emerald-300 font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/40">
-                  HUB & EDT
+                  HUB & AI Classroom
                 </span>
               </div>
               <h2 className="text-lg sm:text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.4)] mt-1">
@@ -1461,8 +1461,8 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
           {/* Chat Header */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center text-slate-950 font-black text-sm">
-                EDT
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center text-slate-950 font-black text-xs">
+                AI
               </div>
               <div>
                 <h3 className="font-black text-white text-xs sm:text-sm">
@@ -1536,7 +1536,7 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
                     }`}
                   >
                     <div className="flex items-center justify-between text-[10px] opacity-75 font-mono mb-1">
-                      <span>{isUser ? 'Bạn (Sinh viên HUB)' : 'Chuyên Gia Kinh Tế Lượng EDT'}</span>
+                      <span>{isUser ? 'Bạn (Sinh viên HUB)' : 'Chuyên Gia Kinh Tế Lượng AI Classroom'}</span>
                       <span>{msg.timestamp}</span>
                     </div>
 
@@ -1578,7 +1578,7 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
               <div className="flex justify-start">
                 <div className="bg-slate-950 border border-cyan-500/30 rounded-2xl p-3 text-xs text-cyan-300 flex items-center gap-2">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Chuyên gia EDT đang phân tích số liệu tài chính & tra cứu nguồn vĩ mô...</span>
+                  <span>Chuyên gia AI Classroom đang phân tích số liệu tài chính & tra cứu nguồn vĩ mô...</span>
                 </div>
               </div>
             )}

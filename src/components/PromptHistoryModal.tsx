@@ -73,8 +73,8 @@ export const PromptHistoryModal: React.FC<PromptHistoryModalProps> = ({ isOpen, 
         throw new Error('Vui lòng cấp quyền Google Drive để lưu tệp');
       }
 
-      let content = `# TỔNG HỢP TOÀN BỘ PROMPTS & KIẾN TRÚC HỆ THỐNG EDT - AI TUTOR XÁC SUẤT THỐNG KÊ\n\n`;
-      content += `> Xuất tự động từ ứng dụng EDT lúc ${new Date().toLocaleString('vi-VN')}\n\n`;
+      let content = `# TỔNG HỢP TOÀN BỘ PROMPTS & KIẾN TRÚC HỆ THỐNG AI CLASSROOM - AI TUTOR XÁC SUẤT THỐNG KÊ\n\n`;
+      content += `> Xuất tự động từ ứng dụng AI Classroom lúc ${new Date().toLocaleString('vi-VN')}\n\n`;
       promptsList.forEach((item) => {
         content += `## GIAI ĐOẠN ${item.stepNumber}: ${item.phaseTitle}\n`;
         content += `**Chuyên mục:** ${item.category}\n`;
@@ -94,7 +94,7 @@ export const PromptHistoryModal: React.FC<PromptHistoryModalProps> = ({ isOpen, 
         content += `\n---\n\n`;
       });
 
-      const fileName = `EDT_So_Tay_Prompt_${new Date().toISOString().substring(0, 10)}.md`;
+      const fileName = `AI_Classroom_So_Tay_Prompt_${new Date().toISOString().substring(0, 10)}.md`;
       const res = await uploadToGoogleDrive(fileName, content, 'text/markdown');
       setDriveUploadSuccess(res.webViewLink || 'Đã lưu thành công!');
       setTimeout(() => setDriveUploadSuccess(null), 6000);
@@ -112,7 +112,7 @@ export const PromptHistoryModal: React.FC<PromptHistoryModalProps> = ({ isOpen, 
   };
 
   const handleCopyAllPrompts = () => {
-    let fullMarkdown = `# TỔNG HỢP TOÀN BỘ PROMPTS & KIẾN TRÚC HỆ THỐNG EDT - AI TUTOR XÁC SUẤT THỐNG KÊ\n\n`;
+    let fullMarkdown = `# TỔNG HỢP TOÀN BỘ PROMPTS & KIẾN TRÚC HỆ THỐNG AI CLASSROOM - AI TUTOR XÁC SUẤT THỐNG KÊ\n\n`;
     fullMarkdown += `> Trình tự hệ thống gồm ${totalPhases} giai đoạn xây dựng từ con số 0 đến ứng dụng hoàn chỉnh.\n\n`;
 
     promptsList.forEach((item) => {
@@ -176,7 +176,7 @@ export const PromptHistoryModal: React.FC<PromptHistoryModalProps> = ({ isOpen, 
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-black text-white tracking-tight">
-                  Tổng Hợp Toàn Bộ Prompt & Kiến Trúc Ứng Dụng EDT
+                  Tổng Hợp Toàn Bộ Prompt & Kiến Trúc Ứng Dụng AI Classroom
                 </h2>
                 <span className="px-2.5 py-0.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-black rounded-full uppercase tracking-wider">
                   Auto-Synced v3.0 ({totalPhases} Giai đoạn)
@@ -270,7 +270,7 @@ export const PromptHistoryModal: React.FC<PromptHistoryModalProps> = ({ isOpen, 
               </span>
               <div>
                 <p className="font-black text-white text-sm">
-                  Lộ Trình Hệ Thống Tái Lập Ứng Dụng EDT Hoàn Chỉnh ({totalPhases} Giai Đoạn)
+                  Lộ Trình Hệ Thống Tái Lập Ứng Dụng AI Classroom Hoàn Chỉnh ({totalPhases} Giai Đoạn)
                 </p>
                 <p className="text-slate-200 mt-0.5">
                   Tự động đồng bộ các prompt mới từ Google AI Studio. Gửi từng câu lệnh User Prompt theo trình tự từ Giai đoạn 1 đến Giai đoạn {totalPhases} để tái lập 100% ứng dụng.
@@ -398,7 +398,7 @@ export const PromptHistoryModal: React.FC<PromptHistoryModalProps> = ({ isOpen, 
           <div className="text-slate-400 font-medium">
             <span>Tổng số: </span>
             <strong className="text-cyan-400">{totalPhases} Giai Đoạn Hoàn Chỉnh</strong>
-            <span> • Đầy đủ tất cả prompt người dùng và kỹ thuật tái lập EDT</span>
+            <span> • Đầy đủ tất cả prompt người dùng và kỹ thuật tái lập AI Classroom</span>
           </div>
 
           <div className="flex items-center gap-2">

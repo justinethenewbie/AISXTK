@@ -300,7 +300,7 @@ export default function App() {
                   <div>
                     <h2 className="text-xl font-black">Kho Dữ Liệu Người Dùng (Developer Vault)</h2>
                     <p className="text-xs text-slate-300">
-                      Bấm nút bên dưới để mở toàn màn hình giao diện quản trị cơ sở dữ liệu người dùng EDT.
+                      Bấm nút bên dưới để mở toàn màn hình giao diện quản trị cơ sở dữ liệu người dùng AI Classroom.
                     </p>
                   </div>
                 </div>
@@ -337,7 +337,7 @@ export default function App() {
     { id: 'mindmap', name: '🗺️ Bản Đồ Tư Duy 7 Chương', icon: <Map className="w-4 h-4 text-cyan-400" /> },
     { id: 'mistake_stats', name: '📊 Thống Kê & Phân Tích Lỗi', icon: <BarChart3 className="w-4 h-4 text-rose-400" /> },
     { id: 'charts', name: '📈 Phân Tích BCTC & Phân Phối Chuẩn / Histogram', icon: <BarChart3 className="w-4 h-4 text-emerald-300" />, isNeon: true },
-    { id: 'forum', name: '💬 Diễn Đàn Học Tập EDT', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
+    { id: 'forum', name: '💬 Diễn Đàn Học Tập AI Classroom', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
     { id: 'profile', name: '👤 Hồ Sơ & 10 Linh Vật', icon: <User className="w-4 h-4 text-cyan-300" /> },
     ...(currentUser?.role === 'nha_phat_trien'
       ? [{ id: 'developer_db' as ActiveToolType, name: '💾 Kho Dữ Liệu Dev (Vault)', icon: <Database className="w-4 h-4 text-purple-400" />, isNeon: true }]
@@ -358,7 +358,7 @@ export default function App() {
               <HubEdtLogo size="lg" className="justify-center" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-black text-white tracking-wide">EDT - AI Tutor Xác Suất Thống Kê</h1>
+              <h1 className="text-2xl font-black text-white tracking-wide">AI Classroom - AI Tutor Xác Suất Thống Kê</h1>
               <p className="text-sm text-slate-300 leading-relaxed font-medium">
                 Vui lòng <strong className="text-cyan-300">Đăng nhập hoặc Đăng ký tài khoản</strong> để hệ thống lưu trữ tiến độ học tập, điểm EXP, GPA và lịch sử bài làm cá nhân của bạn lên cơ sở dữ liệu!
               </p>
@@ -413,7 +413,7 @@ export default function App() {
             <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-800">
               <h3 className="text-xs font-extrabold uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse"></span>
-                <span>CÔNG CỤ EDT AI</span>
+                <span>CÔNG CỤ AI CLASSROOM</span>
               </h3>
               <span className="text-[11px] text-cyan-400 font-mono font-bold">v2.5 PRO</span>
             </div>

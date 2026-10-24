@@ -53,7 +53,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
         <div className="mb-6 p-4 rounded-3xl bg-slate-950/80 border-2 border-cyan-500/40 flex items-center justify-between shadow-[0_0_20px_rgba(6,182,212,0.2)]">
           <HubEdtLogo size="sm" />
           <span className="text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 px-2 py-1 rounded-md font-black">
-            EDT AI v2.5 PRO
+            AI Classroom v2.5 PRO
           </span>
         </div>
 
@@ -62,7 +62,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
           <div className="space-y-6">
             <div className="text-center space-y-2">
               <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
-                Chào mừng bạn đến với EDT • HUB
+                Chào mừng bạn đến với AI Classroom • HUB
               </span>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white">
                 Tạo Hồ Sơ Học Tập Cá Nhân

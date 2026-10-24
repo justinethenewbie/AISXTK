@@ -146,7 +146,7 @@ const RAW_MASCOT_CATALOG: Omit<MascotInfo, 'species' | 'personalityTag'>[] = [
   },
   {
     id: 'cat',
-    name: 'Mèo Thần Tài EDT',
+    name: 'Mèo Thần Tài AI Classroom',
     shortTitle: 'Mèo Thần Tài',
     emoji: '🐱',
     role: 'Vẫy Điểm A & Tài Lộc',

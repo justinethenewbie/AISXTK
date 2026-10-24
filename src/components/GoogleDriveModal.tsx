@@ -123,7 +123,7 @@ export const GoogleDriveModal: React.FC<GoogleDriveModalProps> = ({ isOpen, onCl
     setIsLoading(true);
     setStatusMsg(null);
     try {
-      const folder = await createDriveFolder('EDT Study App - Tài Liệu & Đề Thi');
+      const folder = await createDriveFolder('AI Classroom Study App - Tài Liệu & Đề Thi');
       setStatusMsg({
         type: 'success',
         text: `Đã tạo thư mục "${folder.name}" trên Google Drive của bạn!`,
@@ -143,7 +143,7 @@ export const GoogleDriveModal: React.FC<GoogleDriveModalProps> = ({ isOpen, onCl
       const ledgerRes = await fetch('/api/prompts/history');
       const ledgerData = await ledgerRes.json();
       const content = JSON.stringify(ledgerData.prompts || [], null, 2);
-      const filename = `EDT_Prompt_Ledger_${new Date().toISOString().substring(0, 10)}.json`;
+      const filename = `AI_Classroom_Prompt_Ledger_${new Date().toISOString().substring(0, 10)}.json`;
 
       const uploadRes = await uploadToGoogleDrive(filename, content, 'application/json');
       setStatusMsg({
@@ -166,7 +166,7 @@ export const GoogleDriveModal: React.FC<GoogleDriveModalProps> = ({ isOpen, onCl
       const userRes = await fetch('/api/dev/users');
       const userData = await userRes.json();
       const content = JSON.stringify(userData, null, 2);
-      const filename = `EDT_Study_Database_Backup_${new Date().toISOString().substring(0, 10)}.json`;
+      const filename = `AI_Classroom_Study_Database_Backup_${new Date().toISOString().substring(0, 10)}.json`;
 
       const uploadRes = await uploadToGoogleDrive(filename, content, 'application/json');
       setStatusMsg({
@@ -441,7 +441,7 @@ export const GoogleDriveModal: React.FC<GoogleDriveModalProps> = ({ isOpen, onCl
                 <span>Tạo Thư Mục</span>
               </div>
               <p className="text-[10px] text-slate-400 leading-tight">
-                Tạo folder EDT trên Drive
+                Tạo folder AI Classroom trên Drive
               </p>
             </button>
 

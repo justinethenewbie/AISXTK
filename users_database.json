@@ -1,7 +1,7 @@
 [
   {
     "id": "USR-278929",
-    "fullName": "Test Sinh Vien EDT",
+    "fullName": "Test Sinh Vien AI Classroom",
     "email": "test_student_1792504278760@student.edu.vn",
     "role": "sinh_vien",
     "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
@@ -9,11 +9,11 @@
     "university": "ĐH Kinh Tế TP.HCM (UEH)",
     "classGroup": "2026-XSTK",
     "gpa": 3.92,
-    "exp": 1355,
+    "exp": 1385,
     "level": 7,
     "streakDays": 1,
-    "studyHours": 9,
-    "exercisesSolved": 50,
+    "studyHours": 9.2,
+    "exercisesSolved": 51,
     "accuracyRate": 100,
     "createdAt": "2026-10-20 13:51:18",
     "lastActive": "Vừa xong",
@@ -21,26 +21,6 @@
     "recentActivity": [
       {
         "action": "Học tập & Luyện đề",
-        "detail": "Giải toàn diện bài toán cùng Gemini XSTK",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
         "detail": "Hoàn thành bài tập & nhận +30 EXP",
         "timestamp": "Vừa xong"
       },
@@ -51,6 +31,51 @@
       },
       {
         "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành bài tập & nhận +30 EXP",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Giải toàn diện bài toán cùng Gemini XSTK",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
         "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
         "timestamp": "Vừa xong"
       },
@@ -71,26 +96,6 @@
       },
       {
         "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
         "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
         "timestamp": "Vừa xong"
       },
@@ -112,18 +117,13 @@
       {
         "action": "Học tập & Luyện đề",
         "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Nắm vững bản chất Bước 2: Bản Chất Khái Niệm (Bài 1: Xác Suất và Công Thức Tính Xác Suất)",
         "timestamp": "Vừa xong"
       }
     ]
   },
   {
     "id": "USR-DEV-001",
-    "fullName": "Justine Dev (EDT Lead)",
+    "fullName": "Justine Dev (AI Classroom Lead)",
     "email": "justine.ct.forwork@gmail.com",
     "role": "nha_phat_trien",
     "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",

@@ -23,7 +23,7 @@ export const HubEdtLogo: React.FC<HubEdtLogoProps> = ({
     <div
       onClick={onClick}
       className={`inline-flex items-center ${dimensions.gap} select-none group cursor-pointer ${className}`}
-      title="Đại học Ngân hàng TP.HCM (HUB) • EDT AI Tutor"
+      title="Đại học Ngân hàng TP.HCM (HUB) • AI Classroom Tutor"
     >
       {/* HUB Emblem Container with Neon Glow */}
       <div className="relative shrink-0 flex items-center justify-center">
@@ -120,7 +120,7 @@ export const HubEdtLogo: React.FC<HubEdtLogoProps> = ({
         </svg>
       </div>
 
-      {/* Typography: HUB Logo Brand on Top & EDT Directly Underneath */}
+      {/* Typography: HUB Logo Brand on Top & AI Classroom Directly Underneath */}
       <div className="flex flex-col justify-center">
         {/* Top: University Name Header with Gold/Cyan Glow */}
         <div className="flex items-center gap-1.5 leading-none">
@@ -132,12 +132,12 @@ export const HubEdtLogo: React.FC<HubEdtLogoProps> = ({
           </span>
         </div>
 
-        {/* Bottom: EDT in High-Tech Neon Cyber Typography */}
+        {/* Bottom: AI Classroom in High-Tech Neon Cyber Typography */}
         <div className="flex items-center gap-2 mt-0.5">
           <span
             className={`${dimensions.textEdt} font-black tracking-wider bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.85)]`}
           >
-            EDT
+            AI Classroom
           </span>
           <span className="h-3.5 w-0.5 bg-cyan-500/50 rounded-full" />
           <span className="text-[11px] sm:text-xs font-extrabold text-cyan-200 tracking-tight drop-shadow-[0_0_6px_rgba(6,182,212,0.5)]">

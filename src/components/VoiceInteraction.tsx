@@ -85,7 +85,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({ onAddExp }) 
           Hỏi Đáp Giọng Nói XSTK & Tự Động Trình Bày Công Thức Lên Bảng
         </h2>
         <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-          Trao đổi trực tiếp bằng lời nói với Linh vật AI Cú EDT. Do nội dung toán học phức tạp khó diễn đạt hết bằng lời, AI sẽ tự động xuất sơ đồ bước giải toán lên Bảng iPad màn hình lớn!
+          Trao đổi trực tiếp bằng lời nói với Linh vật AI Cú AI Classroom. Do nội dung toán học phức tạp khó diễn đạt hết bằng lời, AI sẽ tự động xuất sơ đồ bước giải toán lên Bảng iPad màn hình lớn!
         </p>
       </div>
 
@@ -139,7 +139,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({ onAddExp }) 
           <div className="bg-slate-900 border-2 border-cyan-500/30 p-5 rounded-3xl space-y-3 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
             <div className="flex items-center gap-2 text-cyan-300 font-black text-xs">
               <Volume2 className="w-4 h-4 text-cyan-400" />
-              <span>Phản Hồi Lời Nói Từ Cú EDT AI</span>
+              <span>Phản Hồi Lời Nói Từ Cú AI Classroom</span>
             </div>
             <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-semibold">
               "{voiceResponse.spokenResponse}"

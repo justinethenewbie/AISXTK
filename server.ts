@@ -1348,7 +1348,7 @@ app.post('/api/tutor/evaluate-handwriting', async (req, res) => {
         errors: [],
         rootCauseError: '',
         betterStrategy: 'Kiểm tra lại phép tính máy tính Casio để đạt điểm tối đa',
-        detailedFeedback: 'Bài làm rất tốt! Cú EDT khuyến khích bạn tiếp tục phát huy.',
+        detailedFeedback: 'Bài làm rất tốt! Cú AI Classroom khuyến khích bạn tiếp tục phát huy.',
       },
     });
   }
@@ -2639,7 +2639,7 @@ app.post('/api/tutor/economic-analysis', async (req, res) => {
     try {
       let prompt = '';
       if (mode === 'chat_consultation') {
-        prompt = `BẠN LÀ CHUYÊN GIA KINH TẾ LƯỢNG & TÀI CHÍNH ĐỊNH LƯỢNG CAO CẤP TẠI ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB) VÀ TRỢ LÝ AI EDT.
+        prompt = `BẠN LÀ CHUYÊN GIA KINH TẾ LƯỢNG & TÀI CHÍNH ĐỊNH LƯỢNG CAO CẤP TẠI ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB) VÀ TRỢ LÝ AI CLASSROOM.
 BỐI CẢNH BÁO CÁO TÀI CHÍNH / KẾ HOẠCH KINH DOANH:
 Tiêu đề: "${reportTitle}"
 Nội dung báo cáo:
@@ -2679,7 +2679,7 @@ Trả về JSON:
   ]
 }`;
       } else {
-        prompt = `BẠN LÀ CHUYÊN GIA PHÂN TÍCH TÀI CHÍNH DOANH NGHIỆP & KINH TẾ LƯỢNG TẠI ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB) VÀ EDT.
+        prompt = `BẠN LÀ CHUYÊN GIA PHÂN TÍCH TÀI CHÍNH DOANH NGHIỆP & KINH TẾ LƯỢNG TẠI ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB) VÀ AI CLASSROOM.
 HÃY PHÂN TÍCH TOÀN DIỆN BÁO CÁO TÀI CHÍNH / KẾ HOẠCH KINH DOANH SAU ĐÂY:
 Tiêu đề: "${reportTitle}"
 Nội dung:
@@ -2766,7 +2766,7 @@ Trả về định dạng JSON:
       success: true,
       isFallback: true,
       data: {
-        reply: `### Phân Tích & Luận Giải Kinh Tế Lượng Từ Chuyên Gia HUB & EDT
+        reply: `### Phân Tích & Luận Giải Kinh Tế Lượng Từ Chuyên Gia HUB & AI Classroom
 Về câu hỏi: **"${userQuestion}"**, dựa trên lý thuyết Tài chính Doanh nghiệp & Xác suất Thống kê ứng dụng:
 
 1. **Định lượng rủi ro bằng Hệ số biến thiên ($CV$):**
@@ -2850,7 +2850,7 @@ Về câu hỏi: **"${userQuestion}"**, dựa trên lý thuyết Tài chính Doa
       ],
       fullDetailedReport: `### BÁO CÁO PHÂN TÍCH TÀI CHÍNH TOÀN DIỆN & MÔ HÌNH HÓA XSTK
 
-**Đơn vị thực hiện:** AI Tutor EDT & Viện Nghiên cứu Kinh tế HUB
+**Đơn vị thực hiện:** AI Tutor AI Classroom & Viện Nghiên cứu Kinh tế HUB
 **Đối tượng phân tích:** ${reportTitle}
 
 ---
@@ -2919,7 +2919,7 @@ Format JSON:
     success: true,
     isFallback: true,
     data: {
-      spokenResponse: `Chào bạn! Mình là Cú Thông Thái EDT. Về câu hỏi "${userSpeechText || 'XSTK'}", bạn hãy nhớ luôn xác định rõ biến cố và không gian mẫu trước khi tính toán nhé. Mình luôn sẵn sàng giải đáp và vẽ sơ đồ lên bảng iPad cho bạn!`,
+      spokenResponse: `Chào bạn! Mình là Cú Thông Thái AI Classroom. Về câu hỏi "${userSpeechText || 'XSTK'}", bạn hãy nhớ luôn xác định rõ biến cố và không gian mẫu trước khi tính toán nhé. Mình luôn sẵn sàng giải đáp và vẽ sơ đồ lên bảng iPad cho bạn!`,
       ipadMathBoard: `SƠ ĐỒ TỔNG QUÁT BÀI TOÁN XÁC SUẤT:\n1. Gọi biến cố A: Biến cố cần tính xác suất.\n2. Xác định các trường hợp thuận lợi: m = |A|.\n3. Xác định không gian mẫu: n = |Ω|.\n4. Áp dụng công thức: P(A) = m / n.`,
       recommendedAction: 'Mở trang Luyện tập trắc nghiệm hoặc Máy tính Casio',
     },
@@ -3008,7 +3008,7 @@ app.post('/api/tutor/report-bug', async (req, res) => {
     success: true,
     response: {
       acknowledged: true,
-      aiMessage: 'Cảm ơn bạn đã đóng góp ý kiến! Đội ngũ phát triển EDT đã ghi nhận thông tin.',
+      aiMessage: 'Cảm ơn bạn đã đóng góp ý kiến! Đội ngũ phát triển AI Classroom đã ghi nhận thông tin.',
     },
   });
 });
@@ -3131,7 +3131,7 @@ app.post('/api/dev/users', (req, res) => {
     lastActive: 'Vừa tạo',
     status: 'active',
     recentActivity: [
-      { action: 'Khởi tạo tài khoản', detail: 'Được thêm vào users_database.json bởi Nhà phát triển EDT', timestamp: 'Vừa xong' },
+      { action: 'Khởi tạo tài khoản', detail: 'Được thêm vào users_database.json bởi Nhà phát triển AI Classroom', timestamp: 'Vừa xong' },
     ],
   };
 
@@ -3193,7 +3193,7 @@ app.post('/api/auth/developer-login', (req, res) => {
   if (!devUser) {
     devUser = {
       id: 'USR-DEV-001',
-      fullName: 'Justine Dev (EDT Lead)',
+      fullName: 'Justine Dev (AI Classroom Lead)',
       email: 'justine.ct.forwork@gmail.com',
       role: 'nha_phat_trien',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -3280,7 +3280,7 @@ app.post('/api/auth/register', (req, res) => {
     success: true,
     user: newUser,
     token: `edt-jwt-${newUser.id}-${Date.now()}`,
-    message: `Đăng ký thành công! Chào mừng ${newUser.fullName} đến với EDT.`,
+    message: `Đăng ký thành công! Chào mừng ${newUser.fullName} đến với AI Classroom.`,
   });
 });
 
@@ -3309,7 +3309,7 @@ app.post('/api/auth/login', (req, res) => {
     // Tự động tạo người dùng mới và lưu bền vững vào users_database.json
     targetUser = {
       id: `USR-${Date.now().toString().slice(-6)}`,
-      fullName: fullName?.trim() || (email ? email.split('@')[0] : 'Sinh viên EDT'),
+      fullName: fullName?.trim() || (email ? email.split('@')[0] : 'Sinh viên AI Classroom'),
       email: email ? email.trim() : 'user@student.edu.vn',
       role: 'sinh_vien',
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
@@ -3336,7 +3336,7 @@ app.post('/api/auth/login', (req, res) => {
     if (!targetUser.recentActivity) targetUser.recentActivity = [];
     targetUser.recentActivity.unshift({
       action: 'Đăng nhập',
-      detail: 'Đăng nhập thành công vào hệ thống EDT',
+      detail: 'Đăng nhập thành công vào hệ thống AI Classroom',
       timestamp: 'Vừa xong',
     });
   }
@@ -3347,7 +3347,7 @@ app.post('/api/auth/login', (req, res) => {
     success: true,
     user: targetUser,
     token: `edt-jwt-${targetUser.id}-${Date.now()}`,
-    message: `Chào mừng ${targetUser.fullName} trở lại với EDT!`,
+    message: `Chào mừng ${targetUser.fullName} trở lại với AI Classroom!`,
   });
 });
 

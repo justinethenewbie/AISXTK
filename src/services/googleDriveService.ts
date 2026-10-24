@@ -131,8 +131,8 @@ export async function listDriveStudyFiles(searchTerm = ''): Promise<DriveFileIte
   if (searchTerm && searchTerm.trim()) {
     query += ` and name contains '${searchTerm.replace(/'/g, "\\'")}'`;
   } else {
-    // By default prioritize EDT related files or all files
-    query += " and (name contains 'EDT' or name contains 'XSTK' or name contains 'Prompt' or mimeType = 'application/pdf' or mimeType = 'application/json')";
+    // By default prioritize AI Classroom / EDT related files or all files
+    query += " and (name contains 'AI_Classroom' or name contains 'EDT' or name contains 'XSTK' or name contains 'Prompt' or mimeType = 'application/pdf' or mimeType = 'application/json')";
   }
 
   const encodedQuery = encodeURIComponent(query);
@@ -176,7 +176,7 @@ export async function uploadToGoogleDrive(
   const metadata: Record<string, any> = {
     name: fileName,
     mimeType,
-    description: 'Tài liệu học tập & Đề thi được tạo tự động bởi Ứng Dụng EDT XSTK & Kinh Tế Lượng',
+    description: 'Tài liệu học tập & Đề thi được tạo tự động bởi Ứng Dụng AI Classroom XSTK & Kinh Tế Lượng',
   };
 
   if (folderId) {
@@ -238,14 +238,14 @@ export async function deleteDriveFile(fileId: string): Promise<boolean> {
 /**
  * Create a dedicated study folder in Google Drive
  */
-export async function createDriveFolder(folderName = 'EDT Study App - Tài Liệu & Đề Thi'): Promise<{ id: string; name: string }> {
+export async function createDriveFolder(folderName = 'AI Classroom Study App - Tài Liệu & Đề Thi'): Promise<{ id: string; name: string }> {
   const token = await getAccessToken();
   if (!token) throw new Error('Vui lòng kết nối Google Drive trước!');
 
   const metadata = {
     name: folderName,
     mimeType: 'application/vnd.google-apps.folder',
-    description: 'Thư mục lưu trữ bài giảng, đề thi và tổng hợp prompt của ứng dụng EDT',
+    description: 'Thư mục lưu trữ bài giảng, đề thi và tổng hợp prompt của ứng dụng AI Classroom',
   };
 
   const response = await fetch('https://www.googleapis.com/drive/v3/files?fields=id,name', {

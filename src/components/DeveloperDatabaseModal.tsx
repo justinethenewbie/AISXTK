@@ -120,7 +120,7 @@ export const DeveloperDatabaseModal: React.FC<DeveloperDatabaseModalProps> = ({
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(users, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `EDT_User_Database_Backup_${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute('download', `AI_Classroom_User_Database_Backup_${new Date().toISOString().slice(0, 10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -148,7 +148,7 @@ export const DeveloperDatabaseModal: React.FC<DeveloperDatabaseModalProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `EDT_User_Database_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `AI_Classroom_User_Database_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -186,7 +186,7 @@ export const DeveloperDatabaseModal: React.FC<DeveloperDatabaseModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-300 font-medium">
-                Hệ thống quản trị CSDL người dùng EDT • Theo dõi tiến độ học tập, bài giải và quyền truy cập.
+                Hệ thống quản trị CSDL người dùng AI Classroom • Theo dõi tiến độ học tập, bài giải và quyền truy cập.
               </p>
             </div>
           </div>

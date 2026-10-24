@@ -1,5 +1,5 @@
 /**
- * Utility helper for AI API calls in EDT Application
+ * Utility helper for AI API calls in AI Classroom Application
  * Communicates with server-side Gemini proxy endpoints.
  */
 

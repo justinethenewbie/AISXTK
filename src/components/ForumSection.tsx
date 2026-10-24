@@ -61,7 +61,7 @@ const INITIAL_POSTS: ForumPost[] = [
     comments: [
       {
         id: 'c1',
-        author: 'Linh Cú EDT AI',
+        author: 'Linh Cú AI Classroom',
         authorAvatar: '🦉',
         text: 'Chào Hoàng! Nếu đã biết phương sai tổng thể $\\sigma^2$ thì theo lý thuyết Bài 5 dù $n < 30$ vẫn dùng phân phối Chuẩn tắc $Z$-test chuẩn nhé!',
         time: '8 phút trước',
@@ -236,7 +236,7 @@ export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
 
       const newPost: ForumPost = {
         id: `post_${Date.now()}`,
-        authorName: 'Bạn (Sinh viên EDT)',
+        authorName: 'Bạn (Sinh viên AI Classroom)',
         authorClass: '2026-DHKT01',
         authorAvatar: '🦉',
         timestamp: 'Vừa xong',
@@ -283,7 +283,7 @@ export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
               ...p.comments,
               {
                 id: `c_${Date.now()}`,
-                author: 'Bạn (Sinh viên EDT)',
+                author: 'Bạn (Sinh viên AI Classroom)',
                 authorAvatar: '👨‍🎓',
                 text: commentText.trim(),
                 time: 'Vừa xong',
