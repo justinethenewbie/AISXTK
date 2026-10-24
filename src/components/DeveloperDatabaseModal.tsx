@@ -18,6 +18,7 @@ import {
   Award,
 } from 'lucide-react';
 import { AppUser, DevDatabaseStats } from '../types/xstk';
+import { getLocalDateString } from '../utils/streakManager';
 
 interface DeveloperDatabaseModalProps {
   isOpen: boolean;
@@ -597,10 +598,19 @@ export const DeveloperDatabaseModal: React.FC<DeveloperDatabaseModalProps> = ({
                   <span className="text-[10px] text-slate-400 block">Cấp Độ</span>
                   <span className="font-black text-cyan-300">Level {selectedUserDetail.level}</span>
                 </div>
-                <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Chuỗi Học</span>
-                  <span className="font-black text-amber-300">{selectedUserDetail.streakDays} ngày</span>
-                </div>
+                {(() => {
+                  const todayStr = getLocalDateString();
+                  const isStudiedToday = Boolean(selectedUserDetail.lastStudyDate && selectedUserDetail.lastStudyDate === todayStr);
+                  return (
+                    <div className={`p-2.5 rounded-xl border ${isStudiedToday ? 'bg-amber-950/30 border-amber-500/40' : 'bg-slate-950 border-slate-800'}`}>
+                      <span className="text-[10px] text-slate-400 block">Chuỗi Học</span>
+                      <span className={`font-black flex items-center justify-center gap-1 ${isStudiedToday ? 'text-amber-300' : 'text-slate-400'}`}>
+                        {selectedUserDetail.streakDays} ngày
+                        {isStudiedToday ? '🔥' : '⏳'}
+                      </span>
+                    </div>
+                  );
+                })()}
                 <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
                   <span className="text-[10px] text-slate-400 block">Bài Giải</span>
                   <span className="font-black text-emerald-300">{selectedUserDetail.exercisesSolved} bài</span>

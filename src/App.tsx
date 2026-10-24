@@ -55,6 +55,7 @@ import {
   Cloud,
   Sparkles,
   Layers,
+  Flame,
 } from 'lucide-react';
 
 const INITIAL_PROFILE: UserProfile = {
@@ -70,8 +71,16 @@ const INITIAL_PROFILE: UserProfile = {
   gpa: 3.82,
   studyHours: 14.5,
   streakDays: 7,
-  lastActiveDate: new Date().toISOString().split('T')[0],
-  lastStudyDate: new Date().toISOString().split('T')[0],
+  lastActiveDate: (() => {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    return getLocalDateString(y);
+  })(),
+  lastStudyDate: (() => {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    return getLocalDateString(y);
+  })(),
   unlockedLootboxes: 2,
   inventory: INITIAL_MASCOT_ITEMS,
   equippedMascot: {
@@ -528,23 +537,37 @@ export default function App() {
               speechText={`Cùng ${getMascotById(profile.equippedMascot?.species || 'owl').name} chinh phục điểm 10 XSTK nhé!`}
             />
             <div
-              className={`text-xs font-bold py-1.5 px-3 rounded-2xl flex flex-col items-center justify-center gap-0.5 border transition-all ${
+              className={`text-xs font-bold py-2 px-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all ${
                 hasStudiedToday
-                  ? 'text-cyan-300 bg-cyan-950/70 border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-                  : 'text-amber-300 bg-amber-950/70 border-amber-500/40'
+                  ? 'text-amber-300 bg-gradient-to-r from-amber-950/70 to-orange-950/70 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                  : 'text-slate-400 bg-slate-900/90 border-slate-800 shadow-none'
               }`}
               title={
                 hasStudiedToday
-                  ? 'Hôm nay bạn đã hoàn thành bài học! Chuỗi streak đang được giữ vững.'
-                  : 'Bạn chưa học hôm nay. Hoàn thành 1 bài tập hoặc hỏi Gia Sư AI để duy trì chuỗi!'
+                  ? 'Hôm nay bạn đã hoàn thành bài học! Chuỗi streak đã thắp sáng rực rỡ 🔥'
+                  : 'Streak đang ở trạng thái màu xám. Hoàn thành 1 bài tập hoặc hỏi Gia Sư AI để thắp sáng ngọn lửa streak!'
               }
             >
-              <div className="flex items-center gap-1">
-                <span>Chuỗi học:</span>
-                <span className="font-black text-amber-400">{currentUser ? currentUser.streakDays : profile.streakDays} ngày 🔥</span>
+              <div className="flex items-center gap-1.5">
+                <Flame
+                  className={`w-4 h-4 transition-all ${
+                    hasStudiedToday
+                      ? 'fill-amber-400 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(245,158,11,0.9)]'
+                      : 'fill-slate-500 text-slate-500 grayscale opacity-75'
+                  }`}
+                />
+                <span className={hasStudiedToday ? 'text-amber-300 font-black' : 'text-slate-400 font-medium'}>
+                  Chuỗi học: {currentUser ? currentUser.streakDays : profile.streakDays} ngày
+                </span>
               </div>
-              <span className="text-[10px] font-semibold text-slate-300">
-                {hasStudiedToday ? '✓ Hôm nay đã học tập' : '⏳ Cần học 1 bài để giữ streak'}
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                  hasStudiedToday
+                    ? 'text-emerald-300 bg-emerald-950/60 border-emerald-500/40 font-bold'
+                    : 'text-slate-400 bg-slate-800/80 border-slate-700/60 font-medium'
+                }`}
+              >
+                {hasStudiedToday ? '✓ Đã thắp sáng hôm nay' : '⏳ Cần học 1 bài để thắp lửa'}
               </span>
             </div>
           </div>

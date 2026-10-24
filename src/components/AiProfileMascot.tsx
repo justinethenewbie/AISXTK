@@ -326,22 +326,47 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
       {activeTab === 'profile' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-            <div className="p-4 bg-slate-900 border-2 border-cyan-500/30 rounded-2xl shadow-md">
-              <p className="text-slate-300 font-bold mb-1">Chuỗi Streak</p>
-              <p className="text-xl font-black text-cyan-400 flex items-center justify-center gap-1">
-                <Flame className="w-5 h-5 fill-cyan-400 text-cyan-400" />
-                <span>{userProfile.streakDays} Ngày</span>
-              </p>
-              {(() => {
-                const todayStr = getLocalDateString();
-                const hasStudiedToday = Boolean(userProfile.lastStudyDate && userProfile.lastStudyDate === todayStr);
-                return (
-                  <p className={`text-[10px] font-bold mt-1 ${hasStudiedToday ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {hasStudiedToday ? 'Hôm nay: Đã học ✓' : 'Hôm nay: Chưa học ⏳'}
+            {(() => {
+              const todayStr = getLocalDateString();
+              const hasStudiedToday = Boolean(userProfile.lastStudyDate && userProfile.lastStudyDate === todayStr);
+
+              return (
+                <div
+                  className={`p-4 rounded-2xl border-2 transition-all shadow-md ${
+                    hasStudiedToday
+                      ? 'bg-gradient-to-br from-slate-900 to-amber-950/40 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                      : 'bg-slate-900/80 border-slate-800 text-slate-400'
+                  }`}
+                >
+                  <p className="text-slate-300 font-bold mb-1">Chuỗi Streak</p>
+                  <p
+                    className={`text-xl font-black flex items-center justify-center gap-1.5 ${
+                      hasStudiedToday ? 'text-amber-400' : 'text-slate-400'
+                    }`}
+                  >
+                    <Flame
+                      className={`w-5 h-5 transition-all ${
+                        hasStudiedToday
+                          ? 'fill-amber-400 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]'
+                          : 'fill-slate-500 text-slate-500 grayscale opacity-75'
+                      }`}
+                    />
+                    <span>{userProfile.streakDays} Ngày</span>
                   </p>
-                );
-              })()}
-            </div>
+                  <div className="mt-1.5 flex justify-center">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        hasStudiedToday
+                          ? 'text-emerald-300 bg-emerald-950/70 border-emerald-500/40'
+                          : 'text-slate-400 bg-slate-800/80 border-slate-700/60'
+                      }`}
+                    >
+                      {hasStudiedToday ? 'Hôm nay: Đã thắp sáng 🔥' : 'Hôm nay: Chưa học (Màu xám ⏳)'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="p-4 bg-slate-900 border-2 border-cyan-500/30 rounded-2xl shadow-md">
               <p className="text-slate-300 font-bold mb-1">Điểm Hệ 4 (GPA)</p>

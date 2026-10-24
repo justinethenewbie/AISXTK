@@ -181,26 +181,43 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           const todayStr = getLocalDateString();
           const activeLastStudy = currentUser?.lastStudyDate || userProfile.lastStudyDate;
           const hasStudiedToday = Boolean(activeLastStudy && activeLastStudy === todayStr);
+          const streakCount = currentUser ? currentUser.streakDays : userProfile.streakDays;
 
           return (
             <div
-              className="hidden md:flex items-center gap-2 bg-slate-900 border border-cyan-500/30 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-xs cursor-help transition-all"
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-help ${
+                hasStudiedToday
+                  ? 'bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border border-amber-500/50 text-white shadow-[0_0_14px_rgba(245,158,11,0.3)]'
+                  : 'bg-slate-900/90 border border-slate-700/70 text-slate-400 shadow-none'
+              }`}
               title={
                 hasStudiedToday
-                  ? 'Hôm nay bạn đã hoàn thành bài học! Chuỗi streak đang được duy trì liên tục.'
-                  : 'Bạn chưa học hôm nay. Hoàn thành 1 bài tập hoặc hỏi Gia Sư AI để duy trì chuỗi streak!'
+                  ? 'Hôm nay bạn đã thắp sáng chuỗi streak! Đang duy trì liên tục.'
+                  : 'Hôm nay bạn chưa học bài (Màu xám). Hoàn thành 1 bài tập hoặc hỏi Gia Sư AI để thắp sáng ngọn lửa streak!'
               }
             >
-              <div className={`flex items-center gap-1 ${hasStudiedToday ? 'text-amber-300' : 'text-amber-400/80'}`}>
-                <Flame className={`w-4 h-4 fill-amber-400 ${hasStudiedToday ? 'animate-pulse' : ''}`} />
-                <span>{currentUser ? currentUser.streakDays : userProfile.streakDays} ngày</span>
+              <div
+                className={`flex items-center gap-1.5 ${
+                  hasStudiedToday ? 'text-amber-300 font-extrabold' : 'text-slate-400 font-medium'
+                }`}
+              >
+                <Flame
+                  className={`w-4 h-4 transition-all ${
+                    hasStudiedToday
+                      ? 'fill-amber-400 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(245,158,11,0.9)]'
+                      : 'fill-slate-500 text-slate-500 grayscale opacity-70'
+                  }`}
+                />
+                <span className={hasStudiedToday ? 'text-amber-300 font-bold' : 'text-slate-400'}>
+                  {streakCount} ngày
+                </span>
                 {hasStudiedToday ? (
-                  <span className="text-[10px] text-emerald-400 font-black ml-0.5" title="Đã học hôm nay">✓</span>
+                  <span className="text-[10px] text-emerald-400 font-black ml-0.5" title="Đã học hôm nay (Đã thắp sáng)">✓</span>
                 ) : (
-                  <span className="text-[10px] text-amber-400 font-mono ml-0.5" title="Chưa học hôm nay">⏳</span>
+                  <span className="text-[9px] bg-slate-800 text-slate-400 border border-slate-700/80 px-1.5 py-0.5 rounded-md font-medium ml-0.5" title="Chưa học hôm nay (Cần học 1 bài để thắp sáng)">Chưa thắp lửa</span>
                 )}
               </div>
-              <span className="text-slate-600">|</span>
+              <span className={hasStudiedToday ? 'text-slate-700' : 'text-slate-700'}>|</span>
               <div className="flex items-center gap-1 text-cyan-300">
                 <Award className="w-4 h-4 text-cyan-400" />
                 <span>GPA {currentUser ? currentUser.gpa : userProfile.gpa}</span>
