@@ -13,22 +13,32 @@ import {
   Sigma,
   TrendingUp,
   FileSpreadsheet,
+  Cpu,
+  ArrowDownCircle,
+  FileText,
+  AlertTriangle,
+  Flame,
 } from 'lucide-react';
 import { MathFormula } from './MathFormula';
 import { aiFetch } from '../utils/apiHelper';
 import { renderRawMathToKatexHtml } from '../utils/mathDisplayUtils';
+import { HubExamCheatSheetModal } from './HubExamCheatSheetModal';
 
 export const CasioCalculator: React.FC = () => {
-  // Giao diện vỏ máy: 'FX-580VN' (ClassWiz) hoặc 'FX-570VN' (Natural V.P.A.M.)
+  // Giao diện vỏ máy mô phỏng thực tế
   const [modelType, setModelType] = useState<'FX-580VN' | 'FX-570VN'>('FX-580VN');
 
-  // Chế độ tính năng:
-  // 'COMP': Bàn phím Casio chuẩn & Tính toán biểu thức / Tích phân tự động
-  // 'CONTINUOUS': Chuyên đề Biến ngẫu nhiên liên tục (Tìm k, E(X), Var(X), P(a < X < b))
-  // 'FX570_DISTR': Phân phối chuẩn fx-570VN (P, Q, R, Giá trị tới hạn z-alpha, t-alpha)
-  // 'STAT': Thống kê mẫu 1-Variable & Bảng tần số
-  // 'DIST': Phân phối xác suất Casio fx-580VN (Normal, Binomial, Poisson)
-  const [activeMode, setActiveMode] = useState<'COMP' | 'CONTINUOUS' | 'FX570_DISTR' | 'STAT' | 'DIST'>('COMP');
+  // Chế độ tính năng chọn lọc cho XSTK:
+  // 'COMP': MENU 1 - Tính toán cơ bản, phân số, tổ hợp nCr, chỉnh hợp nPr, giai thừa n!, tích phân xác định ∫dx
+  // 'EQUATION': MENU 9 - Giải hệ phương trình 2 ẩn (MENU 9 1 2) & PT bậc 2 (MENU 9 2 2) tìm tham số hàm mật độ
+  // 'STAT': MENU 6 - Thống kê 1-Variable & Bảng tần số + Kỳ vọng/Phương sai biến rời rạc & Hồi quy tuyến tính
+  // 'DIST': MENU 7 - Phân phối xác suất (Normal PD/CD, Inverse Normal, Binomial PD/CD, Poisson PD/CD)
+  // 'CONTINUOUS': Chuyên đề Biến ngẫu nhiên liên tục (Tìm k tự động 4 bước, E(X), Var(X), P(a < X < b))
+  // 'KEY_GUIDE': Cẩm nang bấm phím ngoài đời thực theo hướng dẫn thi HUB
+  const [activeMode, setActiveMode] = useState<'COMP' | 'EQUATION' | 'STAT' | 'DIST' | 'CONTINUOUS' | 'KEY_GUIDE'>('COMP');
+
+  // State mở Modal Tờ phao thi HUB (CamScanner)
+  const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
 
   // LCD Display State
   const [expression, setExpression] = useState('int(0, 2, 3*x^2)');
@@ -39,6 +49,23 @@ export const CasioCalculator: React.FC = () => {
   const [lastAns, setLastAns] = useState(8);
   const [isShift, setIsShift] = useState(false);
   const [isAlpha, setIsAlpha] = useState(false);
+
+  // EQUATION SOLVER STATE (MENU 9)
+  // Hệ 2 phương trình: a1*x + b1*y = c1; a2*x + b2*y = c2
+  const [eqMode, setEqMode] = useState<'system_2x2' | 'poly_deg2'>('system_2x2');
+  const [eqA1, setEqA1] = useState('2');
+  const [eqB1, setEqB1] = useState('2');
+  const [eqC1, setEqC1] = useState('1');
+  const [eqA2, setEqA2] = useState('2.6667');
+  const [eqB2, setEqB2] = useState('2');
+  const [eqC2, setEqC2] = useState('1.1667');
+  const [eqResult, setEqResult] = useState<{ x: string; y: string } | null>({ x: '0.2500 (1/4)', y: '0.2500 (1/4)' });
+
+  // PT bậc 2: a*x^2 + b*x + c = 0
+  const [quadA, setQuadA] = useState('1');
+  const [quadB, setQuadB] = useState('2');
+  const [quadC, setQuadC] = useState('-4');
+  const [quadResult, setQuadResult] = useState<{ x1: string; x2: string } | null>({ x1: '1.2361 (-1+√5)', x2: '-3.2361 (loại)' });
 
   // Continuous RV Dedicated Solver State
   const [continuousTaskType, setContinuousTaskType] = useState<'find_k' | 'prob_interval' | 'expectation_var' | 'cdf_fx' | 'general_int'>('find_k');
@@ -57,46 +84,52 @@ export const CasioCalculator: React.FC = () => {
     decimal: '0.3750',
     summary: 'Hằng số chuẩn hóa: k = 3/8 = 0.3750',
     casioGuide: [
-      'Bấm phím Tích phân ∫dx (dưới nút ALPHA)',
-      'Nhập hàm số tạm bỏ k: X² (bấm ALPHA + X rồi x²)',
+      'Bấm [MENU] [1] (COMP)',
+      'Bấm phím Tích phân [∫dx] (dưới nút ALPHA)',
+      'Nhập hàm bỏ k: X² (bấm ALPHA + X rồi x²)',
       'Nhập cận dưới: 0, cận trên: 2',
-      'Bấm = nhận được 8/3. Suy ra k = 1 / (8/3) = 3/8 = 0.3750',
+      'Bấm [=] nhận được 8/3. Suy ra k = 1 / (8/3) = 3/8 = 0.3750',
     ],
-    infinityTip: 'LƯU Ý PHÒNG THI: Nếu cận là +∞ hãy thay bằng 10^9; nếu cận là -∞ thay bằng -10^9 để máy Casio fx-580VN X tính xấp xỉ chính xác.',
+    infinityTip: 'LƯU Ý PHÒNG THI: Nếu cận là +∞ hãy nhập 10^9 hoặc 1×10^99; nếu là -∞ hãy nhập -10^9 hoặc -1×10^99.',
   });
 
-  // FX-570VN Distr & Critical Values State
-  const [fx570TValue, setFx570TValue] = useState('1.96');
-  const [fx570XVal, setFx570XVal] = useState('65');
-  const [fx570MeanVal, setFx570MeanVal] = useState('50');
-  const [fx570SdVal, setFx570SdVal] = useState('10');
-  const [alphaLevel, setAlphaLevel] = useState('0.05');
-
-  // STAT Data State (Bảng tần số 1-Var)
+  // STAT Data State (MENU 6: 1-Variable & 2-Variable Regression)
+  const [statSubMode, setStatSubMode] = useState<'1-var' | 'discrete_rv' | 'regression'>('1-var');
   const [statRows, setStatRows] = useState<Array<{ x: string; freq: string }>>([
-    { x: '10', freq: '2' },
-    { x: '20', freq: '5' },
-    { x: '30', freq: '8' },
-    { x: '40', freq: '3' },
+    { x: '25', freq: '12' },
+    { x: '35', freq: '28' },
+    { x: '45', freq: '35' },
+    { x: '55', freq: '18' },
+    { x: '65', freq: '7' },
   ]);
   const [statSummary, setStatSummary] = useState<any>(null);
 
-  // DIST Parameters State (FX-580VN)
+  // Regression Data State (y = a + bx)
+  const [regRows, setRegRows] = useState<Array<{ x: string; y: string }>>([
+    { x: '1', y: '2' },
+    { x: '2', y: '5' },
+    { x: '3', y: '7' },
+    { x: '4', y: '8' },
+    { x: '5', y: '11' },
+  ]);
+  const [regSummary, setRegSummary] = useState<any>(null);
+
+  // DIST Parameters State (MENU 7: FX-580VN)
   const [distType, setDistType] = useState<
     'normal_cd' | 'normal_pd' | 'inv_normal' | 'binom_pd' | 'binom_cd' | 'poisson_pd' | 'poisson_cd'
   >('normal_cd');
   const [distInputs, setDistInputs] = useState<Record<string, string>>({
-    lower: '-1.96',
-    upper: '1.96',
-    mean: '0',
-    sd: '1',
-    area: '0.95',
+    lower: '26',
+    upper: '1000000',
+    mean: '24',
+    sd: '2',
+    area: '0.05',
     k: '3',
     n: '10',
     p: '0.5',
     lambda: '4',
   });
-  const [distResult, setDistResult] = useState<number | null>(0.95);
+  const [distResult, setDistResult] = useState<number | null>(0.15866);
 
   // Helper math algorithms
   const fact = (n: number): number => {
@@ -147,7 +180,6 @@ export const CasioCalculator: React.FC = () => {
 
     const q = area < 0.5 ? area : 1 - area;
     let z: number;
-
     if (q > 0.02425) {
       const r = q - 0.5;
       const r2 = r * r;
@@ -216,11 +248,11 @@ export const CasioCalculator: React.FC = () => {
     }
   };
 
-  // Evaluate current expression (supports integrals, combinatorics, powers, etc.)
+  // Evaluate current expression
   const evaluateExpression = async () => {
     if (!expression.trim()) return;
 
-    // If expression contains an integral "int(...)", send to dedicated calculus engine
+    // Dedicated calculus engine for integrals
     if (expression.includes('int(') || expression.includes('Phi(') || expression.includes('sum(')) {
       try {
         const response = await aiFetch('/api/tutor/solve-math', {
@@ -237,7 +269,6 @@ export const CasioCalculator: React.FC = () => {
           const num = parseFloat(d.step4FinalDecimal || '0');
           setLastAns(isNaN(num) ? 0 : num);
 
-          // Update continuous result panel as well
           setContinuousResult({
             title: d.parsedTitle || 'Bài toán Tích phân & Biến ngẫu nhiên liên tục',
             step1: d.step1Rephrased || expression,
@@ -259,15 +290,9 @@ export const CasioCalculator: React.FC = () => {
     // Standard mathematical evaluation
     try {
       let expr = expression;
-
-      // Combinatorics: 10C3 -> nCr(10, 3), 10P3 -> nPr(10, 3)
       expr = expr.replace(/(\d+)C(\d+)/g, (_, n, r) => nCr(parseInt(n), parseInt(r)).toString());
       expr = expr.replace(/(\d+)P(\d+)/g, (_, n, r) => nPr(parseInt(n), parseInt(r)).toString());
-
-      // Factorial: 5! -> fact(5)
       expr = expr.replace(/(\d+)!/g, (_, n) => fact(parseInt(n)).toString());
-
-      // Symbols
       expr = expr.replace(/×/g, '*').replace(/÷/g, '/');
       expr = expr.replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E');
       expr = expr.replace(/√\(([^)]+)\)/g, 'Math.sqrt($1)');
@@ -291,7 +316,61 @@ export const CasioCalculator: React.FC = () => {
     }
   };
 
-  // Solve Continuous Random Variable Problem (Find k, Expectation, Variance, Probability)
+  // Solve Equation Solver 2x2 (MENU 9 1 2)
+  const handleSolve2x2 = () => {
+    const a1 = parseFloat(eqA1);
+    const b1 = parseFloat(eqB1);
+    const c1 = parseFloat(eqC1);
+    const a2 = parseFloat(eqA2);
+    const b2 = parseFloat(eqB2);
+    const c2 = parseFloat(eqC2);
+
+    const D = a1 * b2 - a2 * b1;
+    const Dx = c1 * b2 - c2 * b1;
+    const Dy = a1 * c2 - a2 * c1;
+
+    if (Math.abs(D) < 1e-9) {
+      setEqResult({ x: 'Vô nghiệm hoặc vô số nghiệm', y: '---' });
+    } else {
+      const x = Dx / D;
+      const y = Dy / D;
+      setEqResult({
+        x: `${x.toFixed(4)}`,
+        y: `${y.toFixed(4)}`,
+      });
+      setDisplayResult(`x=${x.toFixed(4)}, y=${y.toFixed(4)}`);
+    }
+  };
+
+  // Solve Quadratic Equation (MENU 9 2 2)
+  const handleSolveQuad = () => {
+    const a = parseFloat(quadA);
+    const b = parseFloat(quadB);
+    const c = parseFloat(quadC);
+
+    if (a === 0) {
+      if (b !== 0) {
+        const x = -c / b;
+        setQuadResult({ x1: x.toFixed(4), x2: 'Nghiệm đơn bậc 1' });
+      }
+      return;
+    }
+
+    const delta = b * b - 4 * a * c;
+    if (delta < 0) {
+      setQuadResult({ x1: 'Vô nghiệm thực (No Real Roots)', x2: '---' });
+    } else {
+      const x1 = (-b + Math.sqrt(delta)) / (2 * a);
+      const x2 = (-b - Math.sqrt(delta)) / (2 * a);
+      setQuadResult({
+        x1: x1.toFixed(4),
+        x2: x2.toFixed(4),
+      });
+      setDisplayResult(`x1=${x1.toFixed(4)}, x2=${x2.toFixed(4)}`);
+    }
+  };
+
+  // Solve Continuous Random Variable Problem
   const handleSolveContinuousProblem = async () => {
     setIsSolvingContinuous(true);
     let rawQuery = '';
@@ -328,7 +407,6 @@ export const CasioCalculator: React.FC = () => {
           infinityTip: d.casioGuide?.infinityNote || '',
         });
 
-        // Sync with Casio LCD screen
         setDisplayFraction(d.step4FinalFraction || '---');
         setDisplayDecimal(d.step4FinalDecimal || '---');
         setDisplayResult(d.step4FinalDecimal || '---');
@@ -341,93 +419,7 @@ export const CasioCalculator: React.FC = () => {
     }
   };
 
-  // Keyboard shortcut listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
-
-      if (e.key >= '0' && e.key <= '9') {
-        handleKeyClick(e.key);
-      } else if (e.key === '+' || e.key === '-' || e.key === '(' || e.key === ')') {
-        handleKeyClick(e.key);
-      } else if (e.key === '*') {
-        handleKeyClick('×');
-      } else if (e.key === '/') {
-        handleKeyClick('÷');
-      } else if (e.key === '.' || e.key === ',') {
-        handleKeyClick('.');
-      } else if (e.key === 'Enter' || e.key === '=') {
-        e.preventDefault();
-        evaluateExpression();
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        handleKeyClick('DEL');
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleKeyClick('AC');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [expression, lastAns]);
-
-  // Classic FX-570VN Distr: P(t), Q(t), R(t)
-  const calcFX570Distr = (type: 'P' | 'Q' | 'R') => {
-    const t = parseFloat(fx570TValue);
-    if (isNaN(t)) return;
-
-    const pVal = normCDF(t, 0, 1);
-    let res = 0;
-    if (type === 'P') {
-      res = pVal; // P(Z <= t)
-      setDisplayResult(res.toFixed(5));
-      setDisplayDecimal(res.toFixed(4));
-      setExpression(`P(${t})`);
-    } else if (type === 'Q') {
-      res = Math.abs(pVal - 0.5); // P(0 <= Z <= t)
-      setDisplayResult(res.toFixed(5));
-      setDisplayDecimal(res.toFixed(4));
-      setExpression(`Q(${t})`);
-    } else if (type === 'R') {
-      res = 1 - pVal; // P(Z >= t)
-      setDisplayResult(res.toFixed(5));
-      setDisplayDecimal(res.toFixed(4));
-      setExpression(`R(${t})`);
-    }
-    setLastAns(res);
-  };
-
-  // Critical Value z-alpha / t-alpha calculator
-  const calcCriticalZ = () => {
-    const a = parseFloat(alphaLevel);
-    if (isNaN(a) || a <= 0 || a >= 1) return;
-
-    // z_(alpha/2) for two-tailed, z_alpha for one-tailed
-    const zOneTail = invNorm(1 - a, 0, 1);
-    const zTwoTail = invNorm(1 - a / 2, 0, 1);
-
-    setDisplayResult(zTwoTail.toFixed(4));
-    setDisplayDecimal(zTwoTail.toFixed(4));
-    setDisplayFraction(`z_{${a}/2} = ${zTwoTail.toFixed(4)}`);
-    setExpression(`z_{${a}/2} = ${zTwoTail.toFixed(4)} (2 phía) | z_{${a}} = ${zOneTail.toFixed(4)} (1 phía)`);
-  };
-
-  const calcFX570ZScore = () => {
-    const x = parseFloat(fx570XVal);
-    const m = parseFloat(fx570MeanVal);
-    const s = parseFloat(fx570SdVal);
-    if (isNaN(x) || isNaN(m) || isNaN(s) || s === 0) return;
-
-    const z = (x - m) / s;
-    setFx570TValue(z.toFixed(4));
-    setDisplayResult(z.toFixed(4));
-    setDisplayDecimal(z.toFixed(4));
-    setExpression(`t = (${x} - ${m}) / ${s}`);
-    setLastAns(z);
-  };
-
-  // STAT calculations
+  // STAT calculations (MENU 6: 1-Variable)
   const calculateStats = () => {
     let totalFreq = 0;
     let sumX = 0;
@@ -468,25 +460,67 @@ export const CasioCalculator: React.FC = () => {
     });
   };
 
-  // DIST calculations (FX-580VN)
+  // Regression calculations (MENU 6 2: y = a + bx)
+  const calculateRegression = () => {
+    let n = 0;
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumX2 = 0;
+    let sumY2 = 0;
+
+    regRows.forEach((row) => {
+      const x = parseFloat(row.x);
+      const y = parseFloat(row.y);
+      if (!isNaN(x) && !isNaN(y)) {
+        n++;
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2 += x * x;
+        sumY2 += y * y;
+      }
+    });
+
+    if (n < 2) return;
+
+    const denom = n * sumX2 - sumX * sumX;
+    if (Math.abs(denom) < 1e-9) return;
+
+    const b = (n * sumXY - sumX * sumY) / denom;
+    const a = (sumY - b * sumX) / n;
+
+    const denomR = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    const r = denomR !== 0 ? (n * sumXY - sumX * sumY) / denomR : 0;
+
+    setRegSummary({
+      n,
+      a: parseFloat(a.toFixed(4)),
+      b: parseFloat(b.toFixed(4)),
+      r: parseFloat(r.toFixed(4)),
+      r2: parseFloat((r * r).toFixed(4)),
+    });
+  };
+
+  // DIST calculations (MENU 7: FX-580VN)
   const calculateDistribution = () => {
     if (distType === 'normal_cd') {
-      const l = parseFloat(distInputs.lower || '-1.96');
-      const u = parseFloat(distInputs.upper || '1.96');
-      const m = parseFloat(distInputs.mean || '0');
-      const s = parseFloat(distInputs.sd || '1');
+      const l = parseFloat(distInputs.lower || '26');
+      const u = parseFloat(distInputs.upper || '1000000');
+      const m = parseFloat(distInputs.mean || '24');
+      const s = parseFloat(distInputs.sd || '2');
       const res = normCDF(u, m, s) - normCDF(l, m, s);
       setDistResult(parseFloat(res.toFixed(5)));
     } else if (distType === 'normal_pd') {
-      const x = parseFloat(distInputs.upper || '0');
-      const m = parseFloat(distInputs.mean || '0');
-      const s = parseFloat(distInputs.sd || '1');
+      const x = parseFloat(distInputs.upper || '24');
+      const m = parseFloat(distInputs.mean || '24');
+      const s = parseFloat(distInputs.sd || '2');
       const res = (1 / (s * Math.sqrt(2 * Math.PI))) * Math.exp(-Math.pow(x - m, 2) / (2 * s * s));
       setDistResult(parseFloat(res.toFixed(5)));
     } else if (distType === 'inv_normal') {
-      const area = parseFloat(distInputs.area || '0.95');
-      const m = parseFloat(distInputs.mean || '0');
-      const s = parseFloat(distInputs.sd || '1');
+      const area = parseFloat(distInputs.area || '0.05');
+      const m = parseFloat(distInputs.mean || '24');
+      const s = parseFloat(distInputs.sd || '2');
       const res = invNorm(area, m, s);
       setDistResult(parseFloat(res.toFixed(5)));
     } else if (distType === 'binom_pd') {
@@ -517,47 +551,49 @@ export const CasioCalculator: React.FC = () => {
   };
 
   useEffect(() => {
-    if (activeMode === 'STAT') calculateStats();
+    if (activeMode === 'STAT') {
+      if (statSubMode === 'regression') calculateRegression();
+      else calculateStats();
+    }
     if (activeMode === 'DIST') calculateDistribution();
-  }, [activeMode, statRows, distType, distInputs]);
+  }, [activeMode, statSubMode, statRows, regRows, distType, distInputs]);
 
   return (
     <div className="space-y-6">
       {/* Top Banner - Neon Modern Styling */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border-2 border-cyan-500/40 p-6 rounded-3xl space-y-3 shadow-[0_0_25px_rgba(6,182,212,0.15)] relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border-2 border-cyan-500/40 p-5 sm:p-6 rounded-3xl space-y-3 shadow-[0_0_25px_rgba(6,182,212,0.15)] relative overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 bg-cyan-500/20 text-cyan-400 rounded-xl border border-cyan-500/30 font-black text-sm shadow-[0_0_12px_rgba(6,182,212,0.3)]">
-              🧮 CASIO PRO
+          <div className="flex items-center gap-3">
+            <span className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-2xl border border-cyan-500/30 font-black text-sm shadow-[0_0_12px_rgba(6,182,212,0.3)]">
+              🧮 CASIO FX-580
             </span>
             <div>
-              <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                <span>Máy Tính Xác Suất Thống Kê Toàn Diện</span>
-                <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
-                  Rời Rạc & Liên Tục Tích Phân
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                  Giả Lập Máy Tính Casio fx-580VN X Chuẩn Phòng Thi
+                </h2>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                  ClassWiz Edition
                 </span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                100% Tiếng Việt • Giải tích phân xác định, tích phân suy rộng $\pm\infty$, tìm hằng số $k$, kỳ vọng $E(X)$, phương sai $Var(X)$ và bảng số liệu thống kê.
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Chuyên biệt Xác suất Thống kê HUB • Bấm máy thực chiến ngoài đời • Rút gọn chức năng thừa, tập trung MENU 1, 6, 7, 9.
               </p>
             </div>
           </div>
 
-          {/* Model Switcher & Standalone Full HTML Simulator Link */}
+          {/* Quick Actions: Open CamScanner Cheat Sheet & Model Switcher */}
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              href="/casio-simulator.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-2 rounded-xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 shadow-[0_0_15px_rgba(0,255,157,0.4)] flex items-center gap-1.5 hover:scale-105 transition-all text-xs"
-              title="Mở file HTML độc lập chứa đầy đủ bàn phím ảo MathLive và Nerdamer JS"
+            <button
+              onClick={() => setIsCheatSheetOpen(true)}
+              className="px-3.5 py-2 rounded-xl font-black bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.4)] flex items-center gap-1.5 transition-all text-xs"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Mở Máy Tính Casio Độc Lập (Full HTML)</span>
-            </a>
+              <FileText className="w-3.5 h-3.5" />
+              <span>📜 Mở Tờ Công Thức HUB (CamScanner)</span>
+            </button>
 
             <div className="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-2xl border border-slate-700 text-xs">
-              <span className="text-[11px] font-semibold text-slate-400 px-2">Dòng máy:</span>
+              <span className="text-[11px] font-semibold text-slate-400 px-2">Vỏ máy:</span>
               <button
                 onClick={() => setModelType('FX-580VN')}
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
@@ -582,70 +618,84 @@ export const CasioCalculator: React.FC = () => {
           </div>
         </div>
 
-        {/* 5 Main Feature Tabs */}
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80">
+        {/* 6 Essential Modes Tailored for Probability & Statistics */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80 text-xs">
           <button
             onClick={() => setActiveMode('COMP')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
               activeMode === 'COMP'
                 ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                 : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <Calculator className="w-4 h-4" />
-            <span>1. BÀN PHÍM CASIO & TÍNH TOÁN (COMP)</span>
+            <Calculator className="w-3.5 h-3.5" />
+            <span>MENU 1: TÍNH TOÁN (COMP)</span>
           </button>
 
           <button
-            onClick={() => setActiveMode('CONTINUOUS')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeMode === 'CONTINUOUS'
-                ? 'bg-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.5)] font-black'
-                : 'bg-slate-800/90 text-emerald-300 hover:bg-slate-700 border border-emerald-500/40'
-            }`}
-          >
-            <Zap className="w-4 h-4 text-emerald-400" />
-            <span>2. BIẾN LIÊN TỤC & TÍCH PHÂN (TÌM k, E(X), Var(X))</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('FX570_DISTR')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeMode === 'FX570_DISTR'
+            onClick={() => setActiveMode('EQUATION')}
+            className={`px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+              activeMode === 'EQUATION'
                 ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                 : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <span>3. PHÂN PHỐI CHUẨN P(t), Q(t), R(t) & z-alpha</span>
+            <Cpu className="w-3.5 h-3.5" />
+            <span>MENU 9: HỆ PHƯƠNG TRÌNH & BẬC 2</span>
           </button>
 
           <button
             onClick={() => setActiveMode('STAT')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
               activeMode === 'STAT'
                 ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                 : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>4. THỐNG KÊ 1-VAR (BẢNG TẦN SỐ)</span>
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>MENU 6: THỐNG KÊ (STAT 1-VAR & HỒI QUY)</span>
           </button>
 
           <button
             onClick={() => setActiveMode('DIST')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
               activeMode === 'DIST'
                 ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                 : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <span>5. PHÂN PHỐI FX-580 (NHỊ THỨC, POISSON)</span>
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>MENU 7: PHÂN PHỐI (CHUẨN, NHỊ THỨC, POISSON)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveMode('CONTINUOUS')}
+            className={`px-3 py-2 rounded-xl font-black transition-all flex items-center gap-1.5 ${
+              activeMode === 'CONTINUOUS'
+                ? 'bg-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                : 'bg-slate-800/90 text-emerald-300 hover:bg-slate-700 border border-emerald-500/40'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>BIẾN LIÊN TỤC & TÍCH PHÂN 4 BƯỚC</span>
+          </button>
+
+          <button
+            onClick={() => setActiveMode('KEY_GUIDE')}
+            className={`px-3 py-2 rounded-xl font-black transition-all flex items-center gap-1.5 ${
+              activeMode === 'KEY_GUIDE'
+                ? 'bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                : 'bg-slate-800/90 text-amber-300 hover:bg-slate-700 border border-amber-500/40'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>CẨM NANG BẤM PHÍM PHÒNG THI</span>
           </button>
         </div>
       </div>
 
       {/* Main Interactive Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Physical Casio Calculator Body (7 Cols) */}
         <div
           className={`lg:col-span-7 border-4 rounded-3xl p-5 shadow-2xl space-y-4 max-w-xl mx-auto w-full transition-all ${
@@ -671,9 +721,7 @@ export const CasioCalculator: React.FC = () => {
           {/* LCD Screen Container */}
           <div
             className={`p-3.5 rounded-xl border-2 border-slate-900 shadow-inner font-mono min-h-[110px] flex flex-col justify-between select-none ${
-              modelType === 'FX-570VN'
-                ? 'bg-[#98a88a] text-slate-950'
-                : 'bg-[#b6cca8] text-slate-950'
+              modelType === 'FX-570VN' ? 'bg-[#98a88a] text-slate-950' : 'bg-[#b6cca8] text-slate-950'
             }`}
           >
             {/* Status Indicators Line */}
@@ -686,11 +734,11 @@ export const CasioCalculator: React.FC = () => {
                 <span className="bg-black/10 px-1 rounded">{activeMode}</span>
               </div>
               <span className="text-[10px] font-black text-slate-800">
-                NATURAL TEXTBOOK DISPLAY (KaTeX)
+                NATURAL TEXTBOOK DISPLAY
               </span>
             </div>
 
-            {/* Natural Textbook Display Line (Hiển thị ký hiệu toán học chuẩn KaTeX) */}
+            {/* Natural Textbook Display Line (Hiển thị ký hiệu toán học KaTeX) */}
             <div className="min-h-[46px] flex items-center justify-end overflow-x-auto whitespace-nowrap py-1 px-1 font-bold text-slate-950">
               <div
                 className="text-base sm:text-lg font-mono text-slate-950 tracking-wide inline-block"
@@ -700,13 +748,13 @@ export const CasioCalculator: React.FC = () => {
 
             {/* Expression Raw Sub-Line */}
             <div className="text-right text-[10px] tracking-wider overflow-x-auto whitespace-nowrap text-slate-700/80 font-mono">
-              [Phím nhập: {expression || '0'}]
+              [Phím: {expression || '0'}]
             </div>
 
             {/* Main Result Line with Parallel Fraction & Decimal Indicator */}
             <div className="flex items-baseline justify-between border-t border-black/10 pt-1">
               <div className="text-[10px] font-bold text-slate-700">
-                {isShowingFraction ? 'DẠNG PHÂN SỐ' : 'DẠNG THẬP PHÂN'}
+                {isShowingFraction ? 'DẠNG PHÂN SỐ' : 'DẠNG THẬP PHÂN (4 CHỮ SỐ)'}
               </div>
               <div className="text-right text-2xl font-black tracking-tight overflow-x-auto whitespace-nowrap text-slate-950">
                 = {displayResult}
@@ -714,221 +762,12 @@ export const CasioCalculator: React.FC = () => {
             </div>
           </div>
 
-          {/* 3 SPECIAL FUNCTION BUTTON GROUPS (VIRTUAL KEYPAD) */}
-          <div className="space-y-2 bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-            {/* Group 1: Continuous Calculus Buttons */}
-            <div>
-              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block mb-1">
-                ⚡ Nhóm Giải Tích & Biến Liên Tục:
-              </span>
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('int(')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Tích phân xác định int(a, b, f(x))"
-                >
-                  ∫dx
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('int(-inf, +inf, ')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Tích phân suy rộng int(-inf, +inf, f(x))"
-                >
-                  ∫₋∞⁺∞
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('+inf')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Dương vô cực (+inf)"
-                >
-                  +∞
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('-inf')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Âm vô cực (-inf)"
-                >
-                  -∞
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('/')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Phân số a/b"
-                >
-                  a/b
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('^')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Số mũ x^y"
-                >
-                  xʸ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('sqrt(')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Căn bậc hai sqrt(x)"
-                >
-                  √x
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('e^(')}
-                  className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
-                  title="Hằng số e mũ x: e^(x)"
-                >
-                  eˣ
-                </button>
-              </div>
-            </div>
-
-            {/* Group 2: Combinatorics & Discrete */}
-            <div>
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-1">
-                🎲 Nhóm Tổ Hợp & Rời Rạc:
-              </span>
-              <div className="grid grid-cols-4 sm:grid-cols-4 gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('C')}
-                  className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
-                  title="Tổ hợp nCr (VD: 10C3)"
-                >
-                  nCr
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('P')}
-                  className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
-                  title="Chỉnh hợp nPr (VD: 10P3)"
-                >
-                  nPr
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('!')}
-                  className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
-                  title="Giai thừa x!"
-                >
-                  x!
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('sum(')}
-                  className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
-                  title="Tổng xích-ma sum(a, b, f(x))"
-                >
-                  Σ (Sigma)
-                </button>
-              </div>
-            </div>
-
-            {/* Group 3: Distribution & Statistics */}
-            <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">
-                📊 Nhóm Phân Phối & Thống Kê:
-              </span>
-              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('Phi(')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Hàm phân phối chuẩn tắc tích lũy Phi(z)"
-                >
-                  Φ(z)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('P(X <= ')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Xác suất tích lũy P(X <= x)"
-                >
-                  P(X ≤ x)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('E(X) = int(')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Kỳ vọng E(X) = int(a, b, x*f(x))"
-                >
-                  E(X)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('Var(X) = ')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Phương sai Var(X) = E(X^2) - [E(X)]^2"
-                >
-                  Var(X)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeyClick('sigma = ')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Độ lệch chuẩn sigma"
-                >
-                  σ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveMode('FX570_DISTR');
-                    calcCriticalZ();
-                  }}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Tra giá trị tới hạn z-alpha"
-                >
-                  z_α
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveMode('FX570_DISTR')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Tra giá trị tới hạn Student t-alpha"
-                >
-                  t_α
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveMode('STAT')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Tính Trung bình mẫu x-bar"
-                >
-                  x̄ (Mean)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveMode('STAT')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Tính Phương sai mẫu s^2"
-                >
-                  s² (Var)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveMode('STAT')}
-                  className="p-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold rounded-lg border border-emerald-800/80 text-center"
-                  title="Tính Độ lệch chuẩn mẫu s"
-                >
-                  s (StdDev)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Standard Casio Control Keys */}
+          {/* D-PAD DIRECTION KEYS & FUNCTION CONTROLS */}
           <div className="grid grid-cols-5 gap-2 text-[11px] font-bold text-center">
             <button
               onClick={() => handleKeyClick('SHIFT')}
               className={`py-2 rounded-lg border transition-all ${
-                isShift ? 'bg-amber-400 text-black' : 'bg-amber-600 hover:bg-amber-500 text-white'
+                isShift ? 'bg-amber-400 text-black font-black' : 'bg-amber-600 hover:bg-amber-500 text-white'
               }`}
             >
               SHIFT
@@ -936,31 +775,136 @@ export const CasioCalculator: React.FC = () => {
             <button
               onClick={() => handleKeyClick('ALPHA')}
               className={`py-2 rounded-lg border transition-all ${
-                isAlpha ? 'bg-rose-400 text-black' : 'bg-rose-700 hover:bg-rose-600 text-white'
+                isAlpha ? 'bg-rose-400 text-black font-black' : 'bg-rose-700 hover:bg-rose-600 text-white'
               }`}
             >
               ALPHA
             </button>
             <button
               onClick={() => {
-                setActiveMode((prev) => (prev === 'COMP' ? 'CONTINUOUS' : prev === 'CONTINUOUS' ? 'FX570_DISTR' : 'COMP'));
+                setActiveMode((prev) =>
+                  prev === 'COMP' ? 'EQUATION' : prev === 'EQUATION' ? 'STAT' : prev === 'STAT' ? 'DIST' : 'COMP'
+                );
               }}
               className="py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg border border-slate-600 font-bold"
+              title="Chuyển chế độ MENU"
             >
-              CHẾ ĐỘ
+              MENU
             </button>
             <button
               onClick={() => handleKeyClick('DEL')}
               className="py-2 bg-rose-800 hover:bg-rose-700 text-white rounded-lg border border-rose-900 font-bold"
             >
-              XÓA (DEL)
+              DEL
             </button>
             <button
               onClick={() => handleKeyClick('AC')}
               className="py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg border border-red-700 font-bold"
             >
-              XÓA HẾT (AC)
+              AC (BẬT)
             </button>
+          </div>
+
+          {/* SPECIAL FUNCTION BUTTON ROW (TAILORED FOR XSTK) */}
+          <div className="space-y-2 bg-slate-900/90 p-3 rounded-2xl border border-slate-800 text-xs">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleKeyClick('int(')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Tích phân xác định int(a, b, f(x))"
+              >
+                ∫dx
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('/')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Phân số"
+              >
+                a/b
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('sqrt(')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Căn bậc hai √x"
+              >
+                √x
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('^2')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Bình phương x²"
+              >
+                x²
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('^')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Lũy thừa x^y"
+              >
+                xʸ
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('C')}
+                className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
+                title="Tổ hợp nCr (VD: 10C3)"
+              >
+                nCr
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('P')}
+                className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
+                title="Chỉnh hợp nPr (VD: 10P3)"
+              >
+                nPr
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('!')}
+                className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
+                title="Giai thừa x!"
+              >
+                x!
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('e^(')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Hàm mũ e^x"
+              >
+                eˣ
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('ln(')}
+                className="p-2 bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 font-bold rounded-lg border border-cyan-800/80 text-center"
+                title="Logarit tự nhiên ln(x)"
+              >
+                ln
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('x')}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg border border-slate-700 text-center font-mono"
+                title="Biến số X"
+              >
+                X
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyClick('sum(')}
+                className="p-2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold rounded-lg border border-amber-800/80 text-center"
+                title="Tổng Sigma"
+              >
+                Σ
+              </button>
+            </div>
           </div>
 
           {/* Numeric Keypad & Operators */}
@@ -970,21 +914,21 @@ export const CasioCalculator: React.FC = () => {
             <button onClick={() => handleKeyClick('8')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">8</button>
             <button onClick={() => handleKeyClick('9')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">9</button>
             <button onClick={() => handleKeyClick('÷')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-cyan-400">÷</button>
-            <button onClick={() => handleKeyClick('x')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-amber-300 font-mono">X</button>
+            <button onClick={() => handleKeyClick('(')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl">(</button>
 
             {/* Row 2 */}
             <button onClick={() => handleKeyClick('4')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">4</button>
             <button onClick={() => handleKeyClick('5')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">5</button>
             <button onClick={() => handleKeyClick('6')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">6</button>
             <button onClick={() => handleKeyClick('×')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-cyan-400">×</button>
-            <button onClick={() => handleKeyClick('(')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl">(</button>
+            <button onClick={() => handleKeyClick(')')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl">)</button>
 
             {/* Row 3 */}
             <button onClick={() => handleKeyClick('1')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">1</button>
             <button onClick={() => handleKeyClick('2')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">2</button>
             <button onClick={() => handleKeyClick('3')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">3</button>
             <button onClick={() => handleKeyClick('-')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-cyan-400">-</button>
-            <button onClick={() => handleKeyClick(')')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl">)</button>
+            <button onClick={() => handleKeyClick('Ans')} className="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-amber-300 text-xs font-mono">Ans</button>
 
             {/* Row 4 */}
             <button onClick={() => handleKeyClick('0')} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl">0</button>
@@ -1002,31 +946,224 @@ export const CasioCalculator: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Info & Continuous Engine Panel (5 Cols) */}
+        {/* Right Info & Functional Modes Panel (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
-          {/* TAB 2: DEDICATED CONTINUOUS RANDOM VARIABLE SOLVER */}
-          {activeMode === 'CONTINUOUS' && (
-            <div className="bg-slate-900 border-2 border-amber-400/50 p-5 rounded-3xl space-y-4 shadow-xl text-xs text-slate-200">
+          
+          {/* TAB: MENU 9 - EQUATION SOLVER (HỆ & PHƯƠNG TRÌNH) */}
+          {activeMode === 'EQUATION' && (
+            <div className="bg-slate-900 border-2 border-cyan-500/40 p-5 rounded-3xl space-y-4 shadow-xl text-xs text-slate-200">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 className="font-extrabold text-amber-300 text-sm flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-amber-400" />
-                  <span>Chuyên Đề Biến Ngẫu Nhiên Liên Tục (Tích Phân)</span>
+                <h3 className="font-extrabold text-cyan-300 text-sm flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-cyan-400" />
+                  <span>Bộ Giải Phương Trình & Hệ PT (MENU 9)</span>
                 </h3>
-                <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded font-bold">
-                  Giải Tự Động 4 Bước
+                <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-mono font-bold">
+                  ClassWiz 9-1-2
+                </span>
+              </div>
+
+              {/* Equation Subtype Selector */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setEqMode('system_2x2')}
+                  className={`p-2.5 rounded-xl font-bold transition-all text-center ${
+                    eqMode === 'system_2x2'
+                      ? 'bg-cyan-500 text-black shadow'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  1. Hệ 2 ẩn (MENU 9 1 2)
+                </button>
+                <button
+                  onClick={() => setEqMode('poly_deg2')}
+                  className={`p-2.5 rounded-xl font-bold transition-all text-center ${
+                    eqMode === 'poly_deg2'
+                      ? 'bg-cyan-500 text-black shadow'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  2. PT Bậc 2 (MENU 9 2 2)
+                </button>
+              </div>
+
+              {/* Sub-mode 1: 2x2 System */}
+              {eqMode === 'system_2x2' ? (
+                <div className="space-y-3 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800">
+                  <div className="space-y-1">
+                    <span className="font-bold text-amber-300 block text-xs">
+                      Ứng dụng XSTK: Tìm 2 tham số $a, b$ của hàm mật độ $f(x) = ax + b$
+                    </span>
+                    <p className="text-[11px] text-slate-400">
+                      Từ điều kiện $\int f(x)dx = 1$ và $E(X) = \int x f(x)dx = \mu$, ta có hệ:
+                    </p>
+                  </div>
+
+                  {/* Inputs Row 1: a1*x + b1*y = c1 */}
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[11px] text-slate-400 font-mono font-semibold">Phương trình 1: a₁X + b₁Y = c₁</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={eqA1}
+                        onChange={(e) => setEqA1(e.target.value)}
+                        placeholder="a1"
+                        className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono text-xs font-bold text-cyan-300"
+                      />
+                      <input
+                        type="text"
+                        value={eqB1}
+                        onChange={(e) => setEqB1(e.target.value)}
+                        placeholder="b1"
+                        className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono text-xs font-bold text-cyan-300"
+                      />
+                      <input
+                        type="text"
+                        value={eqC1}
+                        onChange={(e) => setEqC1(e.target.value)}
+                        placeholder="c1"
+                        className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono text-xs font-bold text-amber-300"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Inputs Row 2: a2*x + b2*y = c2 */}
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[11px] text-slate-400 font-mono font-semibold">Phương trình 2: a₂X + b₂Y = c₂</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={eqA2}
+                        onChange={(e) => setEqA2(e.target.value)}
+                        placeholder="a2"
+                        className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono text-xs font-bold text-cyan-300"
+                      />
+                      <input
+                        type="text"
+                        value={eqB2}
+                        onChange={(e) => setEqB2(e.target.value)}
+                        placeholder="b2"
+                        className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono text-xs font-bold text-cyan-300"
+                      />
+                      <input
+                        type="text"
+                        value={eqC2}
+                        onChange={(e) => setEqC2(e.target.value)}
+                        placeholder="c2"
+                        className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono text-xs font-bold text-amber-300"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSolve2x2}
+                    className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow transition-all hover:scale-[1.01]"
+                  >
+                    BẤM GIẢI HỆ (MENU 9 1 2)
+                  </button>
+
+                  {eqResult && (
+                    <div className="p-3 bg-slate-900 rounded-xl border border-cyan-500/40 text-center space-y-1 font-mono">
+                      <span className="text-[10px] text-slate-400 font-sans block">Kết quả nghiệm từ Casio fx-580:</span>
+                      <div className="grid grid-cols-2 gap-2 text-sm font-black text-cyan-300 pt-1">
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                          X (hoặc a) = <span className="text-white">{eqResult.x}</span>
+                        </div>
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                          Y (hoặc b) = <span className="text-white">{eqResult.y}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800">
+                  <div className="space-y-1">
+                    <span className="font-bold text-amber-300 block text-xs">
+                      Ứng dụng XSTK: Tìm Trung vị Median $F(M) = 0.5$ hoặc Mode cực trị
+                    </span>
+                    <p className="text-[11px] text-slate-400">
+                      Phương trình dạng: $aX^2 + bX + c = 0$
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Hệ số a</label>
+                      <input
+                        type="text"
+                        value={quadA}
+                        onChange={(e) => setQuadA(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono font-bold text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Hệ số b</label>
+                      <input
+                        type="text"
+                        value={quadB}
+                        onChange={(e) => setQuadB(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono font-bold text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Hệ số c</label>
+                      <input
+                        type="text"
+                        value={quadC}
+                        onChange={(e) => setQuadC(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-center font-mono font-bold text-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSolveQuad}
+                    className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow transition-all hover:scale-[1.01]"
+                  >
+                    BẤM GIẢI BẬC 2 (MENU 9 2 2)
+                  </button>
+
+                  {quadResult && (
+                    <div className="p-3 bg-slate-900 rounded-xl border border-cyan-500/40 text-center space-y-1 font-mono">
+                      <span className="text-[10px] text-slate-400 font-sans block">Nghiệm x₁ và x₂:</span>
+                      <div className="grid grid-cols-2 gap-2 text-sm font-black text-cyan-300 pt-1">
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                          x₁ = <span className="text-white">{quadResult.x1}</span>
+                        </div>
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                          x₂ = <span className="text-white">{quadResult.x2}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: CONTINUOUS RANDOM VARIABLE SOLVER */}
+          {activeMode === 'CONTINUOUS' && (
+            <div className="bg-slate-900 border-2 border-emerald-400/50 p-5 rounded-3xl space-y-4 shadow-xl text-xs text-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="font-extrabold text-emerald-300 text-sm flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-emerald-400" />
+                  <span>Chuyên Đề Biến Liên Tục & Tích Phân Tự Động</span>
+                </h3>
+                <span className="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded font-bold">
+                  Câu 2 Đề Thi HUB
                 </span>
               </div>
 
               {/* Task Selector */}
               <div className="space-y-1">
-                <label className="font-bold text-slate-300 text-[11px]">Chọn dạng bài toán cần giải:</label>
+                <label className="font-bold text-slate-300 text-[11px]">Dạng bài tập biến liên tục:</label>
                 <select
                   value={continuousTaskType}
                   onChange={(e) => setContinuousTaskType(e.target.value as any)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="find_k">1. Tìm hằng số k để f(x) là hàm mật độ xác suất</option>
-                  <option value="prob_interval">2. Tính xác suất trong khoảng P(a &lt; X &lt; b)</option>
+                  <option value="find_k">1. Tìm hằng số k để f(x) là hàm mật độ xác suất (int = 1)</option>
+                  <option value="prob_interval">2. Tính xác suất P(a &lt; X &lt; b)</option>
                   <option value="expectation_var">3. Tính Kỳ vọng E(X) và Phương sai Var(X)</option>
                   <option value="cdf_fx">4. Tìm hàm phân phối tích lũy F(x)</option>
                   <option value="general_int">5. Tính Tích phân xác định / Suy rộng bất kỳ</option>
@@ -1037,14 +1174,14 @@ export const CasioCalculator: React.FC = () => {
               <div className="space-y-3 p-3 bg-slate-950/70 rounded-2xl border border-slate-800">
                 <div>
                   <label className="text-[10px] text-slate-400 font-bold block mb-1">
-                    Hàm số f(x) (dùng biến x và hằng số k nếu có):
+                    Hàm f(x) (nhập biểu thức chứa x và k nếu có):
                   </label>
                   <input
                     type="text"
                     value={densityFunction}
                     onChange={(e) => setDensityFunction(e.target.value)}
-                    placeholder="VD: k * x^2 hoặc 2*e^(-2*x) hoặc 3*x^(-4)"
-                    className="w-full p-2 rounded-xl border border-slate-700 bg-slate-800 text-amber-300 font-mono font-bold text-xs"
+                    placeholder="VD: k * x^2 hoặc k*(x^2 - x) hoặc 2*e^(-2*x)"
+                    className="w-full p-2 rounded-xl border border-slate-700 bg-slate-800 text-emerald-300 font-mono font-bold text-xs"
                   />
                 </div>
 
@@ -1078,7 +1215,7 @@ export const CasioCalculator: React.FC = () => {
                 {continuousTaskType === 'prob_interval' && (
                   <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
                     <div>
-                      <label className="text-[11px] text-cyan-300 font-bold block mb-1">Khoảng tính P: Cận dưới</label>
+                      <label className="text-[11px] text-cyan-300 font-bold block mb-1">Cận dưới P:</label>
                       <input
                         type="text"
                         value={probA}
@@ -1087,7 +1224,7 @@ export const CasioCalculator: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] text-cyan-300 font-bold block mb-1">Khoảng tính P: Cận trên</label>
+                      <label className="text-[11px] text-cyan-300 font-bold block mb-1">Cận trên P:</label>
                       <input
                         type="text"
                         value={probB}
@@ -1159,11 +1296,6 @@ export const CasioCalculator: React.FC = () => {
                             <li key={sIdx}>{step}</li>
                           ))}
                         </ul>
-                        {continuousResult.infinityTip && (
-                          <div className="p-2 bg-cyan-950/80 rounded-lg border border-cyan-500/40 text-cyan-200 font-bold text-[11px] mt-1">
-                            {continuousResult.infinityTip}
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -1172,238 +1304,233 @@ export const CasioCalculator: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 1: COMP HELPER */}
-          {activeMode === 'COMP' && (
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xs text-xs text-slate-300">
-              <h3 className="font-extrabold text-cyan-400 flex items-center gap-1.5 text-sm">
-                <BookOpen className="w-4 h-4" />
-                <span>Hướng Dẫn Bấm Máy & Ký Hiệu Xác Suất</span>
-              </h3>
-              <p className="text-slate-400 leading-relaxed">
-                Bạn có thể bấm trực tiếp bàn phím máy tính trên màn hình hoặc gõ từ bàn phím máy tính:
-              </p>
-              <ul className="space-y-2 text-slate-300">
-                <li>• <strong>Tích phân xác định:</strong> Bấm <kbd className="bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800">∫dx</kbd> hoặc gõ <code className="bg-slate-800 px-1 py-0.5 rounded text-cyan-300">int(0, 2, 3*x^2)</code> rồi bấm <kbd className="text-cyan-400 font-bold">=</kbd>.</li>
-                <li>• <strong>Tổ hợp nCr:</strong> Bấm số n -&gt; bấm nCr -&gt; bấm số r (VD: <code className="bg-slate-800 px-1 py-0.5 rounded text-cyan-300">10C3</code> để tính <MathFormula math="C_{10}^3 = 120" />).</li>
-                <li>• <strong>Công thức Bernoulli:</strong> <code className="bg-slate-800 px-1 py-0.5 rounded text-cyan-300">10C3 × 0.5^3 × 0.5^7</code> rồi bấm <kbd className="text-cyan-400 font-bold">=</kbd>.</li>
-                <li>• <strong>Chuyển đổi phân số ⇔ thập phân:</strong> Bấm phím <kbd className="bg-cyan-700 text-white px-1.5 py-0.5 rounded font-bold">{'S<=>D'}</kbd> để hiển thị giữa phân số tối giản và số thập phân 4 chữ số.</li>
-              </ul>
-            </div>
-          )}
-
-          {/* TAB 3: FX-570VN DISTR & CRITICAL VALUES */}
-          {activeMode === 'FX570_DISTR' && (
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xs text-xs text-slate-300">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 className="font-extrabold text-white text-sm flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-cyan-400" />
-                  <span>Phân Phối Chuẩn & Tra Giá Trị Tới Hạn (DISTR)</span>
-                </h3>
-                <span className="text-[10px] font-mono bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded border border-cyan-500/30">
-                  Chuẩn hóa Z
-                </span>
-              </div>
-
-              {/* Critical Value Lookup (z-alpha and t-alpha) */}
-              <div className="p-3 bg-slate-950 rounded-2xl border border-cyan-500/30 space-y-2">
-                <span className="font-bold text-cyan-300 text-[11px] block">
-                  🔍 Tra ngược giá trị tới hạn chuẩn tắc z_α:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Mức ý nghĩa α</label>
-                    <select
-                      value={alphaLevel}
-                      onChange={(e) => setAlphaLevel(e.target.value)}
-                      className="w-full p-1.5 border rounded-lg bg-slate-800 text-xs font-bold text-white"
-                    >
-                      <option value="0.05">α = 0.05 (Độ tin cậy 95%)</option>
-                      <option value="0.01">α = 0.01 (Độ tin cậy 99%)</option>
-                      <option value="0.02">α = 0.02 (Độ tin cậy 98%)</option>
-                      <option value="0.10">α = 0.10 (Độ tin cậy 90%)</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={calcCriticalZ}
-                    className="mt-4 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-black font-extrabold rounded-lg text-xs"
-                  >
-                    Tra z_α
-                  </button>
-                </div>
-              </div>
-
-              {/* Conversion from X, Mean, SD to t */}
-              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
-                <span className="font-bold text-slate-300 text-[11px] block">
-                  Chức năng chuẩn hóa: <MathFormula math="t = \frac{X - \mu}{\sigma}" />
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="text-[10px] text-slate-400">Giá trị X</label>
-                    <input
-                      type="number"
-                      value={fx570XVal}
-                      onChange={(e) => setFx570XVal(e.target.value)}
-                      className="w-full p-1.5 border rounded bg-slate-800 text-xs font-semibold text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-slate-400">Kỳ vọng μ</label>
-                    <input
-                      type="number"
-                      value={fx570MeanVal}
-                      onChange={(e) => setFx570MeanVal(e.target.value)}
-                      className="w-full p-1.5 border rounded bg-slate-800 text-xs font-semibold text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-slate-400">Độ lệch σ</label>
-                    <input
-                      type="number"
-                      value={fx570SdVal}
-                      onChange={(e) => setFx570SdVal(e.target.value)}
-                      className="w-full p-1.5 border rounded bg-slate-800 text-xs font-semibold text-white"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={calcFX570ZScore}
-                  className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg text-[11px]"
-                >
-                  Tính giá trị t = (X - μ) / σ
-                </button>
-              </div>
-
-              {/* Input t */}
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-300">
-                  Giá trị biến chuẩn hóa t (hoặc z):
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={fx570TValue}
-                  onChange={(e) => setFx570TValue(e.target.value)}
-                  className="w-full p-2 border border-slate-700 rounded-xl bg-slate-800 text-xs font-bold text-cyan-300"
-                />
-              </div>
-
-              {/* 3 Distr Buttons: P(t), Q(t), R(t) */}
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => calcFX570Distr('P')}
-                  className="p-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-center transition-all shadow"
-                >
-                  <span className="block text-xs">1: P(t)</span>
-                  <span className="text-[10px] opacity-90 font-mono">P(Z ≤ t)</span>
-                </button>
-
-                <button
-                  onClick={() => calcFX570Distr('Q')}
-                  className="p-2.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-bold text-center transition-all shadow"
-                >
-                  <span className="block text-xs">2: Q(t)</span>
-                  <span className="text-[10px] opacity-90 font-mono">P(0 ≤ Z ≤ t)</span>
-                </button>
-
-                <button
-                  onClick={() => calcFX570Distr('R')}
-                  className="p-2.5 bg-cyan-800 hover:bg-cyan-700 text-white rounded-xl font-bold text-center transition-all shadow"
-                >
-                  <span className="block text-xs">3: R(t)</span>
-                  <span className="text-[10px] opacity-90 font-mono">P(Z ≥ t)</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: STAT 1-VAR (BẢNG TẦN SỐ) */}
+          {/* TAB: MENU 6 - STAT 1-VAR & LINEAR REGRESSION */}
           {activeMode === 'STAT' && (
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xs text-xs text-slate-300">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-white text-sm">
-                  Bảng Nhập Liệu Thống Kê (1-Variable)
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xl text-xs text-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="font-extrabold text-cyan-300 text-sm flex items-center gap-1.5">
+                  <FileSpreadsheet className="w-4 h-4 text-cyan-400" />
+                  <span>Bảng Nhập Thống Kê (MENU 6)</span>
                 </h3>
+                <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-mono font-bold">
+                  ClassWiz 6-1
+                </span>
+              </div>
+
+              {/* Sub-modes selector: 1-Var vs Discrete RV vs Linear Regression */}
+              <div className="grid grid-cols-3 gap-1.5 text-center font-bold">
                 <button
-                  onClick={() => setStatRows([...statRows, { x: '', freq: '1' }])}
-                  className="px-2.5 py-1 bg-cyan-500 text-black rounded-lg font-bold text-[10px]"
+                  onClick={() => setStatSubMode('1-var')}
+                  className={`p-2 rounded-xl transition-all ${
+                    statSubMode === '1-var'
+                      ? 'bg-cyan-500 text-black shadow'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
                 >
-                  + Thêm dòng
+                  1. Mẫu 1-Biến (x̄, s)
+                </button>
+                <button
+                  onClick={() => setStatSubMode('discrete_rv')}
+                  className={`p-2 rounded-xl transition-all ${
+                    statSubMode === 'discrete_rv'
+                      ? 'bg-amber-400 text-black shadow'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  2. Biến Rời Rạc (E, Var)
+                </button>
+                <button
+                  onClick={() => setStatSubMode('regression')}
+                  className={`p-2 rounded-xl transition-all ${
+                    statSubMode === 'regression'
+                      ? 'bg-emerald-400 text-black shadow'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  3. Hồi Quy y=a+bx
                 </button>
               </div>
 
-              <div className="max-h-48 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-950">
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-400 border-b border-slate-800 pb-1">
-                  <span>Giá trị đại diện (x_i)</span>
-                  <span>Tần số (n_i)</span>
-                </div>
-                {statRows.map((row, idx) => (
-                  <div key={idx} className="grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      value={row.x}
-                      onChange={(e) => {
-                        const next = [...statRows];
-                        next[idx].x = e.target.value;
-                        setStatRows(next);
-                      }}
-                      placeholder="x_i"
-                      className="p-1.5 border border-slate-700 rounded bg-slate-800 text-xs text-white"
-                    />
-                    <input
-                      type="number"
-                      value={row.freq}
-                      onChange={(e) => {
-                        const next = [...statRows];
-                        next[idx].freq = e.target.value;
-                        setStatRows(next);
-                      }}
-                      placeholder="n_i"
-                      className="p-1.5 border border-slate-700 rounded bg-slate-800 text-xs text-white"
-                    />
-                  </div>
-                ))}
+              {/* Step Guide for physical Casio setup */}
+              <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-300">
+                <strong className="text-cyan-400 block font-bold mb-0.5">Phím bấm ngoài đời để mở cột tần số:</strong>
+                <code>[SHIFT] [MENU] [▼] [3] (Thống kê) [1] (Bật Tần số / Frequency ON)</code>
               </div>
 
-              {statSummary && (
-                <div className="p-3 bg-slate-950 rounded-xl border border-cyan-500/30 space-y-1.5 text-xs">
-                  <p className="font-bold text-cyan-400">📊 Kết quả đọc từ Casio 1-Variable Calc:</p>
-                  <div className="grid grid-cols-2 gap-1 font-mono text-[11px] text-slate-300">
-                    <p>Cỡ mẫu (n): <strong className="text-white">{statSummary.n}</strong></p>
-                    <p>Trung bình (<MathFormula math="\bar{x}" />): <strong className="text-cyan-300">{statSummary.mean}</strong></p>
-                    <p>Phương sai mẫu (<MathFormula math="s^2" />): <strong className="text-emerald-300">{statSummary.varianceSample}</strong></p>
-                    <p>Độ lệch mẫu (<MathFormula math="s_x" />): <strong className="text-emerald-300">{statSummary.sdSample}</strong></p>
-                    <p>Tổng <MathFormula math="\sum x" />: <strong className="text-white">{statSummary.sumX}</strong></p>
-                    <p>Tổng <MathFormula math="\sum x^2" />: <strong className="text-white">{statSummary.sumX2}</strong></p>
+              {/* Data Table */}
+              {statSubMode !== 'regression' ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-300 text-xs">
+                      {statSubMode === 'discrete_rv' ? 'Nhập giá trị x_i và xác suất p_i (hoặc nhân 100):' : 'Bảng ghép nhóm (x_i: trung điểm, f_i: tần số):'}
+                    </span>
+                    <button
+                      onClick={() => setStatRows([...statRows, { x: '', freq: '1' }])}
+                      className="px-2.5 py-1 bg-cyan-500 text-black rounded-lg font-bold text-[10px]"
+                    >
+                      + Thêm dòng
+                    </button>
                   </div>
+
+                  <div className="max-h-44 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-950 font-mono">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-400 border-b border-slate-800 pb-1">
+                      <span>x_i</span>
+                      <span>{statSubMode === 'discrete_rv' ? 'FREQ (p_i × 100)' : 'FREQ (n_i)'}</span>
+                    </div>
+                    {statRows.map((row, idx) => (
+                      <div key={idx} className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={row.x}
+                          onChange={(e) => {
+                            const next = [...statRows];
+                            next[idx].x = e.target.value;
+                            setStatRows(next);
+                          }}
+                          placeholder="x"
+                          className="p-1.5 border border-slate-700 rounded bg-slate-800 text-xs text-white"
+                        />
+                        <input
+                          type="text"
+                          value={row.freq}
+                          onChange={(e) => {
+                            const next = [...statRows];
+                            next[idx].freq = e.target.value;
+                            setStatRows(next);
+                          }}
+                          placeholder="freq"
+                          className="p-1.5 border border-slate-700 rounded bg-slate-800 text-xs text-white"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {statSummary && (
+                    <div className="p-3.5 bg-slate-950 rounded-xl border border-cyan-500/40 space-y-2 text-xs">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                        <strong className="text-cyan-300 font-bold">
+                          {statSubMode === 'discrete_rv' ? '📊 Đọc Kết Quả Biến Ngẫu Nhiên Rời Rạc:' : '📊 Kết quả màn hình Casio [OPTN 2]:'}
+                        </strong>
+                        <span className="text-[10px] text-slate-400 font-mono">Cỡ mẫu n = {statSummary.n}</span>
+                      </div>
+
+                      {statSubMode === 'discrete_rv' ? (
+                        <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+                          <div className="p-2 bg-slate-900 rounded-lg border border-amber-500/40">
+                            <span className="text-[10px] text-slate-400 block font-sans">Kỳ vọng E(X) = x̄</span>
+                            <span className="text-base font-black text-amber-300">{statSummary.mean}</span>
+                          </div>
+                          <div className="p-2 bg-slate-900 rounded-lg border border-emerald-500/40">
+                            <span className="text-[10px] text-slate-400 block font-sans">Phương sai Var(X) = σ²_x (KHÔNG lấy s²_x!)</span>
+                            <span className="text-base font-black text-emerald-300">{statSummary.variancePop}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-1.5 font-mono text-[11px] text-slate-300">
+                          <p>Trung bình (<MathFormula math="\bar{x}" />): <strong className="text-cyan-300">{statSummary.mean}</strong></p>
+                          <p>Độ lệch mẫu (<MathFormula math="s_x" />): <strong className="text-emerald-300">{statSummary.sdSample}</strong></p>
+                          <p>Phương sai mẫu (<MathFormula math="s^2_x" />): <strong className="text-emerald-300">{statSummary.varianceSample}</strong></p>
+                          <p>Phương sai dân số (<MathFormula math="\sigma^2_x" />): <strong className="text-slate-400">{statSummary.variancePop}</strong></p>
+                          <p>Tổng <MathFormula math="\sum x" />: <strong className="text-white">{statSummary.sumX}</strong></p>
+                          <p>Tổng <MathFormula math="\sum x^2" />: <strong className="text-white">{statSummary.sumX2}</strong></p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-300 text-xs">Bảng hồi quy 2 biến (x_i, y_i):</span>
+                    <button
+                      onClick={() => setRegRows([...regRows, { x: '', y: '' }])}
+                      className="px-2.5 py-1 bg-emerald-400 text-black rounded-lg font-bold text-[10px]"
+                    >
+                      + Thêm cặp (x, y)
+                    </button>
+                  </div>
+
+                  <div className="max-h-44 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-950 font-mono">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-400 border-b border-slate-800 pb-1">
+                      <span>x_i</span>
+                      <span>y_i</span>
+                    </div>
+                    {regRows.map((row, idx) => (
+                      <div key={idx} className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={row.x}
+                          onChange={(e) => {
+                            const next = [...regRows];
+                            next[idx].x = e.target.value;
+                            setRegRows(next);
+                          }}
+                          placeholder="x"
+                          className="p-1.5 border border-slate-700 rounded bg-slate-800 text-xs text-white"
+                        />
+                        <input
+                          type="text"
+                          value={row.y}
+                          onChange={(e) => {
+                            const next = [...regRows];
+                            next[idx].y = e.target.value;
+                            setRegRows(next);
+                          }}
+                          placeholder="y"
+                          className="p-1.5 border border-slate-700 rounded bg-slate-800 text-xs text-white"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {regSummary && (
+                    <div className="p-3 bg-slate-950 rounded-xl border border-emerald-500/40 space-y-1.5 text-xs font-mono">
+                      <strong className="text-emerald-300 font-bold block font-sans">
+                        📊 Kết quả Hồi quy tuyến tính (y = a + bx):
+                      </strong>
+                      <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                        <p>Hệ số chặn (a): <strong className="text-white">{regSummary.a}</strong></p>
+                        <p>Hệ số góc (b): <strong className="text-cyan-300">{regSummary.b}</strong></p>
+                        <p>Hệ số tương quan (r): <strong className="text-emerald-300">{regSummary.r}</strong></p>
+                        <p>Hệ số xác định (r²): <strong className="text-emerald-300">{regSummary.r2}</strong></p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {/* TAB 5: DIST (FX-580VN) */}
+          {/* TAB: MENU 7 - DISTRIBUTION (PHÂN PHỐI XÁC SUẤT) */}
           {activeMode === 'DIST' && (
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 shadow-xs text-xs text-slate-300">
-              <h3 className="font-bold text-white text-sm">
-                Phân Phối Xác Suất Nâng Cao (MENU 7: DIST)
-              </h3>
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xl text-xs text-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="font-extrabold text-cyan-300 text-sm flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-cyan-400" />
+                  <span>Phân Phối Xác Suất (MENU 7: DIST)</span>
+                </h3>
+                <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-mono font-bold">
+                  ClassWiz 7
+                </span>
+              </div>
 
+              {/* Sub-modes for MENU 7 */}
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { id: 'normal_cd', label: '1: Normal CD (Tích lũy)' },
-                  { id: 'normal_pd', label: '2: Normal PD (Mật độ)' },
-                  { id: 'inv_normal', label: '3: Inverse Normal' },
+                  { id: 'normal_cd', label: '2: Normal CD (Tích lũy)' },
+                  { id: 'inv_normal', label: '3: Inverse Normal (Nghịch đảo)' },
+                  { id: 'normal_pd', label: '1: Normal PD (Mật độ)' },
                   { id: 'binom_pd', label: '4: Binomial PD (Nhị thức)' },
-                  { id: 'binom_cd', label: '5: Binomial CD' },
-                  { id: 'poisson_pd', label: '6: Poisson PD' },
-                  { id: 'poisson_cd', label: '7: Poisson CD' },
+                  { id: 'binom_cd', label: '▼1: Binomial CD' },
+                  { id: 'poisson_pd', label: '▼2: Poisson PD' },
+                  { id: 'poisson_cd', label: '▼3: Poisson CD' },
                 ].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setDistType(item.id as any)}
-                    className={`p-2 rounded-lg text-left font-semibold transition-colors ${
+                    className={`p-2 rounded-xl text-left font-bold transition-colors ${
                       distType === item.id
-                        ? 'bg-cyan-500 text-black font-bold'
+                        ? 'bg-cyan-500 text-black'
                         : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
@@ -1412,18 +1539,186 @@ export const CasioCalculator: React.FC = () => {
                 ))}
               </div>
 
-              {distResult !== null && (
-                <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-center">
-                  <span className="text-[11px] text-emerald-300 font-bold">Kết quả xác suất tính toán:</span>
-                  <div className="text-2xl font-mono font-black text-emerald-400 mt-0.5">
-                    {distResult}
+              {/* Parameters Inputs */}
+              <div className="p-3.5 bg-slate-950/70 rounded-2xl border border-slate-800 space-y-2">
+                {distType.startsWith('normal') || distType === 'inv_normal' ? (
+                  <div className="space-y-2">
+                    {distType === 'normal_cd' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-0.5">Lower (Cận dưới)</label>
+                          <input
+                            type="text"
+                            value={distInputs.lower}
+                            onChange={(e) => setDistInputs({ ...distInputs, lower: e.target.value })}
+                            className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-0.5">Upper (Cận trên)</label>
+                          <input
+                            type="text"
+                            value={distInputs.upper}
+                            onChange={(e) => setDistInputs({ ...distInputs, upper: e.target.value })}
+                            className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {distType === 'inv_normal' && (
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-0.5">Area (Diện tích / Xác suất tích lũy)</label>
+                        <input
+                          type="text"
+                          value={distInputs.area}
+                          onChange={(e) => setDistInputs({ ...distInputs, area: e.target.value })}
+                          className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-cyan-300"
+                        />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-0.5">Độ lệch chuẩn σ</label>
+                        <input
+                          type="text"
+                          value={distInputs.sd}
+                          onChange={(e) => setDistInputs({ ...distInputs, sd: e.target.value })}
+                          className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-0.5">Kỳ vọng μ</label>
+                        <input
+                          type="text"
+                          value={distInputs.mean}
+                          onChange={(e) => setDistInputs({ ...distInputs, mean: e.target.value })}
+                          className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : distType.startsWith('binom') ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Số lần k</label>
+                      <input
+                        type="text"
+                        value={distInputs.k}
+                        onChange={(e) => setDistInputs({ ...distInputs, k: e.target.value })}
+                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Số phép thử n</label>
+                      <input
+                        type="text"
+                        value={distInputs.n}
+                        onChange={(e) => setDistInputs({ ...distInputs, n: e.target.value })}
+                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Xác suất p</label>
+                      <input
+                        type="text"
+                        value={distInputs.p}
+                        onChange={(e) => setDistInputs({ ...distInputs, p: e.target.value })}
+                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Số lần k</label>
+                      <input
+                        type="text"
+                        value={distInputs.k}
+                        onChange={(e) => setDistInputs({ ...distInputs, k: e.target.value })}
+                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Tham số λ (Lambda)</label>
+                      <input
+                        type="text"
+                        value={distInputs.lambda}
+                        onChange={(e) => setDistInputs({ ...distInputs, lambda: e.target.value })}
+                        className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs font-bold text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {distResult !== null && (
+                  <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-center">
+                    <span className="text-[11px] text-emerald-300 font-bold">Kết quả xác suất tính toán:</span>
+                    <div className="text-2xl font-mono font-black text-emerald-400 mt-0.5">
+                      {distResult}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
+
+          {/* TAB: CẨM NANG BẤM PHÍM THỰC CHIẾN NGOÀI ĐỜI THỰC */}
+          {(activeMode === 'KEY_GUIDE' || activeMode === 'COMP') && (
+            <div className="bg-slate-900 border-2 border-amber-400/40 p-5 rounded-3xl space-y-4 shadow-xl text-xs text-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="font-extrabold text-amber-300 text-sm flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                  <span>Cẩm Nang Bấm Phím Thực Chiến Phòng Thi (Casio 580 & 570)</span>
+                </h3>
+                <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold">
+                  Bỏ Túi 2026
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {/* Mục 1: Thống kê 1 biến */}
+                <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1.5">
+                  <strong className="text-cyan-300 block font-bold">1. Thống kê mẫu ghép nhóm (Câu 4 Đề Thi HUB):</strong>
+                  <ul className="space-y-1 text-slate-300 text-[11px]">
+                    <li>• <strong>fx-580VN X:</strong> <code>[SHIFT] [MENU] [▼] [3] [1]</code> (Bật tần số) &rarr; <code>[MENU] [6] [1]</code> &rarr; Nhập x_i, n_i &rarr; <code>[AC]</code> &rarr; <code>[OPTN] [2]</code>.</li>
+                    <li>• <strong>fx-570VN PLUS:</strong> <code>[SHIFT] [MODE] [▼] [4] [1]</code> &rarr; <code>[MODE] [3] [1]</code> &rarr; Nhập số &rarr; <code>[AC]</code> &rarr; <code>[SHIFT] [1] [4]</code>.</li>
+                    <li>• <strong>Lấy chỉ số:</strong> x̄ (Trung bình), s_x (Độ lệch mẫu hiệu chỉnh để thế vào Z_qs), s_x² (Phương sai mẫu).</li>
+                  </ul>
+                </div>
+
+                {/* Mục 2: Biến liên tục */}
+                <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1.5">
+                  <strong className="text-emerald-300 block font-bold">2. Biến liên tục & Tích phân (Câu 2 Đề Thi HUB):</strong>
+                  <ul className="space-y-1 text-slate-300 text-[11px]">
+                    <li>• Bấm phím <code>[∫dx]</code> để tính tích phân xác định.</li>
+                    <li>• Khi cận là vô cực: Thay +∞ bằng <code>10^9</code> (hoặc 1×10^99); -∞ bằng <code>-10^9</code>.</li>
+                    <li>• Giải hệ 2 tham số: <code>[MENU] [9] [1] [2]</code>.</li>
+                  </ul>
+                </div>
+
+                {/* Mục 3: Phân phối chuẩn */}
+                <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1.5">
+                  <strong className="text-amber-300 block font-bold">3. Phân phối Chuẩn & Tra ngược (Câu 3 Đề Thi HUB):</strong>
+                  <ul className="space-y-1 text-slate-300 text-[11px]">
+                    <li>• <strong>fx-580VN X:</strong> <code>[MENU] [7] [2]</code> (Normal CD) với Lower, Upper, $\sigma, \mu$.</li>
+                    <li>• <strong>Tìm mức bảo hành:</strong> <code>[MENU] [7] [3]</code> (Inverse Normal) nhập Area, $\sigma, \mu$.</li>
+                    <li>• <strong>fx-570VN PLUS:</strong> <code>[MODE] [3] [1]</code> $\to$ <code>[AC]</code> $\to$ <code>[SHIFT] [1] [5] [1]</code> để bấm $P(t)$.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
+
+      {/* Official HUB Exam Cheat Sheet Modal (CamScanner) */}
+      <HubExamCheatSheetModal
+        isOpen={isCheatSheetOpen}
+        onClose={() => setIsCheatSheetOpen(false)}
+      />
     </div>
   );
 };

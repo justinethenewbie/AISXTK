@@ -1,6 +1,26 @@
 import React, { useState } from 'react';
-import { FileText, Sparkles, Lightbulb, Sliders, CheckCircle2, RefreshCw, FileDown, Printer, Award, AlertCircle } from 'lucide-react';
+import {
+  FileText,
+  Sparkles,
+  Lightbulb,
+  Sliders,
+  CheckCircle2,
+  RefreshCw,
+  FileDown,
+  Printer,
+  Award,
+  AlertCircle,
+  BookOpen,
+  HelpCircle,
+  Layers,
+  ChevronRight,
+  ShieldAlert,
+  Calculator,
+  Flame,
+} from 'lucide-react';
 import { CHAPTERS_DATA } from '../data/curriculumData';
+import { OFFICIAL_HUB_EXAMS, HubExamPaper, HubExamQuestion } from '../data/hubExamArchiveData';
+import { HubExamCheatSheetModal } from './HubExamCheatSheetModal';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { MathFormula, MathText } from './MathFormula';
 import { exportExercisesToWord, exportExercisesToPdf } from '../utils/exportUtils';
@@ -41,7 +61,6 @@ export function getSafeStrategyHint(essay: any): string {
     essay.steps ||
     '';
 
-  // Check if string is empty or literally 'undefined' / 'null'
   if (!hint || typeof hint !== 'string' || hint.trim() === 'undefined' || hint.trim() === 'null') {
     if (essay.keyFormulas && Array.isArray(essay.keyFormulas) && essay.keyFormulas.length > 0) {
       return `Bước 1: Đọc kỹ giả thiết đề bài, xác định các thông số ban đầu. Bước 2: Áp dụng công thức cốt lõi: $${essay.keyFormulas.join('$; $')}$. Bước 3: Thế số liệu, tính toán kết quả và nêu ý nghĩa kinh tế thực tế.`;
@@ -49,7 +68,6 @@ export function getSafeStrategyHint(essay: any): string {
     return 'Bước 1: Phân tích các dữ kiện giả thiết của bài toán. Bước 2: Xác định dạng phân phối hoặc công thức thống kê tương ứng. Bước 3: Lập luận chặt chẽ và tính toán kết quả.';
   }
 
-  // Convert raw code formulas to elegant KaTeX inline math
   hint = hint.replace(/E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
   hint = hint.replace(/E\(X_i\)\s*=\s*p_i\s*[*]\s*r_i/g, '$E(X_i) = p_i \\cdot r_i$');
   hint = hint.replace(/Var\(X\)\s*=\s*Var\(X_A\)\s*\+\s*Var\(X_B\)\s*\+\s*Var\(X_C\)/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
@@ -59,7 +77,17 @@ export function getSafeStrategyHint(essay: any): string {
 }
 
 export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecordMistake }) => {
-  // Config form state
+  // Chế độ xem: Sinh đề tự luận AI hoặc Kho đề thi chính thức HUB (2026 & 2023)
+  const [viewMode, setViewMode] = useState<'hub_official_exams' | 'ai_generator'>('hub_official_exams');
+
+  // Official HUB Exams State
+  const [selectedExamId, setSelectedExamId] = useState<string>('hub_2026_02a');
+  const [activeHubQIdx, setActiveHubQIdx] = useState<number>(0);
+
+  // Modal CamScanner Cheat Sheet
+  const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
+
+  // Config form state for AI Generator
   const [selectedChapterId, setSelectedChapterId] = useState<number | 'all'>('all');
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [difficulty, setDifficulty] = useState<'Cơ bản' | 'Trung bình' | 'Vận dụng' | 'Vận dụng cao'>('Vận dụng');
@@ -80,12 +108,15 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generationNotice, setGenerationNotice] = useState<string | null>(null);
 
-  // Two-way interactive dialogue with Professor on graded essay
+  // Two-way interactive dialogue with Professor
   const [essayDialogue, setEssayDialogue] = useState<
     Array<{ studentQuestion: string; teacherReply: string; comprehensionCheck?: string }>
   >([]);
   const [essayFollowUpInput, setEssayFollowUpInput] = useState('');
   const [isAskingTeacher, setIsAskingTeacher] = useState(false);
+
+  const currentHubExam = OFFICIAL_HUB_EXAMS.find((e) => e.id === selectedExamId) || OFFICIAL_HUB_EXAMS[0];
+  const currentHubQuestion = currentHubExam.questions[activeHubQIdx] || currentHubExam.questions[0];
 
   const handleAskTeacherAboutEssay = async (customQ?: string) => {
     const q = customQ || essayFollowUpInput;
@@ -93,12 +124,12 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
     setIsAskingTeacher(true);
 
     try {
-      const curEssay = essayList[activeEssayIdx];
+      const curQText = viewMode === 'hub_official_exams' ? currentHubQuestion.text : essayList[activeEssayIdx]?.question;
       const response = await aiFetch('/api/tutor/interactive-qa', {
         method: 'POST',
         body: JSON.stringify({
           contextType: 'essay',
-          problemContext: curEssay ? `Đề bài: ${curEssay.question}` : 'Bài tập tự luận',
+          problemContext: `Đề bài: ${curQText}`,
           previousSolution: evaluationResult
             ? `Điểm: ${evaluationResult.totalScore}/10. Nhận xét: ${evaluationResult.detailedFeedback}`
             : '',
@@ -126,13 +157,59 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
   };
 
   const handleNextEssay = () => {
-    if (activeEssayIdx < essayList.length - 1) {
-      setActiveEssayIdx((prev) => prev + 1);
-      setEvaluationResult(null);
-      setEssayDialogue([]);
+    if (viewMode === 'hub_official_exams') {
+      if (activeHubQIdx < currentHubExam.questions.length - 1) {
+        setActiveHubQIdx((prev) => prev + 1);
+        setEvaluationResult(null);
+        setEssayDialogue([]);
+      } else {
+        alert('Chúc mừng em đã hoàn thành toàn bộ 5 câu hỏi trong đề thi chính thức HUB này!');
+      }
     } else {
-      alert('Chúc mừng em đã hoàn thành toàn bộ các bài tự luận trong danh sách!');
+      if (activeEssayIdx < essayList.length - 1) {
+        setActiveEssayIdx((prev) => prev + 1);
+        setEvaluationResult(null);
+        setEssayDialogue([]);
+      } else {
+        alert('Chúc mừng em đã hoàn thành toàn bộ các bài tự luận trong danh sách!');
+      }
     }
+  };
+
+  const handleExportHubWord = () => {
+    exportExercisesToWord({
+      title: `${currentHubExam.title.toUpperCase()} - ${currentHubExam.code}`,
+      subject: 'MÔN: XÁC SUẤT VÀ THỐNG KÊ TOÁN (HUB 2026)',
+      chapterTitle: `${currentHubExam.faculty} • Thời gian: ${currentHubExam.durationMinutes} phút`,
+      difficulty: 'Đề thi chính thức chuẩn phòng thi',
+      exercises: currentHubExam.questions.map((q) => ({
+        question: `[${q.points} Điểm] ${q.text}`,
+        title: q.title,
+        strategyHint: `Bảo bối CamScanner HUB: ${q.camScannerFormulaRef}\nPhím bấm Casio fx-580: ${q.casioKeySequence.join(' -> ')}`,
+        keyFormulas: [q.camScannerFormulaRef],
+        expectedAnswerSummary: q.solutionSteps.join('\n') + `\nĐáp số cuối: ${q.finalAnswer}`,
+      })),
+      isMcq: false,
+      includeSolutions: includeSolutionsInExport,
+    });
+  };
+
+  const handleExportHubPdf = () => {
+    exportExercisesToPdf({
+      title: `${currentHubExam.title} - ${currentHubExam.code}`,
+      subject: 'MÔN: XÁC SUẤT VÀ THỐNG KÊ TOÁN',
+      chapterTitle: `${currentHubExam.faculty} • Thời gian: ${currentHubExam.durationMinutes} phút`,
+      difficulty: 'Đề thi chính thức HUB',
+      exercises: currentHubExam.questions.map((q) => ({
+        question: `[${q.points} Điểm] ${q.text}`,
+        title: q.title,
+        strategyHint: `Công thức CamScanner HUB: ${q.camScannerFormulaRef}`,
+        keyFormulas: [q.camScannerFormulaRef],
+        expectedAnswerSummary: q.solutionSteps.join(' ') + `\nĐáp số: ${q.finalAnswer}`,
+      })),
+      isMcq: false,
+      includeSolutions: includeSolutionsInExport,
+    });
   };
 
   const handleExportWord = () => {
@@ -234,8 +311,8 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
   };
 
   const handleGradeEssaySubmission = async (dataUrl: string, typedText: string) => {
-    const curEssay = essayList[activeEssayIdx];
-    if (!curEssay) return;
+    const activeProblem = viewMode === 'hub_official_exams' ? currentHubQuestion : essayList[activeEssayIdx];
+    if (!activeProblem) return;
 
     setIsSubmitting(true);
     setEvaluationResult(null);
@@ -245,8 +322,8 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
         method: 'POST',
         body: JSON.stringify({
           imageBase64: dataUrl,
-          textContent: `Đề bài: "${curEssay.question}"\nBài làm của sinh viên: "${typedText}"`,
-          chapterTitle: 'Bài tập tự luận do AI sinh theo yêu cầu',
+          textContent: `Đề bài: "${activeProblem.text || activeProblem.question}"\nBài làm của sinh viên: "${typedText}"`,
+          chapterTitle: viewMode === 'hub_official_exams' ? `Đề thi chính thức HUB 2026 - ${activeProblem.title}` : 'Bài tập tự luận do AI sinh theo yêu cầu',
           strategyOnly: false,
         }),
       });
@@ -263,27 +340,28 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
         const gpaEquivalent = (score / 10) * 4.0;
         onAddExp(
           score * 10,
-          `Luyện tập tự luận: ${curEssay.title || 'Bài tập XSTK'} (${score}/10 điểm)`,
+          `Thi thử tự luận HUB: ${activeProblem.title || 'Bài tập XSTK'} (${score}/10 điểm)`,
           1,
           gpaEquivalent
         );
 
         if (score < 8 && onRecordMistake) {
           onRecordMistake({
-            id: `essay_mistake_${curEssay.id || Date.now()}`,
+            id: `essay_mistake_${activeProblem.id || Date.now()}`,
             chapterId: typeof selectedChapterId === 'number' ? selectedChapterId : 1,
-            chapterTitle: typeof selectedChapterId === 'number' ? `Chương ${selectedChapterId}` : 'Tổng hợp XSTK',
+            chapterTitle: viewMode === 'hub_official_exams' ? 'Đề thi HUB 2026' : `Chương ${selectedChapterId}`,
             sourceType: 'essay',
-            questionSummary: curEssay.question,
+            questionSummary: activeProblem.text || activeProblem.question,
             studentAnswer: typedText || 'Bài làm viết tay trên bảng',
-            correctConcept: curEssay.expectedAnswerSummary || 'Trình bày theo phương pháp giải chuẩn',
+            correctConcept: activeProblem.finalAnswer || activeProblem.expectedAnswerSummary || 'Trình bày theo phương pháp giải chuẩn HUB',
             rootCauseError:
               data.data.rootCauseError ||
               (data.data.criticalErrors && data.data.criticalErrors[0]) ||
               'Lỗi lập luận công thức hoặc trình bày tự luận',
             remediationAdvice:
+              activeProblem.commonTraps ||
               data.data.betterStrategy ||
-              'Ôn lại định lý và các bước lập luận trước khi thế số',
+              'Tham khảo lại công thức trong Tờ CamScanner HUB trước khi thế số',
             timestamp: new Date().toLocaleTimeString(),
           });
         }
@@ -301,237 +379,220 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
 
   return (
     <div className="space-y-6 text-slate-100">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-500/40 p-6 rounded-3xl space-y-2 shadow-[0_0_25px_rgba(6,182,212,0.15)]">
-        <div className="flex items-center gap-2 text-cyan-400 font-extrabold text-sm">
-          <FileText className="w-5 h-5 text-cyan-400" />
-          <span>TRÌNH TẠO ĐỀ THI TỰ LUẬN AI CÁ NHÂN HÓA TOÀN DIỆN</span>
+      {/* Top Banner & Mode Switcher */}
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-500/40 p-6 rounded-3xl space-y-3 shadow-[0_0_25px_rgba(6,182,212,0.15)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="p-2.5 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-black text-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+              🏛️ HUB
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                  ĐẠI HỌC NGÂN HÀNG TP.HCM
+                </span>
+                <span className="text-[10px] font-mono text-cyan-400 font-bold">CHUẨN 75 PHÚT</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5">
+                Kho Đề Thi Chính Thức & Trình Luyện Tự Luận Toàn Diện
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsCheatSheetOpen(true)}
+              className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all"
+            >
+              <FileText className="w-4 h-4" />
+              <span>📜 Mở Tờ Công Thức HUB (CamScanner)</span>
+            </button>
+          </div>
         </div>
-        <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]">
-          Thiết Lập Đề Thi Tự Luận XSTK Theo Đúng Ý Muốn Của Bạn
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-          Tùy chọn chủ đề, số lượng câu hỏi, mức độ khó và kỳ vọng cụ thể. AI sẽ sinh đề thi ngay lập tức, cung cấp chiến lược giải từng bước và hỗ trợ làm bài trực tiếp trên bảng iPad!
-        </p>
+
+        {/* View Mode Selector Tabs */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800">
+          <button
+            onClick={() => setViewMode('hub_official_exams')}
+            className={`px-4 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${
+              viewMode === 'hub_official_exams'
+                ? 'bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>1. KHO ĐỀ THI CHÍNH THỨC HUB (2026 & 2023 - 75 PHÚT)</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('ai_generator')}
+            className={`px-4 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${
+              viewMode === 'ai_generator'
+                ? 'bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>2. SINH ĐỀ TỰ LUẬN THEO YÊU CẦU (AI GENERATOR)</span>
+          </button>
+        </div>
       </div>
 
-      {/* Setup Form */}
-      <form onSubmit={handleGenerateCustomEssays} className="bg-slate-900/90 border-2 border-cyan-500/30 p-6 rounded-3xl space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-        <div className="flex items-center gap-2 font-black text-cyan-300 text-xs border-b border-slate-800 pb-2">
-          <Sliders className="w-4 h-4 text-cyan-400" />
-          <span>BẢNG THIẾT LẬP THÔNG SỐ ĐỀ THI TỰ LUẬN</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-          {/* Topic Select */}
-          <div>
-            <label className="block text-slate-200 font-bold mb-1.5">
-              1. Chủ đề / Chương muốn hỏi:
-            </label>
-            <select
-              value={selectedChapterId}
-              onChange={(e) => setSelectedChapterId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-            >
-              <option value="all">Toàn bộ 7 Chương (Tổng hợp)</option>
-              {CHAPTERS_DATA.map((c) => (
-                <option key={c.id} value={c.id}>
-                  Chương {c.id}: {c.shortTitle}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Question Count */}
-          <div>
-            <label className="block text-slate-200 font-bold mb-1.5">
-              2. Số lượng bài toán tự luận:
-            </label>
-            <select
-              value={questionCount}
-              onChange={(e) => setQuestionCount(Number(e.target.value))}
-              className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-            >
-              <option value={3}>3 bài toán (Luyện nhanh 20p)</option>
-              <option value={5}>5 bài toán (Đề tự luyện chuẩn 45p)</option>
-              <option value={8}>8 bài toán (Đề ôn tập giữa kỳ)</option>
-              <option value={10}>10 bài toán (Đề tổng ôn toàn diện 90p)</option>
-            </select>
-          </div>
-
-          {/* Difficulty Level */}
-          <div>
-            <label className="block text-slate-200 font-bold mb-1.5">
-              3. Mức độ câu hỏi:
-            </label>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as any)}
-              className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-            >
-              <option value="Cơ bản">Cơ bản (Áp dụng công thức trực tiếp)</option>
-              <option value="Trung bình">Trung bình (Phân tích biến cố)</option>
-              <option value="Vận dụng">Vận dụng (Bài toán thực tế kinh tế)</option>
-              <option value="Vận dụng cao">Vận dụng cao (Phân hóa 9-10đ thi cử)</option>
-            </select>
-          </div>
-
-          {/* Focus Type */}
-          <div>
-            <label className="block text-slate-200 font-bold mb-1.5">
-              4. Trọng tâm hình thức:
-            </label>
-            <select
-              value={focusType}
-              onChange={(e) => setFocusType(e.target.value as any)}
-              className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-            >
-              <option value="Bài toán thực tế kinh tế & ngân hàng">Thực tế Kinh tế & Ngân hàng</option>
-              <option value="Lập luận chứng minh & Biến cố">Phân tích biến cố & Xác suất điều kiện</option>
-              <option value="Bảng số liệu phân phối tần số">Bảng số liệu tần số & Số đặc trưng</option>
-              <option value="Kiểm định & Ước lượng mẫu">Ước lượng & Kiểm định giả thiết</option>
-            </select>
-          </div>
-        </div>
-
-        {/* User specific expectations */}
-        <div>
-          <label className="block text-xs text-slate-200 font-bold mb-1.5">
-            5. Yêu cầu & Kỳ vọng riêng của bạn (Tùy chọn):
-          </label>
-          <input
-            type="text"
-            value={userExpectations}
-            onChange={(e) => setUserExpectations(e.target.value)}
-            placeholder="Ví dụ: Cần bài toán tính tỷ lệ thu hồi nợ xấu, hàm mật độ liên tục, tìm hằng số k và phương sai..."
-            className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white placeholder-slate-400 text-xs outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium"
-          />
-        </div>
-
-        {/* Action Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 disabled:opacity-50 text-slate-950 font-black rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <Sparkles className="w-4 h-4 text-slate-950" />
-          <span>{isLoading ? `AI đang tạo ${questionCount} bài toán tự luận theo yêu cầu...` : `TẠO NGAY BỘ ĐỀ TỰ LUẬN (${questionCount} BÀI TOÁN)`}</span>
-        </button>
-
-        {generationNotice && (
-          <div className="p-3 bg-cyan-950/70 border border-cyan-500/40 rounded-xl text-xs text-cyan-200 flex items-center gap-2 animate-fade-in font-medium">
-            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>{generationNotice}</span>
-          </div>
-        )}
-      </form>
-
-      {/* Render Essay Problem Workspace */}
-      {essayList.length > 0 && currentEssay && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Export Action Bar (Word & PDF) */}
-          <div className="p-4 bg-slate-900 border-2 border-cyan-500/30 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-            <div className="flex items-center gap-2.5">
-              <span className="p-2 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                <FileDown className="w-5 h-5 text-cyan-400" />
-              </span>
-              <div>
-                <p className="text-xs font-black text-white">Trích Xuất Đề Thi Tự Luận Ra File (Word / PDF)</p>
-                <p className="text-[11px] text-slate-300 font-medium">Bộ đề gồm {essayList.length} bài toán tự luận có gợi ý chiến lược & barem điểm</p>
+      {/* VIEW MODE 1: OFFICIAL HUB EXAM ARCHIVE */}
+      {viewMode === 'hub_official_exams' && (
+        <div className="space-y-6">
+          {/* Exam Selector Strip */}
+          <div className="p-4 bg-slate-900 border-2 border-cyan-500/30 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-300">Chọn đề thi:</span>
+              <div className="flex flex-wrap gap-2">
+                {OFFICIAL_HUB_EXAMS.map((exam) => (
+                  <button
+                    key={exam.id}
+                    onClick={() => {
+                      setSelectedExamId(exam.id);
+                      setActiveHubQIdx(0);
+                      setEvaluationResult(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                      selectedExamId === exam.id
+                        ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    {exam.code}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1.5 text-xs text-slate-200 cursor-pointer font-bold">
-                <input
-                  type="checkbox"
-                  checked={includeSolutionsInExport}
-                  onChange={(e) => setIncludeSolutionsInExport(e.target.checked)}
-                  className="rounded border-cyan-500 text-cyan-500 focus:ring-cyan-400"
-                />
-                <span>Kèm chiến lược giải & công thức</span>
-              </label>
-
+            {/* Export buttons for HUB Official Exam */}
+            <div className="flex items-center gap-2">
               <button
-                type="button"
-                onClick={handleExportWord}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all"
-                title="Tải đề thi tự luận dạng file Microsoft Word (.doc)"
+                onClick={handleExportHubWord}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                title="Tải đề thi HUB ra file Word (.doc)"
               >
-                <FileText className="w-4 h-4" />
-                <span>Xuất Word (.doc)</span>
+                <FileText className="w-3.5 h-3.5" />
+                <span>Xuất Đề Word</span>
               </button>
-
               <button
-                type="button"
-                onClick={handleExportPdf}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all"
-                title="In hoặc Lưu thành file PDF chuẩn A4"
+                onClick={handleExportHubPdf}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                title="In hoặc Lưu thành PDF"
               >
-                <Printer className="w-4 h-4" />
-                <span>Xuất PDF</span>
+                <Printer className="w-3.5 h-3.5" />
+                <span>Xuất Đề PDF</span>
               </button>
             </div>
           </div>
 
-          {/* Question Selector Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-            {essayList.map((essay, idx) => (
+          {/* Official Exam Paper Header */}
+          <div className="p-5 bg-slate-950 border-2 border-slate-800 rounded-3xl space-y-2 text-center relative overflow-hidden">
+            <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
+              TRƯỜNG ĐẠI HỌC NGÂN HÀNG THÀNH PHỐ HỒ CHÍ MINH (HUB)
+            </div>
+            <div className="text-sm font-extrabold text-cyan-300">
+              {currentHubExam.faculty}
+            </div>
+            <h3 className="text-lg sm:text-xl font-black text-white pt-1">
+              {currentHubExam.title} - {currentHubExam.code}
+            </h3>
+            <p className="text-xs text-slate-300 max-w-2xl mx-auto">
+              Thời gian làm bài: <strong>{currentHubExam.durationMinutes} phút</strong> (Không kể thời gian phát đề) • {currentHubExam.description}
+            </p>
+          </div>
+
+          {/* 5 Questions Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {currentHubExam.questions.map((q, idx) => (
               <button
-                key={idx}
+                key={q.id}
                 onClick={() => {
-                  setActiveEssayIdx(idx);
+                  setActiveHubQIdx(idx);
                   setEvaluationResult(null);
+                  setEssayDialogue([]);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  activeEssayIdx === idx
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
+                  activeHubQIdx === idx
                     ? 'bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-                    : 'bg-slate-900 text-slate-300 border border-slate-700 hover:border-cyan-400/50 hover:text-white'
+                    : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-cyan-500/40'
                 }`}
               >
-                Bài toán #{idx + 1}
+                <span>Câu {q.questionNumber}</span>
+                <span className="text-[10px] opacity-80 font-mono">({q.points}đ)</span>
               </button>
             ))}
           </div>
 
-          {/* Current Essay Problem Card */}
+          {/* Question Card */}
           <div className="bg-slate-900 border-2 border-cyan-500/30 p-6 rounded-3xl space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="font-black text-cyan-300 text-sm sm:text-base">
-                Bài toán #{activeEssayIdx + 1}: {currentEssay.title || `Bài tập tự luận ${activeEssayIdx + 1}`}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 flex-wrap gap-2">
+              <span className="font-black text-cyan-300 text-base">
+                {currentHubQuestion.title}
               </span>
-              <span className="text-xs font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold px-3 py-1 rounded-lg">
-                Chiến Lược Giải & Barem Rubric
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-lg border border-cyan-500/40 font-bold">
+                  Thang điểm: {currentHubQuestion.points}đ
+                </span>
+                <span className="text-xs font-mono bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-lg border border-emerald-500/40 font-bold">
+                  {currentHubQuestion.topic}
+                </span>
+              </div>
             </div>
 
-            <div className="text-sm sm:text-base text-white font-medium leading-relaxed">
-              <MathText text={currentEssay.question} />
+            {/* Problem Text */}
+            <div className="text-sm sm:text-base text-white font-medium leading-relaxed bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800">
+              <MathText text={currentHubQuestion.text} />
             </div>
 
-            {/* Strategy Hint Box */}
-            <div className="p-4 sm:p-5 bg-slate-950 rounded-2xl border border-cyan-500/30 space-y-2.5 text-sm sm:text-base">
-              <div className="flex items-center gap-2 font-black text-cyan-300 text-sm sm:text-base">
-                <Lightbulb className="w-5 h-5 text-cyan-400" />
-                <span>Gợi ý chiến lược định hướng từng bước giải từ AI:</span>
-              </div>
-              <div className="text-slate-200 leading-relaxed font-medium">
-                <MathText text={getSafeStrategyHint(currentEssay)} />
-              </div>
-
-              {currentEssay.keyFormulas && currentEssay.keyFormulas.length > 0 && (
-                <div className="pt-2 flex flex-wrap gap-2 items-center">
-                  <span className="font-bold text-xs sm:text-sm text-slate-300">Công thức cần dùng:</span>
-                  {currentEssay.keyFormulas.map((f: string, i: number) => (
-                    <span key={i} className="font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-cyan-500/40 text-cyan-300 font-bold text-xs sm:text-sm">
-                      <MathFormula math={f} />
-                    </span>
-                  ))}
+            {/* CamScanner Formula Reference & Casio fx-580 Sequence */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Formula Sheet Reference */}
+              <div className="p-4 bg-slate-950 rounded-2xl border border-cyan-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-cyan-300 text-xs flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-cyan-400" />
+                    <span>Bảo Bối CamScanner HUB Cần Dùng:</span>
+                  </span>
+                  <button
+                    onClick={() => setIsCheatSheetOpen(true)}
+                    className="text-[11px] text-cyan-400 hover:underline font-bold"
+                  >
+                    Xem tờ phao ➔
+                  </button>
                 </div>
-              )}
+                <div className="text-slate-200 text-xs font-mono leading-relaxed bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                  <MathText text={currentHubQuestion.camScannerFormulaRef} />
+                </div>
+              </div>
+
+              {/* Casio Keypress Guide */}
+              <div className="p-4 bg-slate-950 rounded-2xl border border-amber-500/30 space-y-2">
+                <span className="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                  <Calculator className="w-4 h-4 text-amber-400" />
+                  <span>Cách Bấm Máy Casio fx-580VN X Thực Tế:</span>
+                </span>
+                <ul className="text-slate-300 text-xs font-mono space-y-1 list-disc list-inside bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                  {currentHubQuestion.casioKeySequence.map((step, sIdx) => (
+                    <li key={sIdx}>{step}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
-            {/* Interactive iPad Canvas to write/type solution */}
+            {/* Trap Warning Alert */}
+            {currentHubQuestion.commonTraps && (
+              <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-2xl flex items-start gap-2.5 text-xs text-rose-200">
+                <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-rose-300 block font-bold mb-0.5">Cảnh báo bẫy phòng thi nguy hiểm:</strong>
+                  {currentHubQuestion.commonTraps}
+                </div>
+              </div>
+            )}
+
+            {/* Interactive iPad Canvas */}
             <div className="pt-2">
               <InteractiveCanvas
                 onExportCanvas={handleGradeEssaySubmission}
@@ -546,7 +607,7 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                   <div className="flex items-center justify-between font-black text-emerald-300 text-sm sm:text-base flex-wrap gap-2">
                     <span className="flex items-center gap-2">
                       <Award className="w-5 h-5 text-emerald-400" />
-                      <span>Kết Quả Chấm Điểm & Nhận Xét Của Thầy Giáo AI:</span>
+                      <span>Kết Quả Chấm Điểm Đề Thi HUB (Barem Chính Thức):</span>
                     </span>
                     <span className="font-mono text-base sm:text-lg bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-xl border border-emerald-500/40">
                       {evaluationResult.totalScore} / 10 điểm
@@ -575,12 +636,8 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                       <Sparkles className="w-4 h-4 text-cyan-400" />
                       <span>Trao đổi trực tiếp với Thầy giáo về bài làm này (Không giới hạn câu hỏi):</span>
                     </span>
-                    <span className="text-[11px] text-slate-300 font-bold">
-                      Hỏi bất kỳ thắc mắc nào cho đến khi hiểu rõ
-                    </span>
                   </div>
 
-                  {/* Previous dialogue items */}
                   {essayDialogue.map((d, dIdx) => (
                     <div key={dIdx} className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-cyan-500/30">
                       <div className="text-cyan-300 font-bold flex items-center gap-1.5">
@@ -592,36 +649,10 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                         <div className="leading-relaxed">
                           <MathText text={d.teacherReply} />
                         </div>
-                        {d.comprehensionCheck && (
-                          <div className="p-3 bg-cyan-950/60 rounded-xl border border-cyan-500/30 text-cyan-200 mt-2">
-                            <span className="font-bold text-cyan-300 block mb-0.5">💡 Thầy kiểm tra lại:</span>
-                            <MathText text={d.comprehensionCheck} />
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))}
 
-                  {/* Suggested questions */}
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <span className="text-[11px] text-slate-400 font-bold block w-full">Gợi ý hỏi nhanh:</span>
-                    {[
-                      'Thầy ơi tại sao chỗ này em bị trừ điểm?',
-                      'Nếu giải theo biến cố đối lập thì trình bày ra sao?',
-                      'Chỉ em cách bấm máy Casio 580 để kiểm tra bài này với!',
-                    ].map((sq, sqIdx) => (
-                      <button
-                        key={sqIdx}
-                        onClick={() => handleAskTeacherAboutEssay(sq)}
-                        disabled={isAskingTeacher}
-                        className="px-3 py-1.5 bg-slate-950 hover:bg-cyan-950 text-slate-200 hover:text-cyan-300 border border-slate-700 hover:border-cyan-400 rounded-xl font-bold text-[11px] transition-all"
-                      >
-                        {sq}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Custom question input */}
                   <div className="flex gap-2 pt-1">
                     <input
                       type="text"
@@ -641,7 +672,6 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                     </button>
                   </div>
 
-                  {/* Pedagogical Checkpoint: Only move to next problem when user confirms understanding */}
                   <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
                     <p className="text-slate-300 font-medium text-[11px]">
                       Chừng nào em đã hiểu rõ toàn bộ bài này và không còn thắc mắc, hãy bấm xác nhận để làm bài tiếp theo!
@@ -651,7 +681,7 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
                       className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black rounded-xl text-xs transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Em đã hiểu hoàn toàn, chuyển sang bài tiếp theo! ➔</span>
+                      <span>Em đã hiểu hoàn toàn, chuyển sang câu tiếp theo! ➔</span>
                     </button>
                   </div>
                 </div>
@@ -660,6 +690,234 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
           </div>
         </div>
       )}
+
+      {/* VIEW MODE 2: AI CUSTOM GENERATOR */}
+      {viewMode === 'ai_generator' && (
+        <div className="space-y-6">
+          {/* Setup Form */}
+          <form onSubmit={handleGenerateCustomEssays} className="bg-slate-900/90 border-2 border-cyan-500/30 p-6 rounded-3xl space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+            <div className="flex items-center gap-2 font-black text-cyan-300 text-xs border-b border-slate-800 pb-2">
+              <Sliders className="w-4 h-4 text-cyan-400" />
+              <span>BẢNG THIẾT LẬP THÔNG SỐ ĐỀ THI TỰ LUẬN AI</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              <div>
+                <label className="block text-slate-200 font-bold mb-1.5">
+                  1. Chủ đề / Chương muốn hỏi:
+                </label>
+                <select
+                  value={selectedChapterId}
+                  onChange={(e) => setSelectedChapterId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                  className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+                >
+                  <option value="all">Toàn bộ 7 Chương (Tổng hợp)</option>
+                  {CHAPTERS_DATA.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      Chương {c.id}: {c.shortTitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-200 font-bold mb-1.5">
+                  2. Số lượng bài toán tự luận:
+                </label>
+                <select
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(Number(e.target.value))}
+                  className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+                >
+                  <option value={3}>3 bài toán (Luyện nhanh 20p)</option>
+                  <option value={5}>5 bài toán (Đề tự luyện chuẩn 45p)</option>
+                  <option value={8}>8 bài toán (Đề ôn tập giữa kỳ)</option>
+                  <option value={10}>10 bài toán (Đề tổng ôn toàn diện 90p)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-200 font-bold mb-1.5">
+                  3. Mức độ câu hỏi:
+                </label>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value as any)}
+                  className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+                >
+                  <option value="Cơ bản">Cơ bản (Áp dụng công thức trực tiếp)</option>
+                  <option value="Trung bình">Trung bình (Phân tích biến cố)</option>
+                  <option value="Vận dụng">Vận dụng (Bài toán thực tế kinh tế)</option>
+                  <option value="Vận dụng cao">Vận dụng cao (Phân hóa 9-10đ thi cử)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-200 font-bold mb-1.5">
+                  4. Trọng tâm hình thức:
+                </label>
+                <select
+                  value={focusType}
+                  onChange={(e) => setFocusType(e.target.value as any)}
+                  className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white font-semibold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+                >
+                  <option value="Bài toán thực tế kinh tế & ngân hàng">Thực tế Kinh tế & Ngân hàng</option>
+                  <option value="Lập luận chứng minh & Biến cố">Phân tích biến cố & Xác suất điều kiện</option>
+                  <option value="Bảng số liệu phân phối tần số">Bảng số liệu tần số & Số đặc trưng</option>
+                  <option value="Kiểm định & Ước lượng mẫu">Ước lượng & Kiểm định giả thiết</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-200 font-bold mb-1.5">
+                5. Yêu cầu & Kỳ vọng riêng của bạn (Tùy chọn):
+              </label>
+              <input
+                type="text"
+                value={userExpectations}
+                onChange={(e) => setUserExpectations(e.target.value)}
+                placeholder="Ví dụ: Cần bài toán tính tỷ lệ thu hồi nợ xấu, hàm mật độ liên tục, tìm hằng số k và phương sai..."
+                className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white placeholder-slate-400 text-xs outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 disabled:opacity-50 text-slate-950 font-black rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-slate-950" />
+              <span>{isLoading ? `AI đang tạo ${questionCount} bài toán tự luận theo yêu cầu...` : `TẠO NGAY BỘ ĐỀ TỰ LUẬN (${questionCount} BÀI TOÁN)`}</span>
+            </button>
+
+            {generationNotice && (
+              <div className="p-3 bg-cyan-950/70 border border-cyan-500/40 rounded-xl text-xs text-cyan-200 flex items-center gap-2 animate-fade-in font-medium">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>{generationNotice}</span>
+              </div>
+            )}
+          </form>
+
+          {/* Render Essay Problem Workspace */}
+          {essayList.length > 0 && currentEssay && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="p-4 bg-slate-900 border-2 border-cyan-500/30 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    <FileDown className="w-5 h-5 text-cyan-400" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-black text-white">Trích Xuất Đề Thi Tự Luận Ra File (Word / PDF)</p>
+                    <p className="text-[11px] text-slate-300 font-medium">Bộ đề gồm {essayList.length} bài toán tự luận có gợi ý chiến lược & barem điểm</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 text-xs text-slate-200 cursor-pointer font-bold">
+                    <input
+                      type="checkbox"
+                      checked={includeSolutionsInExport}
+                      onChange={(e) => setIncludeSolutionsInExport(e.target.checked)}
+                      className="rounded border-cyan-500 text-cyan-500 focus:ring-cyan-400"
+                    />
+                    <span>Kèm chiến lược giải & công thức</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleExportWord}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Xuất Word (.doc)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportPdf}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Xuất PDF</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Question Selector Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                {essayList.map((essay, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setActiveEssayIdx(idx);
+                      setEvaluationResult(null);
+                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      activeEssayIdx === idx
+                        ? 'bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                        : 'bg-slate-900 text-slate-300 border border-slate-700 hover:border-cyan-400/50 hover:text-white'
+                    }`}
+                  >
+                    Bài toán #{idx + 1}
+                  </button>
+                ))}
+              </div>
+
+              {/* Current Essay Problem Card */}
+              <div className="bg-slate-900 border-2 border-cyan-500/30 p-6 rounded-3xl space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <span className="font-black text-cyan-300 text-sm sm:text-base">
+                    Bài toán #{activeEssayIdx + 1}: {currentEssay.title || `Bài tập tự luận ${activeEssayIdx + 1}`}
+                  </span>
+                  <span className="text-xs font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold px-3 py-1 rounded-lg">
+                    Chiến Lược Giải & Barem Rubric
+                  </span>
+                </div>
+
+                <div className="text-sm sm:text-base text-white font-medium leading-relaxed">
+                  <MathText text={currentEssay.question} />
+                </div>
+
+                {/* Strategy Hint Box */}
+                <div className="p-4 sm:p-5 bg-slate-950 rounded-2xl border border-cyan-500/30 space-y-2.5 text-sm sm:text-base">
+                  <div className="flex items-center gap-2 font-black text-cyan-300 text-sm sm:text-base">
+                    <Lightbulb className="w-5 h-5 text-cyan-400" />
+                    <span>Gợi ý chiến lược định hướng từng bước giải từ AI:</span>
+                  </div>
+                  <div className="text-slate-200 leading-relaxed font-medium">
+                    <MathText text={getSafeStrategyHint(currentEssay)} />
+                  </div>
+
+                  {currentEssay.keyFormulas && currentEssay.keyFormulas.length > 0 && (
+                    <div className="pt-2 flex flex-wrap gap-2 items-center">
+                      <span className="font-bold text-xs sm:text-sm text-slate-300">Công thức cần dùng:</span>
+                      {currentEssay.keyFormulas.map((f: string, i: number) => (
+                        <span key={i} className="font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-cyan-500/40 text-cyan-300 font-bold text-xs sm:text-sm">
+                          <MathFormula math={f} />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2">
+                  <InteractiveCanvas
+                    onExportCanvas={handleGradeEssaySubmission}
+                    isSubmitting={isSubmitting}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Official HUB Exam Cheat Sheet Modal */}
+      <HubExamCheatSheetModal
+        isOpen={isCheatSheetOpen}
+        onClose={() => setIsCheatSheetOpen(false)}
+      />
     </div>
   );
 };

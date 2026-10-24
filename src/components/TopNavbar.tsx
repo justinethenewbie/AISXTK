@@ -12,6 +12,7 @@ interface TopNavbarProps {
   onOpenDevDatabase: () => void;
   onOpenPromptHistory: () => void;
   onOpenGoogleDrive?: () => void;
+  onOpenCheatSheet?: () => void;
   onLogout: () => void;
   onOpenSettings: () => void;
   onOpenBugReport: () => void;
@@ -27,6 +28,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   onOpenDevDatabase,
   onOpenPromptHistory,
   onOpenGoogleDrive,
+  onOpenCheatSheet,
   onLogout,
   onOpenSettings,
   onOpenBugReport,
@@ -107,6 +109,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
       {/* Zone 3: Developer Vault & User Auth */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* Official HUB Exam Formula Sheet Modal Trigger */}
+        {onOpenCheatSheet && (
+          <button
+            onClick={onOpenCheatSheet}
+            className="px-3 py-1.5 bg-gradient-to-r from-amber-500/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-400/50 hover:border-amber-400 text-amber-300 hover:text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.3)] transition-all cursor-pointer"
+            title="Mở tờ công thức được phép mang vào phòng thi HUB (CamScanner 2026)"
+          >
+            <span>📜</span>
+            <span className="hidden sm:inline">Phao Thi HUB</span>
+          </button>
+        )}
+
         {/* Settings & AI Config Button */}
         <button
           onClick={onOpenSettings}

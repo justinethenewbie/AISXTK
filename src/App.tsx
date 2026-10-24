@@ -34,6 +34,7 @@ import { AuthModal } from './components/AuthModal';
 import { DeveloperDatabaseModal } from './components/DeveloperDatabaseModal';
 import { PromptHistoryModal } from './components/PromptHistoryModal';
 import { GoogleDriveModal } from './components/GoogleDriveModal';
+import { HubExamCheatSheetModal } from './components/HubExamCheatSheetModal';
 
 import {
   BookOpen,
@@ -126,6 +127,7 @@ export default function App() {
   const [isDevDbOpen, setIsDevDbOpen] = useState(false);
   const [isPromptHistoryOpen, setIsPromptHistoryOpen] = useState(false);
   const [isGoogleDriveOpen, setIsGoogleDriveOpen] = useState(false);
+  const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -396,6 +398,7 @@ export default function App() {
         onOpenDevDatabase={() => setIsDevDbOpen(true)}
         onOpenPromptHistory={() => setIsPromptHistoryOpen(true)}
         onOpenGoogleDrive={() => setIsGoogleDriveOpen(true)}
+        onOpenCheatSheet={() => setIsCheatSheetOpen(true)}
         onLogout={handleLogout}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenBugReport={() => setIsBugReportOpen(true)}
@@ -545,6 +548,12 @@ export default function App() {
       <GoogleDriveModal
         isOpen={isGoogleDriveOpen}
         onClose={() => setIsGoogleDriveOpen(false)}
+      />
+
+      {/* Official HUB Exam Formula Sheet Modal (CamScanner) */}
+      <HubExamCheatSheetModal
+        isOpen={isCheatSheetOpen}
+        onClose={() => setIsCheatSheetOpen(false)}
       />
     </div>
   );
