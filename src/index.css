@@ -233,3 +233,178 @@ math-field .ML__placeholder {
   pointer-events: none;
   display: block;
 }
+
+/* ========================================================================= */
+/* Mascot 20+ Comic & Lively Animations                                      */
+/* ========================================================================= */
+@keyframes mascot-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  30% { transform: translateY(-28px) scale(0.9, 1.15) rotate(4deg); }
+  60% { transform: translateY(-38px) scale(1.05, 0.95) rotate(-4deg); }
+  80% { transform: translateY(0) scale(1.15, 0.85); }
+}
+
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(18deg) scale(1.08); }
+  40% { transform: rotate(-14deg) scale(1.08); }
+  60% { transform: rotate(18deg) scale(1.08); }
+  80% { transform: rotate(-10deg) scale(1.04); }
+}
+
+@keyframes mascot-run-circle {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-25px, -15px) rotate(-15deg); }
+  50% { transform: translate(0, -25px) rotate(0deg); }
+  75% { transform: translate(25px, -10px) rotate(15deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes mascot-roll {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(180deg); }
+  100% { transform: translateY(0) rotate(360deg); }
+}
+
+@keyframes mascot-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-8px) rotate(-12deg); }
+  40% { transform: translateX(8px) rotate(12deg); }
+  60% { transform: translateX(-6px) rotate(-8deg); }
+  80% { transform: translateX(6px) rotate(8deg); }
+}
+
+@keyframes mascot-pom-pom {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-16px) scale(1.15) rotate(8deg); }
+  50% { transform: translateY(0) scale(0.95); }
+  75% { transform: translateY(-20px) scale(1.18) rotate(-8deg); }
+}
+
+@keyframes mascot-moonwalk {
+  0% { transform: translateX(0) skewX(0deg); }
+  25% { transform: translateX(18px) skewX(8deg); }
+  50% { transform: translateX(35px) skewX(-6deg); }
+  75% { transform: translateX(18px) skewX(6deg); }
+  100% { transform: translateX(0) skewX(0deg); }
+}
+
+@keyframes mascot-sleepy {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  40% { transform: translateY(12px) rotate(-15deg) scale(0.95); }
+  70% { transform: translateY(14px) rotate(-20deg) scale(0.9); }
+  85% { transform: translateY(-22px) rotate(5deg) scale(1.2); }
+}
+
+@keyframes mascot-eat-snack {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.1, 0.92) translateY(2px); }
+  40% { transform: scale(0.95, 1.08) translateY(-4px); }
+  60% { transform: scale(1.1, 0.92) translateY(2px); }
+  80% { transform: scale(0.98, 1.04) translateY(-2px); }
+}
+
+@keyframes mascot-read-book {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-6deg); }
+  50% { transform: translateY(0) rotate(6deg); }
+  75% { transform: translateY(-4px) rotate(-4deg); }
+}
+
+@keyframes mascot-casio-tap {
+  0%, 100% { transform: translateY(0); }
+  15% { transform: translateY(-6px) scale(1.05); }
+  30% { transform: translateY(2px) scale(0.95); }
+  45% { transform: translateY(-8px) scale(1.08); }
+  60% { transform: translateY(1px) scale(0.97); }
+  75% { transform: translateY(-6px) scale(1.05); }
+}
+
+@keyframes mascot-thinking {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-10deg) translateY(-4px); }
+  60% { transform: rotate(10deg) translateY(-6px); }
+}
+
+@keyframes mascot-pushup {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(18px) scale(1.2, 0.7); }
+  50% { transform: translateY(0) scale(1); }
+  75% { transform: translateY(18px) scale(1.2, 0.7); }
+}
+
+@keyframes mascot-peekaboo {
+  0% { transform: translateY(0); opacity: 1; }
+  30% { transform: translateY(45px); opacity: 0.3; }
+  60% { transform: translateY(45px); opacity: 0.3; }
+  75% { transform: translateY(-10px) scale(1.15); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes mascot-spin-dizzy {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(360deg) scale(1.2); }
+  75% { transform: rotate(720deg) scale(0.9); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+
+@keyframes mascot-heart-flying {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2) translateY(-10px); }
+}
+
+@keyframes mascot-jetpack {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-24px) scale(1.05); }
+}
+
+@keyframes mascot-ninja {
+  0% { opacity: 1; transform: scale(1); }
+  30% { opacity: 0; transform: scale(0.2) rotate(180deg); }
+  70% { opacity: 0; transform: scale(0.2) rotate(180deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes mascot-boba {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px) scale(1.05); }
+  60% { transform: translateY(2px) scale(0.95); }
+}
+
+@keyframes mascot-disco {
+  0% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 10px #00f0ff); }
+  25% { transform: rotate(15deg) scale(1.15); filter: drop-shadow(0 0 15px #f59e0b); }
+  50% { transform: rotate(-15deg) scale(1.1); filter: drop-shadow(0 0 15px #ec4899); }
+  75% { transform: rotate(10deg) scale(1.2); filter: drop-shadow(0 0 20px #10b981); }
+  100% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 10px #00f0ff); }
+}
+
+@keyframes mascot-clap {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.15, 0.9); }
+  40% { transform: scale(0.9, 1.15); }
+  60% { transform: scale(1.15, 0.9); }
+  80% { transform: scale(0.95, 1.05); }
+}
+
+.anim-mascot-jump { animation: mascot-jump 1.2s ease-in-out infinite; }
+.anim-mascot-wave { animation: mascot-wave 1.1s ease-in-out infinite; }
+.anim-mascot-run-circle { animation: mascot-run-circle 2.2s linear infinite; }
+.anim-mascot-roll { animation: mascot-roll 1.4s ease-in-out infinite; }
+.anim-mascot-wiggle { animation: mascot-wiggle 0.9s ease-in-out infinite; }
+.anim-mascot-pom-pom { animation: mascot-pom-pom 0.8s ease-in-out infinite; }
+.anim-mascot-moonwalk { animation: mascot-moonwalk 2s ease-in-out infinite; }
+.anim-mascot-sleepy { animation: mascot-sleepy 3s ease-in-out infinite; }
+.anim-mascot-eat-snack { animation: mascot-eat-snack 1.2s ease-in-out infinite; }
+.anim-mascot-read-book { animation: mascot-read-book 1.5s ease-in-out infinite; }
+.anim-mascot-casio-tap { animation: mascot-casio-tap 0.7s ease-in-out infinite; }
+.anim-mascot-thinking { animation: mascot-thinking 1.6s ease-in-out infinite; }
+.anim-mascot-pushup { animation: mascot-pushup 1.6s ease-in-out infinite; }
+.anim-mascot-peekaboo { animation: mascot-peekaboo 2.5s ease-in-out infinite; }
+.anim-mascot-spin-dizzy { animation: mascot-spin-dizzy 1.8s ease-in-out infinite; }
+.anim-mascot-heart-flying { animation: mascot-heart-flying 1.2s ease-in-out infinite; }
+.anim-mascot-jetpack { animation: mascot-jetpack 1.5s ease-in-out infinite; }
+.anim-mascot-ninja { animation: mascot-ninja 2.2s ease-in-out infinite; }
+.anim-mascot-boba { animation: mascot-boba 1.3s ease-in-out infinite; }
+.anim-mascot-disco { animation: mascot-disco 1.4s ease-in-out infinite; }
+.anim-mascot-clap { animation: mascot-clap 0.8s ease-in-out infinite; }
