@@ -36,6 +36,7 @@ import {
 import confetti from 'canvas-confetti';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { MathText, MathFormula } from './MathFormula';
+import { BigSizeDocumentProcessor } from './BigSizeDocumentProcessor';
 import { aiFetch } from '../utils/apiHelper';
 import { normalizeSpokenMath } from '../utils/mathSpeechParser';
 
@@ -44,7 +45,7 @@ interface ImagePdfGradingProps {
   onRecordMistake: (mistake: any) => void;
 }
 
-export type StudyMode = 'socratic' | 'solve' | 'grade';
+export type StudyMode = 'socratic' | 'solve' | 'grade' | 'big_size_queue';
 
 export interface ChatMessage {
   id: string;
@@ -564,6 +565,18 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
             <Award className="w-5 h-5" />
             <span>📝 Chấm Điểm Bài Tự Làm</span>
           </button>
+
+          <button
+            onClick={() => setStudyMode('big_size_queue')}
+            className={`px-5 py-3 rounded-xl text-sm sm:text-base font-bold flex items-center gap-2.5 transition-all cursor-pointer ${
+              studyMode === 'big_size_queue'
+                ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-slate-950 font-black shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                : 'bg-slate-950 text-amber-300 hover:text-amber-200 border border-amber-500/40'
+            }`}
+          >
+            <Layers className="w-5 h-5 text-amber-400" />
+            <span>🚀 Đề Thi Big Size (100MB)</span>
+          </button>
         </div>
 
         {messages.length > 0 && (
@@ -582,6 +595,37 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
           </button>
         )}
       </div>
+
+      {/* 2.5. Embedded Big Size Document & Exercise Queue Engine */}
+      {studyMode === 'big_size_queue' ? (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="bg-gradient-to-r from-amber-500/15 via-slate-900 to-cyan-500/15 border border-amber-500/40 p-3.5 rounded-2xl flex items-center justify-between text-xs text-amber-200 gap-2 flex-wrap shadow-lg">
+            <span className="flex items-center gap-2 font-bold">
+              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+              Đang mở Động Cơ Big Size Queue của Gia Sư AI: Tải lên đề thi hàng chục câu hỏi (PDF, Word, Excel tới 100MB), giải hàng loạt song song và bấm "Hỏi Thầy AI 1-1" bất cứ lúc nào!
+            </span>
+            <button
+              onClick={() => setStudyMode('socratic')}
+              className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all shrink-0 cursor-pointer"
+            >
+              Quay lại Chat 1-1
+            </button>
+          </div>
+          <BigSizeDocumentProcessor
+            onAddExp={onAddExp}
+            defaultDocType="bulk_exercises"
+            contextMode="tutor"
+            onSendToAiTutor={(item) => {
+              setStudyMode('socratic');
+              const questionPrompt = `Thầy ơi, câu này trong đề thi em cần Thầy giải thích sâu và dạy kèm 1-1 từng bước giúp em:\n\n**${item.title}:** ${item.rawText}${
+                item.options && item.options.length > 0 ? `\nCác phương án: ${item.options.join('; ')}` : ''
+              }\n\nThầy gợi ý bản chất và hướng dẫn em cách tư duy nhé!`;
+              setInputText(questionPrompt);
+            }}
+          />
+        </div>
+      ) : (
+        <>
 
       {/* 3. Empty State / Starter Hero Prompt Cards */}
       {messages.length === 0 && (
@@ -1211,6 +1255,22 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
 
       {/* 7. Gemini-Style Omni-Dock Input Bar */}
       <div className="bg-slate-900/95 border-2 border-cyan-500/40 p-3 sm:p-4 rounded-3xl shadow-[0_0_30px_rgba(6,182,212,0.15)] space-y-3 sticky bottom-16 z-30 backdrop-blur-md">
+        {/* Quick hint & Big Size Queue shortcut */}
+        <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 px-1 flex-wrap gap-1">
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Mẹo: Em có thể gõ công thức KaTeX hoặc nói tiếng Việt tự nhiên</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setStudyMode('big_size_queue')}
+            className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-400" />
+            <span>Đề thi nhiều câu / file 100MB? Mở Big Size Queue ➔</span>
+          </button>
+        </div>
+
         {/* Attached previews chips */}
         {(attachedFile || canvasDrawingUrl) && (
           <div className="flex items-center gap-2.5 flex-wrap pb-1">
@@ -1336,6 +1396,8 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
           </button>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

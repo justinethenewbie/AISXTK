@@ -1,4 +1,5 @@
 import katex from 'katex';
+import { renderMathToHtml } from '../components/MathFormula';
 
 /**
  * Clean and convert raw mathematical input (such as "int(0, 2, 3*x^2)", "int(-inf, +inf, ...)",
@@ -47,8 +48,13 @@ export function convertRawMathToTex(raw: string): string {
     if (!expr) return '';
     let res = expr;
 
-    // Square root: sqrt(expr)
-    res = res.replace(/sqrt\s*\(([^)]+)\)/g, (_m, inner) => `\\sqrt{${cleanExpr(inner)}}`);
+    // Fix malformed `=/sqrt` or `/\sqrt` or `/sqrt`
+    res = res.replace(/=\s*\/\s*\\?sqrt\b/gi, '= \\sqrt');
+    res = res.replace(/(^|[\s(])\/\s*\\?sqrt\b/gi, '$1\\sqrt');
+    res = res.replace(/(^|[^\\])\/sqrt\b/gi, '$1/ \\sqrt');
+
+    // Square root: sqrt(expr) or \sqrt(expr)
+    res = res.replace(/\\?sqrt\s*\(([^)]+)\)/gi, (_m, inner) => `\\sqrt{${cleanExpr(inner)}}`);
 
     // Cumulative Normal Distribution: Phi(z) or P(Z <= z)
     res = res.replace(/Phi\s*\(([^)]+)\)/g, (_m, z) => `\\Phi(${cleanExpr(z)})`);
@@ -94,6 +100,11 @@ export function convertRawMathToTex(raw: string): string {
  */
 export function renderRawMathToKatexHtml(raw: string, isBlock = false): string {
   try {
+    if (!raw) return '0';
+    // Bảo vệ chống dính chữ nếu đầu vào chứa tiếng Việt
+    if (/[À-ỹ]/.test(raw) && !raw.includes('\\text{')) {
+      return renderMathToHtml(raw);
+    }
     const tex = convertRawMathToTex(raw);
     return katex.renderToString(tex, {
       displayMode: isBlock,

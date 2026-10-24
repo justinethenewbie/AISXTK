@@ -9,16 +9,71 @@
     "university": "ĐH Kinh Tế TP.HCM (UEH)",
     "classGroup": "2026-XSTK",
     "gpa": 3.92,
-    "exp": 1725,
-    "level": 9,
+    "exp": 2365,
+    "level": 12,
     "streakDays": 1,
-    "studyHours": 10.8,
-    "exercisesSolved": 59,
+    "studyHours": 12.4,
+    "exercisesSolved": 67,
     "accuracyRate": 100,
     "createdAt": "2026-10-20 13:51:18",
     "lastActive": "Vừa xong",
     "status": "active",
     "recentActivity": [
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn PENGUIN làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành phân tích toàn diện Báo Cáo Tài Chính",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành phân tích toàn diện Báo Cáo Tài Chính",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành phân tích toàn diện Báo Cáo Tài Chính",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành phân tích toàn diện Báo Cáo Tài Chính",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành phân tích toàn diện Báo Cáo Tài Chính",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Bóc tách cấu trúc tài liệu Big Size",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn CAT làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Thi thử tự luận HUB: Câu 2: Biến Ngẫu Nhiên Liên Tục & Kỳ Vọng E(X) (0/10 điểm)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Bóc tách cấu trúc tài liệu Big Size",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn DRAGON làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
       {
         "action": "Linh vật đồng hành 🐾",
         "detail": "Chọn PENGUIN làm bạn đồng hành nhảy nhót học tập!",
@@ -63,67 +118,14 @@
         "action": "Học tập & Luyện đề",
         "detail": "Bóc tách cấu trúc tài liệu Big Size",
         "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Đăng nhập",
-        "detail": "Đăng nhập thành công vào hệ thống AI Classroom",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Đăng nhập",
-        "detail": "Đăng nhập thành công vào hệ thống AI Classroom",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Giải toàn diện bài toán cùng Gemini XSTK",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Hoàn thành bài tập & nhận +30 EXP",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Giải toàn diện bài toán cùng Gemini XSTK",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
-      },
-      {
-        "action": "Học tập & Luyện đề",
-        "detail": "Trao đổi & hỏi bài Thầy AI (Bước 1)",
-        "timestamp": "Vừa xong"
       }
     ],
     "lastStudyDate": "2026-10-24",
     "equippedMascot": {
       "species": "penguin",
-      "hat": "hat_grad"
+      "hat": "hat_grad",
+      "outfit": "robe_gold",
+      "accessory": "glasses_smart"
     }
   },
   {

@@ -58,15 +58,15 @@ export const HubEdtLogo: React.FC<HubEdtLogoProps> = ({
           >
             AI Classroom
           </span>
-          <span className="h-3.5 w-0.5 bg-cyan-500/50 rounded-full" />
-          <span className="text-[11px] sm:text-xs font-extrabold text-cyan-200 tracking-tight drop-shadow-[0_0_6px_rgba(6,182,212,0.5)]">
+          <span className="h-3.5 w-0.5 bg-cyan-500/50 rounded-full hidden sm:block" />
+          <span className="text-[11px] sm:text-xs font-extrabold text-cyan-200 tracking-tight drop-shadow-[0_0_6px_rgba(6,182,212,0.5)] hidden sm:inline">
             AI TUTOR XSTK
           </span>
         </div>
 
-        {/* Optional Subtitle */}
+        {/* Optional Subtitle: Only on 2xl ultra widescreen to save space on laptops */}
         {showSubtitle && (
-          <div className={`${dimensions.textSub} font-semibold text-slate-400 tracking-wide mt-0.5 hidden sm:flex items-center gap-1.5`}>
+          <div className={`${dimensions.textSub} font-semibold text-slate-400 tracking-wide mt-0.5 hidden 2xl:flex items-center gap-1.5`}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#10b981]" />
             <span>Khoa Khoa Học Dữ Liệu & Trí Tuệ Nhân Tạo</span>
           </div>

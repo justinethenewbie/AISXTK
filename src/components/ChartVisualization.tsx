@@ -28,6 +28,7 @@ import {
   Info,
   DollarSign,
   PieChart,
+  Layers,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -44,6 +45,7 @@ import {
 import katex from 'katex';
 import { aiFetch } from '../utils/apiHelper';
 import { renderMathToHtml, MathText, MathFormula } from './MathFormula';
+import { BigSizeDocumentProcessor } from './BigSizeDocumentProcessor';
 
 // --- DATA TYPES ---
 export interface SpreadsheetItem {
@@ -263,9 +265,13 @@ const ACADEMIC_SOURCES_DIRECTORY: AcademicSource[] = [
   },
 ];
 
-export const ChartVisualization: React.FC = () => {
-  // Active Tab: spreadsheet_charts | report_analysis | ai_chat | open_sources
-  const [activeTab, setActiveTab] = useState<'spreadsheet_charts' | 'report_analysis' | 'ai_chat' | 'open_sources'>('spreadsheet_charts');
+interface ChartVisualizationProps {
+  onAddExp?: (amount: number, details?: string) => void;
+}
+
+export const ChartVisualization: React.FC<ChartVisualizationProps> = ({ onAddExp }) => {
+  // Active Tab: spreadsheet_charts | report_analysis | big_report_queue | ai_chat | open_sources
+  const [activeTab, setActiveTab] = useState<'spreadsheet_charts' | 'report_analysis' | 'big_report_queue' | 'ai_chat' | 'open_sources'>('spreadsheet_charts');
 
   // Selected Financial Plan
   const [selectedPlanId, setSelectedPlanId] = useState<string>('fnb_hub');
@@ -519,7 +525,7 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
 - **Giá trị rủi ro ở độ tin cậy 99% (VaR 99%):** Trong 99% trường hợp, tổn thất tồi tệ nhất không vượt quá ${calculatedStats.var99.toFixed(1)} triệu VNĐ.
 
 #### 3. Khuyến nghị cải thiện chiến lược
-1. **Thiết lập quỹ phòng vệ:** Duy trì số dư tiền mặt tương đương tối thiểu $3$ tháng chi phí cố định ($${(calculatedStats.totalCosts * 0.3).toFixed(1)}$ triệu VNĐ).
+1. **Thiết lập quỹ phòng vệ:** Duy trì số dư tiền mặt tương đương tối thiểu $3$ tháng chi phí cố định (${(calculatedStats.totalCosts * 0.3).toFixed(1)} triệu VNĐ).
 2. **Theo dõi dữ liệu liên tục:** Ứng dụng biểu đồ Histogram để phát hiện sớm các dị biệt (Outliers) ngoài khoảng $[\\mu - 3\\sigma, \\mu + 3\\sigma]$.
 3. **Đối chiếu chỉ số vĩ mô:** Định kỳ tham chiếu số liệu tăng trưởng và lạm phát từ World Bank và Ngân hàng Nhà nước để điều chỉnh giá bán linh hoạt.`,
       });
@@ -926,6 +932,18 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
         </button>
 
         <button
+          onClick={() => setActiveTab('big_report_queue')}
+          className={`pb-3 px-3 whitespace-nowrap transition-colors flex items-center gap-1.5 text-xs sm:text-sm font-bold ${
+            activeTab === 'big_report_queue'
+              ? 'border-b-2 border-amber-400 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)] font-black'
+              : 'text-amber-400/90 hover:text-amber-300'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-amber-400" />
+          <span>🚀 BCTC Big Size (100MB Queue)</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('ai_chat')}
           className={`pb-3 px-3 whitespace-nowrap transition-colors flex items-center gap-1.5 text-xs sm:text-sm font-bold ${
             activeTab === 'ai_chat'
@@ -1191,10 +1209,10 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
                   • <strong className="text-white">Độ lệch chuẩn σ = {calculatedStats.stdDev.toFixed(1)} triệu VNĐ:</strong> Phản ánh biên độ co giãn dòng tiền giữa kịch bản lạc quan và bi quan.
                 </div>
                 <div>
-                  • <strong className="text-white">Khoảng tin cậy 95% [μ - 1.96σ, μ + 1.96σ]:</strong> Dao động từ ${(calculatedStats.mean - 1.96 * calculatedStats.stdDev).toFixed(1)} triệu đến ${(calculatedStats.mean + 1.96 * calculatedStats.stdDev).toFixed(1)} triệu VNĐ.
+                  • <strong className="text-white">Khoảng tin cậy 95% [μ - 1.96σ, μ + 1.96σ]:</strong> Dao động từ {(calculatedStats.mean - 1.96 * calculatedStats.stdDev).toFixed(1)} triệu đến {(calculatedStats.mean + 1.96 * calculatedStats.stdDev).toFixed(1)} triệu VNĐ.
                 </div>
                 <div>
-                  • <strong className="text-white">Quy tắc 3-Sigma:</strong> Hơn 99.7% quan sát sẽ nằm trong khoảng ${(calculatedStats.mean - 3 * calculatedStats.stdDev).toFixed(1)} - ${(calculatedStats.mean + 3 * calculatedStats.stdDev).toFixed(1)} triệu VNĐ.
+                  • <strong className="text-white">Quy tắc 3-Sigma:</strong> Hơn 99.7% quan sát sẽ nằm trong khoảng {(calculatedStats.mean - 3 * calculatedStats.stdDev).toFixed(1)} - {(calculatedStats.mean + 3 * calculatedStats.stdDev).toFixed(1)} triệu VNĐ.
                 </div>
               </div>
             </div>
@@ -1207,6 +1225,26 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
       {/* ============================================================== */}
       {activeTab === 'report_analysis' && (
         <div className="space-y-6">
+          {/* Big Size Shortcut Banner */}
+          <div className="bg-gradient-to-r from-amber-500/15 via-slate-900 to-cyan-500/15 border border-amber-500/40 p-4 rounded-2xl flex items-center justify-between flex-wrap gap-3 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300">
+                <Layers className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-white">Bạn có tệp Báo Cáo Tài Chính lớn nhiều trang (PDF / Excel / Word tới 100MB)?</h4>
+                <p className="text-[11px] text-slate-300">Sử dụng Động Cơ BCTC Big Size Queue để bóc tách tự động từng phân mục và xử lý song song không giật lag.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab('big_report_queue')}
+              className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer"
+            >
+              <span>Mở Chế Độ BCTC Big Size (100MB)</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
           {/* Action Trigger Card */}
           <div className="bg-slate-900 border-2 border-cyan-500/30 p-5 rounded-3xl space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1427,6 +1465,47 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB 2.5: BIG SIZE FINANCIAL REPORT QUEUE PROCESSOR (100MB)     */}
+      {/* ============================================================== */}
+      {activeTab === 'big_report_queue' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="bg-gradient-to-r from-emerald-500/15 via-slate-900 to-cyan-500/15 border border-emerald-500/40 p-3.5 rounded-2xl flex items-center justify-between text-xs text-emerald-200 gap-2 flex-wrap shadow-lg">
+            <span className="flex items-center gap-2 font-bold">
+              <TrendingUp className="w-4 h-4 text-emerald-400 animate-pulse" />
+              Đang mở Động Cơ BCTC Big Size Queue: Tải lên báo cáo tài chính lớn nhiều trang (PDF/Word/Excel tới 100MB), bóc tách từng phân mục và tính toán ma trận rủi ro XSTK song song!
+            </span>
+            <button
+              onClick={() => setActiveTab('spreadsheet_charts')}
+              className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all shrink-0 cursor-pointer"
+            >
+              Về Bảng Tính & Đồ Thị
+            </button>
+          </div>
+          <BigSizeDocumentProcessor
+            onAddExp={onAddExp}
+            defaultDocType="financial_report"
+            contextMode="finance"
+            onSendToSpreadsheet={(sec) => {
+              if (sec.analysis?.statisticalMetrics && sec.analysis.statisticalMetrics.length > 0) {
+                const newItems: SpreadsheetItem[] = sec.analysis.statisticalMetrics.map((m, idx) => ({
+                  id: `sec_${Date.now()}_${idx}`,
+                  code: `BC_${idx + 1}`,
+                  item: `${sec.title}: ${m.label} (${m.value})`,
+                  category: 'revenue',
+                  amount: parseFloat(m.value.replace(/[^0-9.-]/g, '')) || 25,
+                  probability: 0.9,
+                  riskWeight: 0.25,
+                }));
+                setSpreadsheetItems((prev) => [...prev, ...newItems]);
+                alert(`✅ Đã xuất ${newItems.length} chỉ số định lượng từ "${sec.title}" vào Bảng tính Excel & Đồ thị Histogram!`);
+              }
+              setActiveTab('spreadsheet_charts');
+            }}
+          />
         </div>
       )}
 

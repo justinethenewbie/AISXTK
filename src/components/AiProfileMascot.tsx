@@ -764,7 +764,7 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
                         ✓ Đang chọn
                       </span>
                     )}
-                    {['penguin', 'crocodile', 'bear', 'fox', 'cat'].includes(m.species) && (
+                    {['penguin', 'crocodile', 'bear', 'fox', 'cat', 'dragon'].includes(m.species) && (
                       <span className="absolute top-2 left-2 bg-slate-950/90 text-amber-300 border border-red-500/60 text-[9px] font-black px-1.5 py-0.2 rounded-md shadow flex items-center gap-1 z-10">
                         <img src="/assets/hub-logo.png" alt="HUB" className="w-2.5 h-2.5 object-contain" />
                         HUB 1976

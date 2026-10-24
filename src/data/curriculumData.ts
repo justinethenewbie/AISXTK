@@ -340,19 +340,19 @@ export const CHAPTERS_DATA: Chapter[] = [
         stepNumber: 2,
         title: 'Bước 2: Giảng Giải Bản Chất Khái Niệm',
         content:
-          'Thầy muốn các em hiểu: Phép thử ngẫu nhiên là một hành động mà kết quả không thể biết trước chắc chắn (như tung xúc xắc hay theo dõi tình trạng trả nợ của khách hàng). Tập hợp tất cả các kết quả có thể xảy ra tạo thành Không gian mẫu \\Omega. Biến cố A là một tập con của \\Omega. Đừng bao giờ học vẹt công thức, hãy luôn nhớ: Xác suất P(A) đo lường cơ hội xảy ra của A!',
+          'Thầy muốn các em hiểu: Phép thử ngẫu nhiên là một hành động mà kết quả không thể biết trước chắc chắn (như tung xúc xắc hay theo dõi tình trạng trả nợ của khách hàng). Tập hợp tất cả các kết quả có thể xảy ra tạo thành Không gian mẫu $\\Omega$. Biến cố $A$ là một tập con của $\\Omega$. Đừng bao giờ học vẹt công thức, hãy luôn nhớ: Xác suất $P(A)$ đo lường cơ hội xảy ra của $A$!',
       },
       {
         stepNumber: 3,
         title: 'Bước 3: Xây Dựng Công Thức Toán & Ký Hiệu KaTeX',
         content:
-          'Thầy hướng dẫn cách áp dụng hai quy tắc vàng:\n1) Quy tắc cộng: P(A+B) = P(A) + P(B) - P(AB). Nếu A và B xung khắc (không thể cùng xảy ra), P(AB) = 0.\n2) Xác suất có điều kiện: P(A|B) = \\frac{P(AB)}{P(B)}, tức xác suất A xảy ra khi đã biết B xảy ra.\n3) Công thức Bayes: P(H_i|A) = \\frac{P(H_i)P(A|H_i)}{\\sum P(H_j)P(A|H_j)}.',
+          'Thầy hướng dẫn cách áp dụng hai quy tắc vàng:\n1) Quy tắc cộng: $P(A+B) = P(A) + P(B) - P(AB)$. Nếu $A$ và $B$ xung khắc (không thể cùng xảy ra), $P(AB) = 0$.\n2) Xác suất có điều kiện: $P(A|B) = \\frac{P(AB)}{P(B)}$, tức xác suất $A$ xảy ra khi đã biết $B$ xảy ra.\n3) Công thức Bayes: $P(H_i|A) = \\frac{P(H_i)P(A|H_i)}{\\sum P(H_j)P(A|H_j)}$.',
       },
       {
         stepNumber: 4,
         title: 'Bước 4: Các Ví Dụ Mẫu Chi Tiết Từ Giáo Viên',
         content:
-          'Thầy làm mẫu 3 ví dụ thực tế:\n• Ví dụ 1: Đầu tư cổ phiếu & trái phiếu -> P(A+B) = 0.6 + 0.5 - 0.3 = 0.8 (80%).\n• Ví dụ 2: Lợi nhuận quý công ty công bố tốt P(B)=0.6, cổ phiếu tăng giá P(AB)=0.4 -> Xác suất tăng giá khi biết lợi nhuận tốt P(A|B) = 0.4/0.6 = 66.7%.\n• Ví dụ 3: Tung 3 lần con xúc xắc, xác suất xuất hiện mặt 6 chấm đúng 2 lần theo Bernoulli P_3(2) = C_3^2 (1/6)^2 (5/6) = 5/72.',
+          'Thầy làm mẫu 3 ví dụ thực tế:\n• Ví dụ 1: Đầu tư cổ phiếu & trái phiếu -> $P(A+B) = 0.6 + 0.5 - 0.3 = 0.8$ (80%).\n• Ví dụ 2: Lợi nhuận quý công ty công bố tốt $P(B)=0.6$, cổ phiếu tăng giá $P(AB)=0.4$ -> Xác suất tăng giá khi biết lợi nhuận tốt $P(A|B) = 0.4/0.6 = 66.7%$.\n• Ví dụ 3: Tung 3 lần con xúc xắc, xác suất xuất hiện mặt 6 chấm đúng 2 lần theo Bernoulli $P_3(2) = C_3^2 (1/6)^2 (5/6) = 5/72$.',
       },
     ],
     practiceExamples: [
@@ -375,8 +375,8 @@ export const CHAPTERS_DATA: Chapter[] = [
           'Trong 100 khách hàng vay vốn có 90 khách hàng có điểm tín dụng >750, có 85 khách hàng đã trả nợ đúng hạn trong 6 tháng qua (P(AB) = 0.85, P(B) = 0.90). Tính xác suất khách hàng trả nợ đúng hạn khi biết họ có điểm tín dụng >750?',
         given: ['P(B) = 0.90 (Điểm tín dụng >750)', 'P(AB) = 0.85 (Điểm tín dụng tốt VÀ Trả đúng hạn)'],
         baremRubric: 'Công thức xác suất điều kiện (3đ) - Tính toán (4đ) - Ý nghĩa tài chính (3đ)',
-        defaultStrategyHint: 'Sử dụng công thức xác suất có điều kiện P(A|B) = P(AB) / P(B) = 0.85 / 0.90.',
-        sampleSolution: 'P(A|B) = \\frac{0.85}{0.90} = 0.9444 (94.44%).\nNghĩa là khách hàng có điểm tín dụng >750 thì khả năng trả nợ đúng hạn lên tới 94.44%.',
+        defaultStrategyHint: 'Sử dụng công thức xác suất có điều kiện $P(A|B) = \\frac{P(AB)}{P(B)} = \\frac{0.85}{0.90}$.',
+        sampleSolution: '$P(A|B) = \\frac{0.85}{0.90} = 0.9444$ (94.44%).\nNghĩa là khách hàng có điểm tín dụng >750 thì khả năng trả nợ đúng hạn lên tới 94.44%.',
       },
       {
         id: 'ex1_3',
@@ -385,8 +385,8 @@ export const CHAPTERS_DATA: Chapter[] = [
           'Nhà máy có 3 máy A, B, C sản xuất bóng đèn chiếm tỷ lệ 25%, 35%, 40%. Tỷ lệ phế phẩm lần lượt là 3%, 2%, 1%. Mua 1 bóng đèn thấy bị hỏng. Tính xác suất bóng này do máy C sản xuất?',
         given: ['P(H1)=0.25, P(H2)=0.35, P(H3)=0.40', 'P(L|H1)=0.03, P(L|H2)=0.02, P(L|H3)=0.01'],
         baremRubric: 'Hệ biến cố đầy đủ (2đ) - Xác suất đầy đủ P(Lỗi) (4đ) - Bayes P(H3|Lỗi) (4đ)',
-        defaultStrategyHint: '1) P(Lỗi) = 0.25*0.03 + 0.35*0.02 + 0.40*0.01 = 0.0185 (1.85%).\n2) Bayes P(H3|Lỗi) = (0.40*0.01) / 0.0185 = 0.2162 (21.62%).',
-        sampleSolution: 'P(Lỗi) = 0.0185.\nP(H3|Lỗi) = \\frac{0.40 \\times 0.01}{0.0185} = 0.2162 (21.62%).',
+        defaultStrategyHint: '1) $P(\\text{Lỗi}) = 0.25 \\times 0.03 + 0.35 \\times 0.02 + 0.40 \\times 0.01 = 0.0185$ (1.85%).\n2) Bayes $P(H_3|\\text{Lỗi}) = \\frac{0.40 \\times 0.01}{0.0185} = 0.2162$ (21.62%).',
+        sampleSolution: '$P(\\text{Lỗi}) = 0.0185$.\n$P(H_3|\\text{Lỗi}) = \\frac{0.40 \\times 0.01}{0.0185} = 0.2162$ (21.62%).',
       },
     ],
     homeworkTasks: [
@@ -470,10 +470,10 @@ export const CHAPTERS_DATA: Chapter[] = [
     ],
     roadmapSteps: [
       '1. Phân biệt BNN Rời rạc vs BNN Liên tục',
-      '2. Lập Bảng phân phối xác suất & Điều kiện hàm mật độ \\int f(x)dx = 1',
+      '2. Lập Bảng phân phối xác suất & Điều kiện hàm mật độ $\\int f(x)dx = 1$',
       '3. Tính Mode X (giá trị có xác suất / mật độ lớn nhất)',
-      '4. Tính Kỳ vọng E(X) và ý nghĩa trung bình tài chính',
-      '5. Tính Phương sai Var(X) & Độ lệch chuẩn \\sigma(X) đo lường rủi ro',
+      '4. Tính Kỳ vọng $E(X)$ và ý nghĩa trung bình tài chính',
+      '5. Tính Phương sai $Var(X)$ & Độ lệch chuẩn $\\sigma(X)$ đo lường rủi ro',
     ],
     feynmanSteps: [
       {
@@ -484,17 +484,17 @@ export const CHAPTERS_DATA: Chapter[] = [
       {
         stepNumber: 2,
         title: 'Bước 2: Giảng Giải Bản Chất Phương Sai',
-        content: 'Thầy nhấn mạnh: Kỳ vọng E(X) cho biết "điểm cân bằng trung bình". Nhưng Phương sai Var(X) mới đo lường "mức độ rủi ro / biến động". Phương sai càng lớn nghĩa là kết quả thực tế càng dễ bị lệch xa so với kỳ vọng!',
+        content: 'Thầy nhấn mạnh: Kỳ vọng $E(X)$ cho biết "điểm cân bằng trung bình". Nhưng Phương sai $Var(X)$ mới đo lường "mức độ rủi ro / biến động". Phương sai càng lớn nghĩa là kết quả thực tế càng dễ bị lệch xa so với kỳ vọng!',
       },
       {
         stepNumber: 3,
         title: 'Bước 3: Công Thức Toán Tính Var(X)',
-        content: 'Var(X) = E(X^2) - [E(X)]^2. Với BNN liên tục có hàm mật độ f(x): E(X) = \\int x f(x) dx, E(X^2) = \\int x^2 f(x) dx.',
+        content: '$Var(X) = E(X^2) - [E(X)]^2$. Với BNN liên tục có hàm mật độ $f(x)$: $E(X) = \\int x f(x) dx$, $E(X^2) = \\int x^2 f(x) dx$.',
       },
       {
         stepNumber: 4,
         title: 'Bước 4: Ví Dụ Mẫu Chi Tiết Của Giáo Viên',
-        content: 'Cổ phiếu X: 20% (xác suất 0.3), 10% (xác suất 0.5), -5% (xác suất 0.2). E(X) = 20*0.3 + 10*0.5 + (-5)*0.2 = 10%. E(X^2) = 400*0.3 + 100*0.5 + 25*0.2 = 175. Var(X) = 175 - 10^2 = 75. Độ lệch chuẩn \\sigma = \\sqrt{75} \\approx 8.66%.',
+        content: 'Cổ phiếu X: 20% (xác suất 0.3), 10% (xác suất 0.5), -5% (xác suất 0.2). $E(X) = 20 \\times 0.3 + 10 \\times 0.5 + (-5) \\times 0.2 = 10%$. $E(X^2) = 400 \\times 0.3 + 100 \\times 0.5 + 25 \\times 0.2 = 175$. $Var(X) = 175 - 10^2 = 75$. Độ lệch chuẩn $\\sigma = \\sqrt{75} \\approx 8.66%$.',
       },
     ],
     practiceExamples: [
@@ -506,9 +506,9 @@ export const CHAPTERS_DATA: Chapter[] = [
         given: ['X1 = 20, p1 = 0.3', 'X2 = 10, p2 = 0.5', 'X3 = -5, p3 = 0.2'],
         baremRubric: 'Tính E(X) (3đ) - Tính E(X^2) (3đ) - Tính Var(X) (2đ) - Ý nghĩa tài chính (2đ)',
         defaultStrategyHint:
-          '1. Tính E(X) = 20*0.3 + 10*0.5 + (-5)*0.2.\n2. Tính E(X^2) = 20^2*0.3 + 10^2*0.5 + (-5)^2*0.2.\n3. Var(X) = E(X^2) - [E(X)]^2.',
+          '1. Tính $E(X) = 20 \\times 0.3 + 10 \\times 0.5 + (-5) \\times 0.2$.\n2. Tính $E(X^2) = 20^2 \\times 0.3 + 10^2 \\times 0.5 + (-5)^2 \\times 0.2$.\n3. $Var(X) = E(X^2) - [E(X)]^2$.',
         sampleSolution:
-          'E(X) = 6 + 5 - 1 = 10%.\nE(X^2) = 400*0.3 + 100*0.5 + 25*0.2 = 120 + 50 + 5 = 175.\nVar(X) = 175 - 10^2 = 75.\nĐộ lệch chuẩn \\sigma = \\sqrt{75} \\approx 8.66%.',
+          '$E(X) = 6 + 5 - 1 = 10%$.\n$E(X^2) = 400 \\times 0.3 + 100 \\times 0.5 + 25 \\times 0.2 = 120 + 50 + 5 = 175$.\n$Var(X) = 175 - 10^2 = 75$.\nĐộ lệch chuẩn $\\sigma = \\sqrt{75} \\approx 8.66%$.',
       },
     ],
     homeworkTasks: [
@@ -549,8 +549,8 @@ export const CHAPTERS_DATA: Chapter[] = [
       {
         name: 'Phân phối Chuẩn N(μ, σ²)',
         formula: 'f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}',
-        description: 'Chuyển về chuẩn tắc Z = \\frac{X - \\mu}{\\sigma} \\sim N(0,1).',
-        casioTip: 'Casio Menu 7 -> Normal CD. Lower, Upper, \\sigma, \\mu.',
+        description: 'Chuyển về chuẩn tắc $Z = \\frac{X - \\mu}{\\sigma} \\sim N(0,1)$.',
+        casioTip: 'Casio Menu 7 -> Normal CD. Lower, Upper, $\\sigma$, $\\mu$.',
       },
       {
         name: 'Phân phối Poisson P(λ)',
@@ -560,11 +560,11 @@ export const CHAPTERS_DATA: Chapter[] = [
       },
     ],
     roadmapSteps: [
-      '1. Phân phối rời rạc: Nhị thức B(n,p) & Poisson P(\\lambda)',
-      '2. Phân phối liên tục: Chuẩn N(\\mu, \\sigma^2) & Đều U(a,b) & Mũ Exp(\\lambda)',
-      '3. Chuẩn hóa biến số Z = \\frac{X - \\mu}{\\sigma} để tra bảng Laplace \\Phi(z)',
+      '1. Phân phối rời rạc: Nhị thức $B(n,p)$ & Poisson $P(\\lambda)$',
+      '2. Phân phối liên tục: Chuẩn $N(\\mu, \\sigma^2)$ & Đều $U(a,b)$ & Mũ $\\text{Exp}(\\lambda)$',
+      '3. Chuẩn hóa biến số $Z = \\frac{X - \\mu}{\\sigma}$ để tra bảng Laplace $\\Phi(z)$',
       '4. Sử dụng máy tính Casio Menu 7 tính xác suất tích lũy Normal CD',
-      '5. Nhận biết các phân phối kiểm định: Student t, Chi-bình phương \\chi^2, Fisher F',
+      '5. Nhận biết các phân phối kiểm định: Student $t$, Chi-bình phương $\\chi^2$, Fisher $F$',
     ],
     feynmanSteps: [
       {
@@ -575,7 +575,7 @@ export const CHAPTERS_DATA: Chapter[] = [
       {
         stepNumber: 2,
         title: 'Bước 2: Giảng Giải Chuẩn Hóa Z',
-        content: 'Thầy nhấn mạnh: Chỉ cần thực hiện phép biến đổi Z = \\frac{X - \\mu}{\\sigma}, mọi bài toán Phân phối chuẩn N(\\mu, \\sigma^2) đều trở về Phân phối Chuẩn tắc N(0,1) với bảng tra duy nhất!',
+        content: 'Thầy nhấn mạnh: Chỉ cần thực hiện phép biến đổi $Z = \\frac{X - \\mu}{\\sigma}$, mọi bài toán Phân phối chuẩn $N(\\mu, \\sigma^2)$ đều trở về Phân phối Chuẩn tắc $N(0,1)$ với bảng tra duy nhất!',
       },
     ],
     practiceExamples: [
@@ -583,13 +583,13 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'ex3_1',
         title: 'Ví dụ: Tuổi thọ sản phẩm & Phân phối chuẩn',
         problem:
-          'Tuổi thọ bóng đèn có phân phối chuẩn với trung bình \\mu = 2000 giờ, phương sai \\sigma^2 = 400 giờ^2 (độ lệch chuẩn \\sigma = 20 giờ). Thời gian bảo hành miễn phí là 1950 giờ. Tính tỷ lệ sản phẩm phải bảo hành?',
-        given: ['\\mu = 2000', '\\sigma = 20', 'Cần tính P(X < 1950)'],
+          'Tuổi thọ bóng đèn có phân phối chuẩn với trung bình $\\mu = 2000$ giờ, phương sai $\\sigma^2 = 400$ giờ$^2$ (độ lệch chuẩn $\\sigma = 20$ giờ). Thời gian bảo hành miễn phí là 1950 giờ. Tính tỷ lệ sản phẩm phải bảo hành?',
+        given: ['$\\mu = 2000$', '$\\sigma = 20$', 'Cần tính $P(X < 1950)$'],
         baremRubric: 'Chuẩn hóa Z (3đ) - Tra bảng Laplace (4đ) - Kết luận tỷ lệ (3đ)',
         defaultStrategyHint:
-          '1. Đặt Z = \\frac{X - 2000}{20}.\n2. Ta có P(X < 1950) = P(Z < \\frac{1950 - 2000}{20}) = P(Z < -2.5).\n3. Bấm Casio Menu 7 -> Normal CD: Lower=-9999, Upper=-2.5, \\sigma=1, \\mu=0.',
+          '1. Đặt $Z = \\frac{X - 2000}{20}$.\n2. Ta có $P(X < 1950) = P(Z < \\frac{1950 - 2000}{20}) = P(Z < -2.5)$.\n3. Bấm Casio Menu 7 -> Normal CD: Lower=-9999, Upper=-2.5, $\\sigma=1$, $\\mu=0$.',
         sampleSolution:
-          'Z = \\frac{1950 - 2000}{20} = -2.5.\nP(X < 1950) = \\Phi(-2.5) = 0.5 - \\Phi_0(2.5) = 0.5 - 0.4938 = 0.0062 (0.62%).\nVậy tỷ lệ sản phẩm phải bảo hành chỉ là 0.62%.',
+          '$Z = \\frac{1950 - 2000}{20} = -2.5$.\n$P(X < 1950) = \\Phi(-2.5) = 0.5 - \\Phi_0(2.5) = 0.5 - 0.4938 = 0.0062$ (0.62%).\nVậy tỷ lệ sản phẩm phải bảo hành chỉ là 0.62%.',
       },
     ],
     homeworkTasks: [
@@ -597,7 +597,7 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'hw3_1',
         title: 'Bài tập 1: Quản trị rủi ro vỡ nợ ngân hàng',
         question:
-          'Ngân hàng có 10.000 khoản vay cá nhân, xác suất vỡ nợ p = 0.0005. Sử dụng xấp xỉ Poisson (\\lambda = n \\cdot p = 5), tính xác suất trong năm tới có đúng 4 khoản vay bị vỡ nợ?',
+          'Ngân hàng có 10.000 khoản vay cá nhân, xác suất vỡ nợ $p = 0.0005$. Sử dụng xấp xỉ Poisson ($\\lambda = n \\cdot p = 5$), tính xác suất trong năm tới có đúng 4 khoản vay bị vỡ nợ?',
         type: 'essay',
       },
     ],
@@ -630,27 +630,27 @@ export const CHAPTERS_DATA: Chapter[] = [
       {
         name: 'Trung bình mẫu cụ thể (x̄)',
         formula: '\\bar{x} = \\frac{\\sum_{i=1}^k n_i \\cdot x_i}{n}',
-        description: 'x_i là điểm đại diện trung vị của từng khoảng phân lớp.',
+        description: '$x_i$ là điểm đại diện trung vị của từng khoảng phân lớp.',
       },
       {
         name: 'Phương sai mẫu hiệu chỉnh (s²)',
         formula: 's^2 = \\frac{1}{n - 1} \\sum_{i=1}^k n_i \\cdot (x_i - \\bar{x})^2',
-        description: 'Ước lượng không chệch cho phương sai tổng thể \\sigma^2.',
+        description: 'Ước lượng không chệch cho phương sai tổng thể $\\sigma^2$.',
         casioTip: 'Bấm Casio Menu 6 (Statistics) -> 1-Variable. Nhập dữ liệu đọc ngay x̄ và s_x.',
       },
     ],
     roadmapSteps: [
       '1. Phân biệt Tổng thể (Population) vs Mẫu (Sample)',
       '2. Xác định điểm đại diện trung điểm cho dữ liệu dạng khoảng [a, b)',
-      '3. Tính Trung bình mẫu x̄',
-      '4. Tính Phương sai mẫu hiệu chỉnh s² và Độ lệch chuẩn mẫu s',
-      '5. Áp dụng Định lý Giới hạn Trung tâm cho trung bình mẫu X̄ ~ N(\\mu, \\sigma^2/n)',
+      '3. Tính Trung bình mẫu $\\bar{x}$',
+      '4. Tính Phương sai mẫu hiệu chỉnh $s^2$ và Độ lệch chuẩn mẫu $s$',
+      '5. Áp dụng Định lý Giới hạn Trung tâm cho trung bình mẫu $\\bar{X} \\sim N(\\mu, \\sigma^2/n)$',
     ],
     feynmanSteps: [
       {
         stepNumber: 1,
         title: 'Bước 1: Điểm đại diện',
-        content: 'Khoảng [10, 20) có điểm đại diện x_i = \\frac{10+20}{2} = 15.',
+        content: 'Khoảng [10, 20) có điểm đại diện $x_i = \\frac{10+20}{2} = 15$.',
       },
     ],
     practiceExamples: [
@@ -658,11 +658,11 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'ex4_1',
         title: 'Ví dụ: Doanh số siêu thị 100 ngày',
         problem:
-          'Thống kê doanh số bán hàng (X: triệu đồng/ngày) của 100 ngày tại siêu thị: <10tr (5 ngày), 10-20tr (12 ngày), 20-30tr (18 ngày), 30-40tr (24 ngày), 40-50tr (23 ngày), 50-60tr (11 ngày), >60tr (7 ngày). Tính doanh số trung bình x̄ và phương sai hiệu chỉnh s²?',
+          'Thống kê doanh số bán hàng (X: triệu đồng/ngày) của 100 ngày tại siêu thị: <10tr (5 ngày), 10-20tr (12 ngày), 20-30tr (18 ngày), 30-40tr (24 ngày), 40-50tr (23 ngày), 50-60tr (11 ngày), >60tr (7 ngày). Tính doanh số trung bình $\\bar{x}$ và phương sai hiệu chỉnh $s^2$?',
         given: ['Đại diện x_i: 5, 15, 25, 35, 45, 55, 65', 'Tần số n_i: 5, 12, 18, 24, 23, 11, 7', 'Tổng n = 100'],
         baremRubric: 'Bảng điểm đại diện (2đ) - Tính x̄ (3đ) - Tính s² (3đ) - Nhận xét (2đ)',
         defaultStrategyHint: 'Sử dụng phím Casio Menu 6 -> 1-Variable Statistics. Lập bảng x_i và n_i.',
-        sampleSolution: 'Trung bình mẫu x̄ = 35.9 triệu đồng/ngày.\nPhương sai hiệu chỉnh s² = 240.19.\nĐộ lệch chuẩn s = 15.576 triệu đồng.',
+        sampleSolution: 'Trung bình mẫu $\\bar{x} = 35.9$ triệu đồng/ngày.\nPhương sai hiệu chỉnh $s^2 = 240.19$.\nĐộ lệch chuẩn $s = 15.576$ triệu đồng.',
       },
     ],
     homeworkTasks: [
@@ -670,7 +670,7 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'hw4_1',
         title: 'Bài tập 1: Lãi suất huy động ngân hàng',
         question:
-          'Thống kê lãi suất kỳ hạn 12 tháng tại 50 chi nhánh: [5.0-5.5%) 8 chi nhánh, [5.5-6.0%) 15, [6.0-6.5%) 12, [6.5-7.0%) 10, [7.0-7.5%] 5. Tính lãi suất trung bình mẫu x̄ và s?',
+          'Thống kê lãi suất kỳ hạn 12 tháng tại 50 chi nhánh: [5.0-5.5%) 8 chi nhánh, [5.5-6.0%) 15, [6.0-6.5%) 12, [6.5-7.0%) 10, [7.0-7.5%] 5. Tính lãi suất trung bình mẫu $\\bar{x}$ và $s$?',
         type: 'essay',
       },
     ],
@@ -684,7 +684,7 @@ export const CHAPTERS_DATA: Chapter[] = [
     isCompleted: false,
     feynmanConcept: {
       coreDefinition:
-        'Ước lượng khoảng là việc tìm một khoảng số (\\theta_1, \\theta_2) chứa giá trị tham số thực tế của tổng thể với độ tin cậy (1-\\alpha) cho trước.',
+        'Ước lượng khoảng là việc tìm một khoảng số $(\\theta_1, \\theta_2)$ chứa giá trị tham số thực tế của tổng thể với độ tin cậy $(1-\\alpha)$ cho trước.',
       simpleExplanation:
         'Thay vì phán đoán chính xác tỷ lệ trái cây hỏng là 9%, ta ước lượng với độ tin cậy 95% rằng tỷ lệ trái hỏng nằm trong khoảng từ 8.21% đến 9.79%.',
       realWorldAnalogy: 'Dự báo khoảng biến động doanh thu hoặc khoảng lãi suất kỳ vọng cổ phiếu.',
@@ -699,21 +699,21 @@ export const CHAPTERS_DATA: Chapter[] = [
       {
         name: 'Khoảng tin cậy Tỷ lệ p (n >= 30)',
         formula: '(f - z_{\\alpha/2} \\cdot \\sqrt{\\frac{f(1-f)}{n}} , f + z_{\\alpha/2} \\cdot \\sqrt{\\frac{f(1-f)}{n}})',
-        description: 'Sai số biên \\epsilon = z_{\\alpha/2} \\cdot \\sqrt{\\frac{f(1-f)}{n}}. Với độ tin cậy 95%, z_{0.025} = 1.96.',
-        casioTip: 'Tra z_{\\alpha/2}: Casio Menu 7 -> Inverse Normal (Area = 1 - \\alpha/2).',
+        description: 'Sai số biên $\\epsilon = z_{\\alpha/2} \\cdot \\sqrt{\\frac{f(1-f)}{n}}$. Với độ tin cậy 95%, $z_{0.025} = 1.96$.',
+        casioTip: 'Tra $z_{\\alpha/2}$: Casio Menu 7 -> Inverse Normal (Area = $1 - \\alpha/2$).',
       },
       {
         name: 'Khoảng tin cậy Trung bình \\mu (n >= 30)',
         formula: '(\\bar{x} - z_{\\alpha/2} \\cdot \\frac{s}{\\sqrt{n}} , \\bar{x} + z_{\\alpha/2} \\cdot \\frac{s}{\\sqrt{n}})',
-        description: 'Nếu n < 30 và chưa biết \\sigma, thay z_{\\alpha/2} bằng phân phối Student t_{\\alpha/2}^{(n-1)}.',
+        description: 'Nếu $n < 30$ và chưa biết $\\sigma$, thay $z_{\\alpha/2}$ bằng phân phối Student $t_{\\alpha/2}^{(n-1)}$.',
       },
     ],
     roadmapSteps: [
-      '1. Xác định tham số cần ước lượng (Tỷ lệ p, Trung bình \\mu, Phương sai \\sigma^2)',
-      '2. Xác định cỡ mẫu n và độ tin cậy 1-\\alpha -> Tra giá trị tới hạn z_{\\alpha/2} hoặc t_{\\alpha/2}',
-      '3. Tính sai số chính xác \\epsilon',
-      '4. Viết khoảng tin cậy hai phía (\\bar{x} - \\epsilon, \\bar{x} + \\epsilon)',
-      '5. Xác định cỡ mẫu tối thiểu n_{min} khi biết yêu cầu sai số',
+      '1. Xác định tham số cần ước lượng (Tỷ lệ $p$, Trung bình $\\mu$, Phương sai $\\sigma^2$)',
+      '2. Xác định cỡ mẫu $n$ và độ tin cậy $1-\\alpha$ -> Tra giá trị tới hạn $z_{\\alpha/2}$ hoặc $t_{\\alpha/2}$',
+      '3. Tính sai số chính xác $\\epsilon$',
+      '4. Viết khoảng tin cậy hai phía $(\\bar{x} - \\epsilon, \\bar{x} + \\epsilon)$',
+      '5. Xác định cỡ mẫu tối thiểu $n_{min}$ khi biết yêu cầu sai số',
     ],
     feynmanSteps: [
       {
@@ -727,13 +727,13 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'ex5_1',
         title: 'Ví dụ: Ước lượng tỷ lệ trái cây hỏng & Cỡ mẫu',
         problem:
-          'Kiểm tra 50 sọt trái cây (mỗi sọt 100 trái -> tổng 5000 trái) thấy có 450 trái không đạt tiêu chuẩn (f = 450/5000 = 0.09).\na) Ước lượng tỷ lệ trái hỏng với độ tin cậy 95%?\nb) Với độ tin cậy 95%, muốn sai số \\epsilon <= 0.005 thì cần kiểm tra bao nhiêu sọt?',
-        given: ['n = 5000', 'f = 0.09', '1-\\alpha = 0.95 -> z_{0.025} = 1.96'],
-        baremRubric: 'Tính f & z (2đ) - Tính sai số \\epsilon (3đ) - Khoảng tin cậy (3đ) - Tính cỡ mẫu n_min (2đ)',
+          'Kiểm tra 50 sọt trái cây (mỗi sọt 100 trái $\\implies$ tổng 5000 trái) thấy có 450 trái không đạt tiêu chuẩn ($f = 450/5000 = 0.09$).\na) Ước lượng tỷ lệ trái hỏng với độ tin cậy $95\\%$?\nb) Với độ tin cậy $95\\%$, muốn sai số $\\varepsilon \\le 0.005$ thì cần kiểm tra bao nhiêu sọt?',
+        given: ['$n = 5000$', '$f = 0.09$', '$1-\\alpha = 0.95 \\implies z_{0.025} = 1.96$'],
+        baremRubric: 'Tính $f$ & $z$ (2đ) - Tính sai số $\\varepsilon$ (3đ) - Khoảng tin cậy (3đ) - Tính cỡ mẫu $n_{min}$ (2đ)',
         defaultStrategyHint:
-          'a) Tính \\epsilon = 1.96 \\cdot \\sqrt{\\frac{0.09 \\cdot 0.91}{5000}} = 0.0079. Khoảng tin cậy (0.09 - 0.0079, 0.09 + 0.0079).\nb) n_{min} = f(1-f) \\cdot (\\frac{z}{\\epsilon})^2 = 0.09 \\cdot 0.91 \\cdot (\\frac{1.96}{0.005})^2 = 12586 trái -> chia 100 = 126 sọt.',
+          'a) Tính $\\varepsilon = 1.96 \\cdot \\sqrt{\\frac{0.09 \\cdot 0.91}{5000}} = 0.0079$. Khoảng tin cậy: $(0.09 - 0.0079, 0.09 + 0.0079)$.\nb) $n_{min} = f(1-f) \\cdot \\left(\\frac{z}{\\varepsilon}\\right)^2 = 0.09 \\cdot 0.91 \\cdot \\left(\\frac{1.96}{0.005}\\right)^2 = 12586$ trái $\\implies$ chia $100 = 126$ sọt.',
         sampleSolution:
-          'a) Khoảng tin cậy tỷ lệ hỏng: (8.21%, 9.79%).\nb) Số trái cần kiểm tra n >= 0.09 \\cdot 0.91 \\cdot (\\frac{1.96}{0.005})^2 = 12586 trái, tương ứng 126 sọt.',
+          'a) Khoảng tin cậy tỷ lệ hỏng: $(8.21\\%, 9.79\\%)$.\nb) Số trái cần kiểm tra $n \\ge 0.09 \\cdot 0.91 \\cdot \\left(\\frac{1.96}{0.005}\\right)^2 = 12586$ trái, tương ứng $126$ sọt.',
       },
     ],
     homeworkTasks: [
@@ -741,7 +741,7 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'hw5_1',
         title: 'Bài tập 1: Dư nợ vay tiêu dùng ngân hàng',
         question:
-          'Khảo sát 100 khách hàng ngân hàng: trung bình dư nợ x̄ = 42.5 triệu, s = 18.2 triệu. Ước lượng dư nợ trung bình thực tế với độ tin cậy 95%?',
+          'Khảo sát 100 khách hàng ngân hàng: trung bình dư nợ $\\bar{x} = 42.5$ triệu, $s = 18.2$ triệu. Ước lượng dư nợ trung bình thực tế với độ tin cậy $95\\%$?',
         type: 'essay',
       },
     ],
@@ -750,46 +750,46 @@ export const CHAPTERS_DATA: Chapter[] = [
     id: 6,
     title: 'Bài 6: Kiểm Định Giả Thiết Trong Thống Kê',
     shortTitle: 'Bài 6: Kiểm định giả thiết',
-    subtitle: 'Nguyên lý H₀ & H₁, Tiêu chuẩn Z_qs, T_qs, Miền bác bỏ W_α, Mức ý nghĩa α',
+    subtitle: 'Nguyên lý $H_0$ & $H_1$, Tiêu chuẩn $Z_{qs}$, $T_{qs}$, Miền bác bỏ $W_\\alpha$, Mức ý nghĩa $\\alpha$',
     iconName: 'ShieldAlert',
     isCompleted: false,
     feynmanConcept: {
       coreDefinition:
-        'Kiểm định giả thiết là việc quyết định chấp nhận hay bác bỏ giả thiết H₀ dựa trên bằng chứng dữ liệu mẫu khảo sát.',
+        'Kiểm định giả thiết là việc quyết định chấp nhận hay bác bỏ giả thiết $H_0$ dựa trên bằng chứng dữ liệu mẫu khảo sát.',
       simpleExplanation:
-        'Giống như tòa án xử án: Bị cáo mặc định vô tội (H₀). Công tố viên thu thập bằng chứng (mẫu khảo sát). Nếu bằng chứng quá đủ mâu thuẫn (Z_{qs} rơi vào miền bác bỏ W_\\alpha), tòa tuyên bố bác bỏ H₀ và chấp nhận H₁.',
+        'Giống như tòa án xử án: Bị cáo mặc định vô tội ($H_0$). Công tố viên thu thập bằng chứng (mẫu khảo sát). Nếu bằng chứng quá đủ mâu thuẫn ($Z_{qs}$ rơi vào miền bác bỏ $W_\\alpha$), tòa tuyên bố bác bỏ $H_0$ và chấp nhận $H_1$.',
       realWorldAnalogy: 'Tòa án xét xử hoặc kiểm tra dây chuyền sản xuất có thực sự bị sai lệch tiêu chuẩn hay không.',
       diagramType: 'normal_curve',
       diagramData: [
-        { name: 'Miền chấp nhận H₀', y: 0.35 },
-        { name: 'Z_qs = 1.142', y: 0.15 },
-        { name: 'Miền bác bỏ W_α (|Z| > 1.96)', y: 0.02 },
+        { name: 'Miền chấp nhận $H_0$', y: 0.35 },
+        { name: '$Z_{qs} = 1.142$', y: 0.15 },
+        { name: 'Miền bác bỏ $W_\\alpha$ ($|Z| > 1.96$)', y: 0.02 },
       ],
     },
     keyFormulas: [
       {
-        name: 'Tiêu chuẩn kiểm định Tỷ lệ Z_qs',
+        name: 'Tiêu chuẩn kiểm định Tỷ lệ $Z_{qs}$',
         formula: 'Z_{qs} = \\frac{f - p_0}{\\sqrt{\\frac{p_0(1-p_0)}{n}}}',
-        description: 'Kiểm định 2 phía: Bác bỏ H₀ nếu |Z_{qs}| > z_{\\alpha/2}.',
+        description: 'Kiểm định 2 phía: Bác bỏ $H_0$ nếu $|Z_{qs}| > z_{\\alpha/2}$.',
       },
       {
-        name: 'Tiêu chuẩn kiểm định Trung bình Z_qs',
+        name: 'Tiêu chuẩn kiểm định Trung bình $Z_{qs}$',
         formula: 'Z_{qs} = \\frac{\\bar{x} - \\mu_0}{\\frac{s}{\\sqrt{n}}}',
-        description: 'Nếu n < 30 dùng phân phối Student T_{qs} với bậc tự do n - 1.',
+        description: 'Nếu $n < 30$ dùng phân phối Student $T_{qs}$ với bậc tự do $n - 1$.',
       },
     ],
     roadmapSteps: [
-      '1. Phát biểu Giả thiết H₀ và Đối thiết H₁ (2 phía, 1 phía lớn hơn, 1 phía nhỏ hơn)',
-      '2. Xác định Mức ý nghĩa \\alpha và Miền bác bỏ W_\\alpha',
-      '3. Tính Tiêu chuẩn kiểm định Z_{qs} / T_{qs} / \\chi^2_{qs} từ dữ liệu mẫu',
-      '4. So sánh Z_{qs} với miền bác bỏ W_\\alpha',
-      '5. Kết luận: Bác bỏ H₀ (chấp nhận H₁) hay Chưa đủ bằng chứng bác bỏ H₀',
+      '1. Phát biểu Giả thiết $H_0$ và Đối thiết $H_1$ (2 phía, 1 phía lớn hơn, 1 phía nhỏ hơn)',
+      '2. Xác định Mức ý nghĩa $\\alpha$ và Miền bác bỏ $W_\\alpha$',
+      '3. Tính Tiêu chuẩn kiểm định $Z_{qs}$ / $T_{qs}$ / $\\chi^2_{qs}$ từ dữ liệu mẫu',
+      '4. So sánh $Z_{qs}$ với miền bác bỏ $W_\\alpha$',
+      '5. Kết luận: Bác bỏ $H_0$ (chấp nhận $H_1$) hay Chưa đủ bằng chứng bác bỏ $H_0$',
     ],
     feynmanSteps: [
       {
         stepNumber: 1,
         title: 'Bước 1: Thiết lập giả thiết',
-        content: 'H₀ luôn mang dấu "=" (VD: H₀: p = 0.05). H₁ mang dấu khác "!= ", ">" hoặc "<".',
+        content: '$H_0$ luôn mang dấu "=" (VD: $H_0: p = 0.05$). $H_1$ mang dấu khác "$\\ne$", "$>$" hoặc "$<$".',
       },
     ],
     practiceExamples: [
@@ -797,13 +797,13 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'ex6_1',
         title: 'Ví dụ: Đánh giá cải tiến kỹ thuật giảm phế phẩm',
         problem:
-          'Tỷ lệ phế phẩm nhà máy trước cải tiến là 5% (p₀ = 0.05). Sau cải tiến, kiểm tra 400 sản phẩm thấy 16 phế phẩm (f = 16/400 = 0.04). Với mức ý nghĩa \\alpha = 0.01, việc cải tiến có làm giảm tỷ lệ phế phẩm không?',
-        given: ['H₀: p = 0.05 vs H₁: p < 0.05 (1 phía)', 'n = 400, f = 0.04', '\\alpha = 0.01 -> z_{0.01} = 2.33 -> W = (-\\infty, -2.33)'],
-        baremRubric: 'Lập H₀, H₁ (2đ) - Xác định miền bác bỏ (2đ) - Tính Z_qs (3đ) - Kết luận (3đ)',
+          'Tỷ lệ phế phẩm nhà máy trước cải tiến là $5\\%$ ($p_0 = 0.05$). Sau cải tiến, kiểm tra $400$ sản phẩm thấy $16$ phế phẩm ($f = 16/400 = 0.04$). Với mức ý nghĩa $\\alpha = 0.01$, việc cải tiến có làm giảm tỷ lệ phế phẩm không?',
+        given: ['$H_0: p = 0.05$ vs $H_1: p < 0.05$ (1 phía)', '$n = 400$, $f = 0.04$', '$\\alpha = 0.01 \\implies z_{0.01} = 2.33 \\implies W_\\alpha = (-\\infty, -2.33)$'],
+        baremRubric: 'Lập $H_0, H_1$ (2đ) - Xác định miền bác bỏ (2đ) - Tính $Z_{qs}$ (3đ) - Kết luận (3đ)',
         defaultStrategyHint:
-          '1. Lập cặp giả thiết H₀: p = 0.05; H₁: p < 0.05.\n2. Z_{qs} = \\frac{0.04 - 0.05}{\\sqrt{\\frac{0.05 \\cdot 0.95}{400}}} = -0.9177.\n3. So sánh Z_{qs} với -2.33. Vì -0.92 > -2.33 nên Z_{qs} không thuộc W_\\alpha.',
+          '1. Lập cặp giả thiết $H_0: p = 0.05$; $H_1: p < 0.05$.\n2. $Z_{qs} = \\frac{0.04 - 0.05}{\\sqrt{\\frac{0.05 \\cdot 0.95}{400}}} = -0.9177$.\n3. So sánh $Z_{qs}$ với $-2.33$. Vì $-0.92 > -2.33$ nên $Z_{qs} \\notin W_\\alpha$.',
         sampleSolution:
-          'Z_{qs} = -0.9177. Do Z_{qs} không thuộc miền bác bỏ W = (-\\infty, -2.33), ta chưa đủ bằng chứng bác bỏ H₀ ở mức ý nghĩa 1%. Chưa thể khẳng định cải tiến kỹ thuật làm giảm tỷ lệ phế phẩm.',
+          '$Z_{qs} = -0.9177$. Do $Z_{qs} \\notin W_\\alpha = (-\\infty, -2.33)$, ta chưa đủ bằng chứng bác bỏ $H_0$ ở mức ý nghĩa $1\\%$. Chưa thể khẳng định cải tiến kỹ thuật làm giảm tỷ lệ phế phẩm.',
       },
     ],
     homeworkTasks: [
@@ -837,27 +837,27 @@ export const CHAPTERS_DATA: Chapter[] = [
     },
     keyFormulas: [
       {
-        name: 'Tiêu chuẩn So sánh 2 Tỷ lệ Z_qs',
+        name: 'Tiêu chuẩn So sánh 2 Tỷ lệ $Z_{qs}$',
         formula: 'Z_{qs} = \\frac{f_1 - f_2}{\\sqrt{f(1-f)(\\frac{1}{n} + \\frac{1}{m})}}',
-        description: 'f = \\frac{k_1 + k_2}{n + m} là tỷ lệ chung của 2 mẫu.',
+        description: '$f = \\frac{k_1 + k_2}{n + m}$ là tỷ lệ chung của 2 mẫu.',
       },
       {
-        name: 'Tiêu chuẩn So sánh 2 Trung bình Student t_qs',
+        name: 'Tiêu chuẩn So sánh 2 Trung bình Student $t_{qs}$',
         formula: 't_{qs} = \\frac{\\bar{x} - \\bar{y}}{\\sqrt{s_p^2 (\\frac{1}{n} + \\frac{1}{m})}}',
-        description: 's_p^2 là phương sai gộp (Pooled Variance): s_p^2 = \\frac{(n-1)s_1^2 + (m-1)s_2^2}{n + m - 2}.',
+        description: '$s_p^2$ là phương sai gộp (Pooled Variance): $s_p^2 = \\frac{(n-1)s_1^2 + (m-1)s_2^2}{n + m - 2}$.',
       },
     ],
     roadmapSteps: [
       '1. Xác định bài toán so sánh: 2 tỷ lệ (A/B testing) / 2 trung bình / 2 phương sai',
-      '2. Tính tỷ lệ chung f hoặc Phương sai gộp s_p^2',
-      '3. Tính Tiêu chuẩn Z_{qs} / t_{qs} / F_{qs}',
-      '4. Tra bảng z_\\alpha, t_\\alpha(n+m-2) hoặc F_\\alpha',
+      '2. Tính tỷ lệ chung $f$ hoặc Phương sai gộp $s_p^2$',
+      '3. Tính Tiêu chuẩn $Z_{qs}$ / $t_{qs}$ / $F_{qs}$',
+      '4. Tra bảng $z_\\alpha$, $t_\\alpha(n+m-2)$ hoặc $F_\\alpha$',
       '5. Đưa ra kết luận có sự khác biệt có ý nghĩa thống kê hay không',
     ],
     feynmanSteps: [
       {
         stepNumber: 1,
-        title: 'Bước 1: Phương sai gộp s_p^2',
+        title: 'Bước 1: Phương sai gộp $s_p^2$',
         content: 'Vì giả thiết 2 tổng thể có cùng phương sai, việc gộp mẫu giúp ước lượng độ biến động chính xác hơn rất nhiều!',
       },
     ],
@@ -866,13 +866,13 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'ex7_1',
         title: 'Ví dụ: So sánh chiến dịch quảng cáo AI ở 2 thành phố',
         problem:
-          'Thành phố A khảo sát 500 khách hàng thấy 320 người dùng ứng dụng AI (f₁ = 320/500 = 0.64). Thành phố B khảo sát 450 khách hàng thấy 250 người dùng AI (f₂ = 250/450 = 0.5556). Với \\alpha = 0.05, tỷ lệ dùng AI ở thành phố A có cao hơn B?',
-        given: ['n₁ = 500, k₁ = 320', 'n₂ = 450, k₂ = 250', 'Tỷ lệ chung f = (320+250)/(500+450) = 570/950 = 0.60'],
-        baremRubric: 'Tính tỷ lệ f (2đ) - Tiêu chuẩn Z_qs (4đ) - So sánh miền bác bỏ (2đ) - Kết luận (2đ)',
+          'Thành phố A khảo sát $500$ khách hàng thấy $320$ người dùng ứng dụng AI ($f_1 = 320/500 = 0.64$). Thành phố B khảo sát $450$ khách hàng thấy $250$ người dùng AI ($f_2 = 250/450 = 0.5556$). Với $\\alpha = 0.05$, tỷ lệ dùng AI ở thành phố A có cao hơn B?',
+        given: ['$n_1 = 500, k_1 = 320$', '$n_2 = 450, k_2 = 250$', 'Tỷ lệ chung $f = \\frac{320+250}{500+450} = \\frac{570}{950} = 0.60$'],
+        baremRubric: 'Tính tỷ lệ $f$ (2đ) - Tiêu chuẩn $Z_{qs}$ (4đ) - So sánh miền bác bỏ (2đ) - Kết luận (2đ)',
         defaultStrategyHint:
-          '1. H₀: p₁ = p₂ vs H₁: p₁ > p₂.\n2. Z_{qs} = \\frac{0.64 - 0.5556}{\\sqrt{0.60 \\cdot 0.40 \\cdot (\\frac{1}{500} + \\frac{1}{450})}} = 2.65.\n3. Với \\alpha = 0.05 kiểm định 1 phía, z_{0.05} = 1.645.',
+          '1. $H_0: p_1 = p_2$ vs $H_1: p_1 > p_2$.\n2. $Z_{qs} = \\frac{0.64 - 0.5556}{\\sqrt{0.60 \\cdot 0.40 \\cdot (\\frac{1}{500} + \\frac{1}{450})}} = 2.65$.\n3. Với $\\alpha = 0.05$ kiểm định 1 phía, $z_{0.05} = 1.645$.',
         sampleSolution:
-          'Z_{qs} = 2.65 > 1.645 (thuộc miền bác bỏ W = (1.645, +\\infty)). Bác bỏ H₀. Vậy tỷ lệ dùng AI tại Thành phố A cao hơn Thành phố B có ý nghĩa thống kê.',
+          '$Z_{qs} = 2.65 > 1.645$ (thuộc miền bác bỏ $W = (1.645, +\\infty)$). Bác bỏ $H_0$. Vậy tỷ lệ dùng AI tại Thành phố A cao hơn Thành phố B có ý nghĩa thống kê.',
       },
     ],
     homeworkTasks: [
@@ -880,7 +880,7 @@ export const CHAPTERS_DATA: Chapter[] = [
         id: 'hw7_1',
         title: 'Bài tập 1: So sánh hiệu quả 2 phương pháp giảng dạy',
         question:
-          'Nhóm 1 (Truyền thống): n₁=25, x̄₁=7.2, s₁=1.1. Nhóm 2 (Tích hợp AI): n₂=22, x̄₂=7.8, s₂=1.3. Với \\alpha = 0.05, phương pháp tích hợp AI có thực sự tốt hơn?',
+          'Nhóm 1 (Truyền thống): $n_1=25, \\bar{x}_1=7.2, s_1=1.1$. Nhóm 2 (Tích hợp AI): $n_2=22, \\bar{x}_2=7.8, s_2=1.3$. Với $\\alpha = 0.05$, phương pháp tích hợp AI có thực sự tốt hơn?',
         type: 'essay',
       },
     ],
@@ -899,43 +899,43 @@ export const PRESET_EXAM_SETS: ExamSet[] = [
     questions: [
       {
         id: 'hub_26_02a_q1',
-        text: 'Một công ty tài chính nhập linh kiện vi mạch điện tử từ 3 phân xưởng I, II, III với tỷ lệ 45%, 35%, 20%. Tỷ lệ đạt chuẩn lần lượt là 92%, 88%, 95%. Lấy ngẫu nhiên 1 linh kiện, xác suất linh kiện đạt chuẩn chất lượng P(A) là bao nhiêu?',
+        text: 'Một công ty tài chính nhập linh kiện vi mạch điện tử từ 3 phân xưởng I, II, III với tỷ lệ 45%, 35%, 20%. Tỷ lệ đạt chuẩn lần lượt là 92%, 88%, 95%. Lấy ngẫu nhiên 1 linh kiện, xác suất linh kiện đạt chuẩn chất lượng $P(A)$ là bao nhiêu?',
         type: 'mcq',
         options: ['0.9120', '0.8950', '0.9340', '0.8800'],
         correctIndex: 0,
-        explanation: 'Theo công thức xác suất đầy đủ: P(A) = 0.45 × 0.92 + 0.35 × 0.88 + 0.20 × 0.95 = 0.414 + 0.308 + 0.190 = 0.9120.',
+        explanation: 'Theo công thức xác suất đầy đủ: $P(A) = 0.45 \\times 0.92 + 0.35 \\times 0.88 + 0.20 \\times 0.95 = 0.414 + 0.308 + 0.190 = 0.9120$.',
       },
       {
         id: 'hub_26_02a_q2',
-        text: 'Biết linh kiện lấy ra đạt chuẩn chất lượng, xác suất linh kiện đó do phân xưởng I sản xuất P(H₁|A) là:',
+        text: 'Biết linh kiện lấy ra đạt chuẩn chất lượng, xác suất linh kiện đó do phân xưởng I sản xuất $P(H_1|A)$ là:',
         type: 'mcq',
         options: ['0.4539 (45.39%)', '0.3377 (33.77%)', '0.2083 (20.83%)', '0.5000 (50.00%)'],
         correctIndex: 0,
-        explanation: 'Áp dụng công thức Bayes: P(H₁|A) = (0.45 × 0.92) / 0.9120 = 0.414 / 0.9120 = 0.4539 (45.39%).',
+        explanation: 'Áp dụng công thức Bayes: $P(H_1|A) = \\frac{0.45 \\times 0.92}{0.9120} = \\frac{0.414}{0.9120} = 0.4539$ (45.39%).',
       },
       {
         id: 'hub_26_02a_q3',
-        text: 'Biến liên tục X có f(x) = k(x² - x) trên [1, 3] và bằng 0 ở ngoài. Hằng số k chuẩn hóa là:',
+        text: 'Biến liên tục $X$ có $f(x) = k(x^2 - x)$ trên $[1, 3]$ và bằng 0 ở ngoài. Hằng số $k$ chuẩn hóa là:',
         type: 'mcq',
         options: ['k = 3/14', 'k = 14/3', 'k = 1/2', 'k = 3/8'],
         correctIndex: 0,
-        explanation: 'Tích phân int(1 to 3) (x² - x) dx = [x³/3 - x²/2] từ 1 đến 3 = 14/3. Do int f(x)dx = 1 nên k = 3/14.',
+        explanation: 'Tích phân $\\int_1^3 (x^2 - x) dx = [\\frac{x^3}{3} - \\frac{x^2}{2}]_1^3 = \\frac{14}{3}$. Do $\\int f(x)dx = 1$ nên $k = 3/14$.',
       },
       {
         id: 'hub_26_02a_q4',
-        text: 'Tuổi thọ pin điện thoại X ~ N(24, 4) (tháng). Tỷ lệ pin có tuổi thọ trên 26 tháng P(X > 26) là:',
+        text: 'Tuổi thọ pin điện thoại $X \\sim N(24, 4)$ (tháng). Tỷ lệ pin có tuổi thọ trên 26 tháng $P(X > 26)$ là:',
         type: 'mcq',
         options: ['15.87%', '34.13%', '2.28%', '50.00%'],
         correctIndex: 0,
-        explanation: 'Chú ý σ = √4 = 2 tháng. P(X > 26) = 0.5 - Φ((26-24)/2) = 0.5 - Φ(1.0) = 0.5 - 0.3413 = 0.1587 (15.87%).',
+        explanation: 'Chú ý $\\sigma = \\sqrt{4} = 2$ tháng. $P(X > 26) = 0.5 - \\Phi_0(\\frac{26-24}{2}) = 0.5 - \\Phi_0(1.0) = 0.5 - 0.3413 = 0.1587$ ($15.87\\%$).',
       },
       {
         id: 'hub_26_02a_q5',
-        text: 'Khảo sát 100 chi nhánh ngân hàng: trung bình mẫu x̄ = 42.6 triệu, s = 10.7422 triệu. Độ chính xác ước lượng trung bình ở độ tin cậy 95% (z_0.025 = 1.96) là:',
+        text: 'Khảo sát 100 chi nhánh ngân hàng: trung bình mẫu $\\bar{x} = 42.6$ triệu, $s = 10.7422$ triệu. Độ chính xác ước lượng trung bình ở độ tin cậy $95\\%$ ($z_{0.025} = 1.96$) là:',
         type: 'mcq',
         options: ['2.1055 triệu đồng', '1.0742 triệu đồng', '3.8416 triệu đồng', '0.5000 triệu đồng'],
         correctIndex: 0,
-        explanation: 'ε = z_{α/2} × (s / √n) = 1.96 × (10.7422 / 10) = 2.1055 triệu đồng.',
+        explanation: '$\\varepsilon = z_{\\alpha/2} \\cdot \\frac{s}{\\sqrt{n}} = 1.96 \\cdot \\frac{10.7422}{10} = 2.1055$ triệu đồng.',
       },
     ],
   },
@@ -958,27 +958,27 @@ export const PRESET_EXAM_SETS: ExamSet[] = [
       },
       {
         id: 'hub_23_ca1_q2',
-        text: 'Hàm mật độ f(x) = ax + b trên [0, 2]. Biết E(X) = 7/6. Bấm Casio Menu 9 1 2 giải hệ ta được a và b là:',
+        text: 'Hàm mật độ $f(x) = ax + b$ trên $[0, 2]$. Biết $E(X) = 7/6$. Bấm Casio Menu 9 1 2 giải hệ ta được $a$ và $b$ là:',
         type: 'mcq',
         options: ['a = 1/4, b = 1/4', 'a = 1/2, b = 0', 'a = 1/3, b = 1/6', 'a = 3/8, b = 1/8'],
         correctIndex: 0,
-        explanation: 'Hệ phương trình: 2a + 2b = 1 và (8/3)a + 2b = 7/6. Giải hệ được a = 1/4 (0.25) và b = 1/4 (0.25).',
+        explanation: 'Hệ phương trình: $2a + 2b = 1$ và $\\frac{8}{3}a + 2b = \\frac{7}{6}$. Giải hệ được $a = 1/4$ (0.25) và $b = 1/4$ (0.25).',
       },
       {
         id: 'hub_23_ca1_q3',
-        text: 'Thời gian tự học của 120 sinh viên HUB: x̄ = 13.2667 giờ, s = 4.2934 giờ. Nếu muốn sai số ước lượng đạt 0.5 giờ ở độ tin cậy 99% (z_0.005 = 2.58), cần khảo sát THÊM ít nhất bao nhiêu sinh viên?',
+        text: 'Thời gian tự học của 120 sinh viên HUB: $\\bar{x} = 13.2667$ giờ, $s = 4.2934$ giờ. Nếu muốn sai số ước lượng đạt $0.5$ giờ ở độ tin cậy $99\\%$ ($z_{0.005} = 2.58$), cần khảo sát THÊM ít nhất bao nhiêu sinh viên?',
         type: 'mcq',
         options: ['371 sinh viên', '491 sinh viên', '120 sinh viên', '250 sinh viên'],
         correctIndex: 0,
-        explanation: 'Cỡ mẫu tối thiểu n_{min} = (2.58² × 4.2934²) / 0.5² = (6.6564 × 18.4333) / 0.25 = 490.81 => n_{min} = 491. Số SV cần khảo sát THÊM = 491 - 120 = 371 sinh viên.',
+        explanation: 'Cỡ mẫu tối thiểu $n_{min} = \\frac{2.58^2 \\times 4.2934^2}{0.5^2} = \\frac{6.6564 \\times 18.4333}{0.25} = 490.81 \\implies n_{min} = 491$. Số sinh viên cần khảo sát THÊM = $491 - 120 = 371$ sinh viên.',
       },
       {
         id: 'hub_23_ca1_q4',
-        text: 'Trong bài toán kiểm định giả thiết H₀: μ = 12.5 vs H₁: μ > 12.5 với mức ý nghĩa α = 0.05. Miền bác bỏ W_α là:',
+        text: 'Trong bài toán kiểm định giả thiết $H_0: \\mu = 12.5$ vs $H_1: \\mu > 12.5$ với mức ý nghĩa $\\alpha = 0.05$. Miền bác bỏ $W_\\alpha$ là:',
         type: 'mcq',
-        options: ['W_α = (1.645, +∞)', 'W_α = (-∞, -1.645) ∪ (1.645, +∞)', 'W_α = (-∞, -1.96) ∪ (1.96, +∞)', 'W_α = (1.96, +∞)'],
+        options: ['$W_\\alpha = (1.645, +\\infty)$', '$W_\\alpha = (-\\infty, -1.645) \\cup (1.645, +\\infty)$', '$W_\\alpha = (-\\infty, -1.96) \\cup (1.96, +\\infty)$', '$W_\\alpha = (1.96, +\\infty)$'],
         correctIndex: 0,
-        explanation: 'Kiểm định 1 phía bên phải (dấu >) ở mức α = 0.05 có giá trị tới hạn z_{0.05} = 1.645. Miền bác bỏ là W_α = (1.645, +∞).',
+        explanation: 'Kiểm định 1 phía bên phải (dấu $>$) ở mức $\\alpha = 0.05$ có giá trị tới hạn $z_{0.05} = 1.645$. Miền bác bỏ là $W_\\alpha = (1.645, +\\infty)$.',
       },
     ],
   },
@@ -997,7 +997,7 @@ export const PRESET_EXAM_SETS: ExamSet[] = [
         type: 'mcq',
         options: ['0.50', '0.35', '0.62', '0.48'],
         correctIndex: 0,
-        explanation: 'Sử dụng công thức tổ hợp \\frac{C_7^3 \\cdot C_3^1}{C_{10}^4} = \\frac{35 \\cdot 3}{210} = 0.50.',
+        explanation: 'Sử dụng công thức tổ hợp $\\frac{C_7^3 \\cdot C_3^1}{C_{10}^4} = \\frac{35 \\cdot 3}{210} = 0.50$.',
       },
     ],
   },

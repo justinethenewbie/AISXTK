@@ -16,6 +16,13 @@ function processMathInContainer(container: HTMLElement) {
   if (!container || typeof window === 'undefined' || !window.renderMathInElement) return;
 
   try {
+    // Merge adjacent text nodes so React JSX fragments or split nodes don't fragment math/text sentences
+    try {
+      container.normalize();
+    } catch {
+      // ignore
+    }
+
     const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
     const textNodes: Node[] = [];
     while (walker.nextNode()) {
@@ -25,9 +32,13 @@ function processMathInContainer(container: HTMLElement) {
 
       if (
         !['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE', 'MATH-FIELD'].includes(parentTag) &&
-        !parentElement?.closest?.('.katex')
+        !parentElement?.closest?.('.katex') &&
+        !parentElement?.closest?.('.no-math')
       ) {
-        if (node.nodeValue && /\\[a-zA-Z]+/.test(node.nodeValue)) {
+        if (
+          node.nodeValue &&
+          (/\\|\$|[a-zA-Z]_[a-zA-Z0-9{]|[a-zA-Z]\^[0-9{]|\/sqrt|[ZtFWzH]_\w|H₀|H₁|W_α|x̄|s²|=/i.test(node.nodeValue))
+        ) {
           textNodes.push(node);
         }
       }
@@ -49,6 +60,7 @@ function processMathInContainer(container: HTMLElement) {
         { left: '\\(', right: '\\)', display: false },
         { left: '\\[', right: '\\]', display: true },
       ],
+      ignoredClasses: ['katex', 'no-math', 'lucide'],
       throwOnError: false, // Never crash on syntax errors
       strict: false,
     });

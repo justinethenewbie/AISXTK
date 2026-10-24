@@ -366,7 +366,7 @@ export default function App() {
           />
         );
       case 'charts':
-        return <ChartVisualization />;
+        return <ChartVisualization onAddExp={handleAddExp} />;
       case 'big_doc_processor':
         return <BigSizeDocumentProcessor onAddExp={handleAddExp} />;
       case 'developer_db':
@@ -409,21 +409,38 @@ export default function App() {
     }
   };
 
-  const ALL_NAVIGATION_ITEMS: Array<{ id: ActiveToolType; name: string; icon: React.ReactNode; isNeon?: boolean }> = [
-    { id: 'learning', name: '📖 Lý Thuyết 5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
-    { id: 'image_grading', name: '⚡ Gia Sư AI 1-1', icon: <Sparkles className="w-4 h-4 text-cyan-300" />, isNeon: true },
-    { id: 'big_doc_processor', name: '🚀 Xử Lý File Lớn', icon: <Layers className="w-4 h-4 text-amber-300" />, isNeon: true },
-    { id: 'casio_calc', name: '🧮 Máy Tính Casio', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
-    { id: 'mcq_generator', name: '✅ Đề Thi Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
-    { id: 'essay_generator', name: '✍️ Đề Thi Tự Luận', icon: <FileText className="w-4 h-4 text-blue-400" /> },
-    { id: 'mindmap', name: '🗺️ Bản Đồ Tư Duy', icon: <Map className="w-4 h-4 text-cyan-400" /> },
-    { id: 'mistake_stats', name: '📊 Thống Kê Lỗi Sai', icon: <BarChart3 className="w-4 h-4 text-rose-400" /> },
-    { id: 'charts', name: '📈 Phân Tích Dữ Liệu', icon: <BarChart3 className="w-4 h-4 text-emerald-300" />, isNeon: true },
-    { id: 'forum', name: '💬 Diễn Đàn Học Tập', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
-    { id: 'profile', name: '👤 Hồ Sơ & Linh Vật', icon: <User className="w-4 h-4 text-cyan-300" /> },
-    ...(currentUser?.role === 'nha_phat_trien'
-      ? [{ id: 'developer_db' as ActiveToolType, name: '💾 Kho Dữ Liệu Dev', icon: <Database className="w-4 h-4 text-purple-400" />, isNeon: true }]
-      : []),
+  const NAVIGATION_GROUPS: Array<{
+    groupName: string;
+    items: Array<{ id: ActiveToolType; name: string; icon: React.ReactNode; isNeon?: boolean }>;
+  }> = [
+    {
+      groupName: 'Học Tập & Ôn Luyện',
+      items: [
+        { id: 'learning', name: '📖 Lý Thuyết 5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
+        { id: 'image_grading', name: '⚡ Gia Sư AI 1-1', icon: <Sparkles className="w-4 h-4 text-cyan-300" />, isNeon: true },
+        { id: 'mcq_generator', name: '✅ Đề Thi Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
+        { id: 'essay_generator', name: '✍️ Đề Thi Tự Luận', icon: <FileText className="w-4 h-4 text-blue-400" /> },
+        { id: 'mindmap', name: '🗺️ Bản Đồ Tư Duy', icon: <Map className="w-4 h-4 text-cyan-400" /> },
+      ],
+    },
+    {
+      groupName: 'Công Cụ & Thống Kê',
+      items: [
+        { id: 'casio_calc', name: '🧮 Máy Tính Casio', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
+        { id: 'charts', name: '📈 Phân Tích Dữ Liệu', icon: <BarChart3 className="w-4 h-4 text-emerald-300" />, isNeon: true },
+        { id: 'mistake_stats', name: '📊 Thống Kê Lỗi Sai', icon: <BarChart3 className="w-4 h-4 text-rose-400" /> },
+      ],
+    },
+    {
+      groupName: 'Cộng Đồng & Cá Nhân',
+      items: [
+        { id: 'forum', name: '💬 Diễn Đàn Học Tập', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
+        { id: 'profile', name: '👤 Hồ Sơ & Linh Vật', icon: <User className="w-4 h-4 text-cyan-300" /> },
+        ...(currentUser?.role === 'nha_phat_trien'
+          ? [{ id: 'developer_db' as ActiveToolType, name: '💾 Kho Dữ Liệu Dev', icon: <Database className="w-4 h-4 text-purple-400" />, isNeon: true }]
+          : []),
+      ],
+    },
   ];
 
 
@@ -507,31 +524,40 @@ export default function App() {
               <span className="text-[11px] text-cyan-400 font-mono font-bold">v2.5 PRO</span>
             </div>
 
-            <nav className="space-y-1.5 pt-1.5">
-              {ALL_NAVIGATION_ITEMS.map((item) => {
-                const isActive = activeTool === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTool(item.id)}
-                    className={`w-full text-left px-3.5 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-between group cursor-pointer ${
-                      isActive
-                        ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 truncate">
-                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400 group-hover:text-cyan-400'}`}>
-                        {item.icon}
-                      </div>
-                      <span className="truncate">{item.name}</span>
-                    </div>
-                    {isActive && (
-                      <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] shrink-0"></span>
-                    )}
-                  </button>
-                );
-              })}
+            <nav className="space-y-3 pt-1.5">
+              {NAVIGATION_GROUPS.map((group, gIdx) => (
+                <div key={gIdx} className="space-y-1">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-cyan-400/80 px-2 flex items-center justify-between">
+                    <span>{group.groupName}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {group.items.map((item) => {
+                      const isActive = activeTool === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveTool(item.id)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-between group cursor-pointer ${
+                            isActive
+                              ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+                              : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <div className={`p-1.5 rounded-lg ${isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400 group-hover:text-cyan-400'}`}>
+                              {item.icon}
+                            </div>
+                            <span className="truncate">{item.name}</span>
+                          </div>
+                          {isActive && (
+                            <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] shrink-0"></span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
 
             {/* Quick Prompt Blueprint Modal Trigger */}
@@ -579,7 +605,7 @@ export default function App() {
               <button
                 onClick={handleCycleMascot}
                 className="px-2.5 py-1 rounded-xl bg-slate-950/80 hover:bg-cyan-950 text-cyan-300 hover:text-white border border-cyan-500/40 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Đổi nhanh giữa 5 Linh Vật Pixel HUB 1976"
+                title="Đổi nhanh linh vật Pixel HUB (Rồng Thần, Cánh Cụt, Bác Gấu, Bé Cáo, Bé Mèo...)"
               >
                 <span>🔄 Đổi Bé HUB</span>
               </button>

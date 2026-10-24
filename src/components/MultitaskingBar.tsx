@@ -43,7 +43,6 @@ export const MultitaskingBar: React.FC<MultitaskingBarProps> = ({
   const ALL_ADDABLE_TOOLS: ActiveToolType[] = [
     'learning',
     'image_grading',
-    'big_doc_processor',
     'essay_generator',
     'mcq_generator',
     'mindmap',

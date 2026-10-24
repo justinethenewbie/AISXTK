@@ -25,6 +25,7 @@ import {
   Cpu,
   BarChart2,
   FileCheck,
+  BookOpen,
   X,
 } from 'lucide-react';
 import { MathFormula, MathText } from './MathFormula';
@@ -32,6 +33,11 @@ import { aiFetch } from '../utils/apiHelper';
 
 interface BigSizeDocumentProcessorProps {
   onAddExp?: (amount: number, details?: string) => void;
+  defaultDocType?: 'bulk_exercises' | 'financial_report';
+  lockDocType?: boolean;
+  contextMode?: 'tutor' | 'finance' | 'general';
+  onSendToAiTutor?: (item: DocumentItem) => void;
+  onSendToSpreadsheet?: (section: ReportSection) => void;
 }
 
 export interface DocumentItem {
@@ -110,13 +116,24 @@ Chi phí hoạt động (OPEX) được kiểm soát ở mức 4,920 tỷ đồn
 PHẦN 3: ĐÁNH GIÁ ĐỊNH LƯỢNG RỦI RO & MÔ HÌNH XÁC SUẤT THỐNG KÊ
 Sử dụng mô hình phân phối chuẩn N(mu, sigma^2) cho danh mục đầu tư trái phiếu và tín dụng với độ lệch chuẩn sigma = 420 tỷ đồng. Xác suất danh mục rơi vào vùng tổn thất vượt mức VaR 99% trong 10 ngày được ước lượng theo phân phối kiểm định. Tỷ lệ an toàn vốn CAR đạt 12.4%, vượt chuẩn Basel II.`;
 
-export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> = ({ onAddExp }) => {
+export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> = ({
+  onAddExp,
+  defaultDocType = 'bulk_exercises',
+  lockDocType = false,
+  contextMode = 'general',
+  onSendToAiTutor,
+  onSendToSpreadsheet,
+}) => {
   // Mode: 'bulk_exercises' | 'financial_report'
-  const [docType, setDocType] = useState<'bulk_exercises' | 'financial_report'>('bulk_exercises');
-  const [documentTitle, setDocumentTitle] = useState('Đề Thi & Tài Liệu Big Size');
+  const [docType, setDocType] = useState<'bulk_exercises' | 'financial_report'>(defaultDocType);
+  const [documentTitle, setDocumentTitle] = useState(
+    defaultDocType === 'financial_report' ? 'Báo Cáo Tài Chính & Đề Án Big Size' : 'Đề Thi & Bài Tập Big Size'
+  );
 
   // Input states
-  const [inputText, setInputText] = useState(DEMO_EXERCISE_PRESET);
+  const [inputText, setInputText] = useState(
+    defaultDocType === 'financial_report' ? DEMO_FINANCIAL_REPORT_PRESET : DEMO_EXERCISE_PRESET
+  );
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileBase64, setFileBase64] = useState<string | null>(null);
   const [isSegmenting, setIsSegmenting] = useState(false);
@@ -469,14 +486,29 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 text-xs font-black tracking-widest uppercase">
               <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
-              <span>CÔNG NGHỆ CHUNK QUEUE ĐA LUỒNG • HỖ TRỢ FILE 100MB</span>
+              <span>
+                {contextMode === 'tutor'
+                  ? 'GIA SƯ AI 1-1 • ĐỘNG CƠ GIẢI ĐỀ BIG SIZE 100MB'
+                  : contextMode === 'finance'
+                  ? 'PHÂN TÍCH BCTC • ĐỘNG CƠ BÓC TÁCH BCTC LỚN 100MB'
+                  : 'CÔNG NGHỆ CHUNK QUEUE ĐA LUỒNG • HỖ TRỢ FILE 100MB'}
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-              <span>🚀 BỘ XỬ LÝ TÀI LIỆU & BÀI TẬP BIG SIZE TOÀN DIỆN</span>
+              <span>
+                {contextMode === 'tutor'
+                  ? '🚀 GIẢI ĐỀ THI & BÀI TẬP BIG SIZE HÀNG LOẠT'
+                  : contextMode === 'finance'
+                  ? '🚀 BÓC TÁCH & PHÂN TÍCH BÁO CÁO TÀI CHÍNH BIG SIZE'
+                  : '🚀 BỘ XỬ LÝ TÀI LIỆU & BÀI TẬP BIG SIZE TOÀN DIỆN'}
+              </span>
             </h1>
             <p className="text-sm sm:text-base text-slate-300 max-w-3xl leading-relaxed">
-              Tự động phân tách và giải hàng chục câu hỏi thi trắc nghiệm & tự luận, phân tích chuyên sâu báo cáo tài chính lớn
-              nhiều trang. Kiến trúc <strong>Non-blocking Asynchronous Queue</strong> đảm bảo 100% không gây đơ lag hay ảnh hưởng hệ thống chính!
+              {contextMode === 'tutor'
+                ? 'Tự động phân tách và giải hàng chục câu hỏi thi trắc nghiệm & tự luận từ tài liệu lớn (PDF, Word, Excel lên tới 100MB). Các câu hỏi sau khi xử lý có thể gửi trực tiếp vào Gia sư 1-1 để trao đổi sâu!'
+                : contextMode === 'finance'
+                ? 'Tự động bóc tách từng phần báo cáo tài chính nhiều trang, kiểm định định lượng XSTK (E(X), σ, VaR 95%) và cho phép xuất trực tiếp số liệu vào Bảng tính Excel & Đồ thị phân phối chuẩn!'
+                : 'Tự động phân tách và giải hàng chục câu hỏi thi trắc nghiệm & tự luận, phân tích chuyên sâu báo cáo tài chính lớn nhiều trang. Kiến trúc Non-blocking Asynchronous Queue đảm bảo 100% không gây đơ lag hay ảnh hưởng hệ thống chính!'}
             </p>
           </div>
 
@@ -921,6 +953,31 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                         <span><strong>Cảnh báo bẫy: </strong><MathText text={activeItem.solution.trapAlert} inline /></span>
                       </div>
                     )}
+
+                    {/* Action Row for Solution */}
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-800 flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          const textToCopy = `${activeItem.title}\n${activeItem.rawText}\n\nLời giải:\n${activeItem.solution?.stepByStep.join('\n')}\nKết luận: ${activeItem.solution?.finalAnswer}`;
+                          navigator.clipboard.writeText(textToCopy);
+                          alert('Đã sao chép toàn bộ lời giải vào clipboard!');
+                        }}
+                        className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Sao chép lời giải</span>
+                      </button>
+
+                      {onSendToAiTutor && (
+                        <button
+                          onClick={() => onSendToAiTutor(activeItem)}
+                          className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer"
+                        >
+                          <BookOpen className="w-4 h-4" />
+                          <span>🎓 Đưa Vào Gia Sư AI 1-1 Để Dạy Kèm & Trò Chuyện</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-16 space-y-3">
@@ -1043,6 +1100,31 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
                         </ul>
                       </div>
                     )}
+
+                    {/* Action Row for Section */}
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-800 flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          const textToCopy = `${activeSection.title}\n\nTóm tắt:\n${activeSection.analysis?.executiveSummary}\n\nPhân tích chi tiết:\n${activeSection.analysis?.detailedAnalysis}`;
+                          navigator.clipboard.writeText(textToCopy);
+                          alert('Đã sao chép phân tích phân mục vào clipboard!');
+                        }}
+                        className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Sao chép phân tích</span>
+                      </button>
+
+                      {onSendToSpreadsheet && (
+                        <button
+                          onClick={() => onSendToSpreadsheet(activeSection)}
+                          className="px-4 py-2 bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.4)] cursor-pointer"
+                        >
+                          <FileSpreadsheet className="w-4 h-4" />
+                          <span>📊 Xuất Số Liệu Vào Bảng Tính & Vẽ Đồ Thị XSTK</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-16 text-sm text-slate-400 space-y-2">

@@ -68,57 +68,20 @@ function getGeminiClient(): GoogleGenAI | null {
   return clients.length > 0 ? clients[0].client : null;
 }
 
-// API Key status and dynamic configuration endpoints
+// API Key status endpoint (Server-Managed via Render environment variables)
 app.get('/api/settings/get-api-key-status', (_req, res) => {
   const keys = getAllGeminiKeys();
-  const maskedKeys = keys.map((k, idx) => ({
-    index: idx + 1,
-    masked: `${k.slice(0, 6)}...${k.slice(-4)}`,
-  }));
   res.json({
     hasKey: keys.length > 0,
     keyCount: keys.length,
-    maskedKey: keys[0] ? `${keys[0].slice(0, 6)}...${keys[0].slice(-4)}` : '',
-    maskedKey2: keys[1] ? `${keys[1].slice(0, 6)}...${keys[1].slice(-4)}` : '',
-    keys: maskedKeys,
+    isServerManaged: true,
   });
 });
 
-app.post('/api/settings/save-api-key', (req, res) => {
-  const { apiKey, apiKey2 } = req.body;
-  if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim()) {
-    return res.status(400).json({ success: false, error: 'API Key #1 không hợp lệ.' });
-  }
-
-  const cleanKey1 = apiKey.trim();
-  const cleanKey2 = typeof apiKey2 === 'string' && apiKey2.trim() ? apiKey2.trim() : '';
-
-  process.env.GEMINI_API_KEY = cleanKey1;
-  if (cleanKey2) {
-    process.env.GEMINI_API_KEY_2 = cleanKey2;
-  } else {
-    delete process.env.GEMINI_API_KEY_2;
-  }
-
-  // Persist to .env file
-  try {
-    const envPath = path.resolve(process.cwd(), '.env');
-    let envContent = `GEMINI_API_KEY="${cleanKey1}"\n`;
-    if (cleanKey2) {
-      envContent += `GEMINI_API_KEY_2="${cleanKey2}"\n`;
-    }
-    envContent += `PORT=${PORT}\n`;
-    fs.writeFileSync(envPath, envContent, 'utf-8');
-  } catch (err) {
-    console.error('Failed to write .env file:', err);
-  }
-
-  return res.json({
-    success: true,
-    message: cleanKey2
-      ? 'Đã kích hoạt thành công Hệ Thống Cặp 2 API Key (Dual Key Pool)! Hệ thống đã bật tự động chuyển đổi dự phòng chống 429 Quota.'
-      : 'Đã lưu GEMINI_API_KEY thành công!',
-    keyCount: cleanKey2 ? 2 : 1,
+app.post('/api/settings/save-api-key', (_req, res) => {
+  return res.status(403).json({
+    success: false,
+    error: 'Tính năng nhập API Key từ người dùng đã bị tắt. Hệ thống hiện sử dụng API Key do Nhà phát hành cung cấp sẵn trên máy chủ Render.',
   });
 });
 
@@ -151,7 +114,7 @@ async function generateGeminiFast(
 ) {
   const clients = getGeminiClients();
   if (clients.length === 0) {
-    throw new Error('Chưa có Gemini API Key hợp lệ trên máy chủ. Hãy dán API Key vào Cài đặt.');
+    throw new Error('Chưa có Gemini API Key hợp lệ trên máy chủ Render. Vui lòng thiết lập biến môi trường GEMINI_API_KEY trên Render Dashboard.');
   }
 
   const target = reqModel || 'gemini-3.5-flash';
@@ -365,7 +328,7 @@ app.post('/api/tutor/test-connection', async (req, res) => {
   if (clients.length === 0) {
     return res.json({
       success: false,
-      error: 'Máy chủ chưa nhận được API Key. Vui lòng nhập mã API Key lấy từ Google AI Studio (bắt đầu bằng AIzaSy...).',
+      error: 'Máy chủ chưa nhận được API Key từ biến môi trường. Vui lòng thiết lập biến GEMINI_API_KEY trên Render Dashboard.',
     });
   }
 

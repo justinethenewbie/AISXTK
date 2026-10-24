@@ -14,6 +14,48 @@ export function fixStuckVietnameseMathWords(raw: string): string {
   if (!raw || typeof raw !== 'string') return '';
   let res = raw;
   const phrases: [RegExp, string][] = [
+    // Các cụm từ ghép dài nhất chứa biến thống kê bị dính chữ vào đuôi
+    [/vàđộlệchchuẩnmẫuhiệuchỉnhs\^2/gi, ', và độ lệch chuẩn mẫu hiệu chỉnh s^2'],
+    [/vàđộlệchchuẩnmẫuhiệuchỉnhs²/gi, ', và độ lệch chuẩn mẫu hiệu chỉnh s^2'],
+    [/vàđộlệchchuẩnmẫuhiệuchỉnhs/gi, ', và độ lệch chuẩn mẫu hiệu chỉnh s'],
+    [/vàđộlệchchuẩnmẫuhiệuchỉnh/gi, ', và độ lệch chuẩn mẫu hiệu chỉnh '],
+    [/phươngsaimẫuhiệuchỉnhs\^2/gi, 'phương sai mẫu hiệu chỉnh s^2'],
+    [/phươngsaimẫuhiệuchỉnhs²/gi, 'phương sai mẫu hiệu chỉnh s^2'],
+    [/phươngsaimẫuhiệuchỉnhs/gi, 'phương sai mẫu hiệu chỉnh s'],
+    [/phươngsaimẫuhiệuchỉnh/gi, 'phương sai mẫu hiệu chỉnh '],
+    [/độlệchchuẩnmẫuhiệuchỉnhs\^2/gi, 'độ lệch chuẩn mẫu hiệu chỉnh s^2'],
+    [/độlệchchuẩnmẫuhiệuchỉnhs²/gi, 'độ lệch chuẩn mẫu hiệu chỉnh s^2'],
+    [/độlệchchuẩnmẫuhiệuchỉnhs/gi, 'độ lệch chuẩn mẫu hiệu chỉnh s'],
+    [/độlệchchuẩnmẫuhiệuchỉnh/gi, 'độ lệch chuẩn mẫu hiệu chỉnh '],
+    [/độlệchchuẩnmẫus/gi, 'độ lệch chuẩn mẫu s'],
+    [/độlệchchuẩnmẫu/gi, 'độ lệch chuẩn mẫu '],
+    [/vàđộlệchchuẩn/gi, ', và độ lệch chuẩn '],
+    [/phươngsaimẫus\^2/gi, 'phương sai mẫu s^2'],
+    [/phươngsaimẫus²/gi, 'phương sai mẫu s^2'],
+    [/phươngsaimẫu/gi, 'phương sai mẫu '],
+    [/mẫuhiệuchỉnhs\^2/gi, 'mẫu hiệu chỉnh s^2'],
+    [/mẫuhiệuchỉnhs²/gi, 'mẫu hiệu chỉnh s^2'],
+    [/mẫuhiệuchỉnhs/gi, 'mẫu hiệu chỉnh s'],
+    [/mẫuhiệuchỉnh/gi, 'mẫu hiệu chỉnh '],
+    [/hiệuchỉnh/gi, 'hiệu chỉnh '],
+    [/trungbìnhmẫux̄/gi, 'trung bình mẫu x̄'],
+    [/trungbìnhmẫu/gi, 'trung bình mẫu '],
+    [/cỡmẫun/gi, 'cỡ mẫu n'],
+    [/cỡmẫu/gi, 'cỡ mẫu '],
+    [/sửdụngmáytínhCasio/gi, 'sử dụng máy tính Casio '],
+    [/sửdụngmáytính/gi, 'sử dụng máy tính '],
+    [/máytínhCasio/gi, 'máy tính Casio '],
+    [/máytính/gi, 'máy tính '],
+    [/xácđịnh/gi, 'xác định '],
+    [/vàđộ/gi, ' và độ '],
+    [/khoảngtincậyđốixứng/gi, 'khoảng tin cậy đối xứng '],
+    [/khoảngtincậy/gi, 'khoảng tin cậy '],
+    [/độtincậy/gi, 'độ tin cậy '],
+    [/sai sốướclượng/gi, 'sai số ước lượng '],
+    [/sai số/gi, 'sai số '],
+    [/tỷlệchínhxác/gi, 'tỷ lệ chính xác '],
+    [/tỷlệphếphẩm/gi, 'tỷ lệ phế phẩm '],
+    [/tỷlệ/gi, 'tỷ lệ '],
     [/Vớimỗidựáni/gi, 'Với mỗi dự án $i$'],
     [/Vớimỗidựán/gi, 'Với mỗi dự án '],
     [/mỗidựán/gi, 'mỗi dự án '],
@@ -29,11 +71,13 @@ export function fixStuckVietnameseMathWords(raw: string): string {
     [/biếncốđộclập/gi, 'biến cố độc lập'],
     [/biếncố/gi, 'biến cố '],
     [/độclập/gi, 'độc lập '],
+    [/xungkhắc/gi, 'xung khắc '],
     [/phươngsaitổngbằngtổngcácphươngsai/gi, 'phương sai tổng bằng tổng các phương sai'],
     [/phươngsaitổng/gi, 'phương sai tổng '],
     [/tổngbằngtổngcácphươngsai/gi, 'tổng bằng tổng các phương sai'],
     [/tổngbằngtổng/gi, 'tổng bằng tổng '],
     [/cácphươngsai/gi, 'các phương sai '],
+    [/phươngsaigộp/gi, 'phương sai gộp '],
     [/phươngsai/gi, 'phương sai '],
     [/từđósuyrađộlệchchuẩn/gi, 'từ đó suy ra độ lệch chuẩn '],
     [/từđósuyra/gi, 'từ đó suy ra '],
@@ -42,21 +86,53 @@ export function fixStuckVietnameseMathWords(raw: string): string {
     [/suyra/gi, 'suy ra '],
     [/độlệchchuẩn/gi, 'độ lệch chuẩn '],
     [/biếnngẫunhiên/gi, 'biến ngẫu nhiên '],
+    [/ngẫunhiên/gi, 'ngẫu nhiên '],
+    [/xácsuấttoànphần/gi, 'xác suất toàn phần '],
+    [/côngthứcbayes/gi, 'công thức Bayes '],
     [/xácsuất/gi, 'xác suất '],
     [/phânphốixácsuất/gi, 'phân phối xác suất '],
     [/phânphốichuẩn/gi, 'phân phối chuẩn '],
     [/phânphối/gi, 'phân phối '],
     [/khoảngướclượng/gi, 'khoảng ước lượng '],
+    [/mứcýnghĩa/gi, 'mức ý nghĩa '],
+    [/miềnbácbỏ/gi, 'miền bác bỏ '],
+    [/miềnchấpnhận/gi, 'miền chấp nhận '],
     [/ướclượng/gi, 'ước lượng '],
     [/kiểmđịnhgiảthuyết/gi, 'kiểm định giả thuyết '],
     [/kiểmđịnh/gi, 'kiểm định '],
     [/giảthuyết/gi, 'giả thuyết '],
+    [/đốithiết/gi, 'đối thiết '],
+    [/tiêuchuẩnkiểmđịnh/gi, 'tiêu chuẩn kiểm định '],
     [/tiêuchuẩn/gi, 'tiêu chuẩn '],
+    [/bậctựdo/gi, 'bậc tự do '],
+    [/trungbìnhmẫu/gi, 'trung bình mẫu '],
+    [/trungbình/gi, 'trung bình '],
+    [/cỡmẫu/gi, 'cỡ mẫu '],
+    [/phếphẩm/gi, 'phế phẩm '],
+    [/sảnphẩm/gi, 'sản phẩm '],
+    [/kháchhàng/gi, 'khách hàng '],
+    [/doanhthu/gi, 'doanh thu '],
+    [/lợinhuận/gi, 'lợi nhuận '],
+    [/ngânhàng/gi, 'ngân hàng '],
+    [/sinhviên/gi, 'sinh viên '],
+    [/giảngviên/gi, 'giảng viên '],
+    [/bàitoán/gi, 'bài toán '],
+    [/côngthức/gi, 'công thức '],
+    [/đápsố/gi, 'đáp số '],
+    [/kếtluận/gi, 'kết luận '],
+    [/kếtquả/gi, 'kết quả '],
     [/đồngthời/gi, 'đồng thời ']
   ];
   for (const [re, rep] of phrases) {
     res = res.replace(re, rep);
   }
+
+  // Tách dính chữ s^2 hoặc s² vào đuôi từ tiếng Việt: ví dụ "hiệu chỉnhs^2" -> "hiệu chỉnh s^2"
+  res = res.replace(/([À-ỹa-z])(s\^2|s²)(?![a-zA-Z0-9^])/giu, '$1 $2');
+
+  // Tự động giãn cách dính chữ giữa số và từ ngữ tiếng Việt
+  res = res.replace(/(\b\d+(?:[.,]\d+)?%?)\s*(người|trái|sản phẩm|sọt|gói|phút|triệu|đồng|ngày|lần|câu|bài|điểm|hộ|chi nhánh|học sinh|sinh viên|phế phẩm|tháng|năm|giờ)\b/giu, '$1 $2');
+
   res = res.replace(/,\s*,/g, ',');
   res = res.replace(/[ \t]{2,}/g, ' ');
   return res;
@@ -79,8 +155,12 @@ export function sanitizeAndFixMathText(rawText: string): string {
   // 0. Thu gọn các chuỗi lặp dấu $ (ví dụ $$$ hoặc $$$$) thành dấu $ hợp lệ
   text = text.replace(/\${3,}/g, '$');
 
+  // - Khử dấu $ bị dùng nhầm trước số tiền hoặc phạm vi số tiếng Việt (ví dụ: "$19.0 triệu đến $31.7 triệu" -> "19.0 triệu đến 31.7 triệu")
+  text = text.replace(/(?<!\\)\$\s*([0-9]+(?:\.[0-9]+)?)\s*(triệu|nghìn|tỷ|đồng|VNĐ|usd|USD|k)\b/giu, '$1 $2');
+  text = text.replace(/(?<!\\)\$\s*([0-9]+(?:\.[0-9]+)?)(?=\s*[-–—đến])/giu, '$1');
+
   // A. Khắc phục lỗi dính chữ (Sticky text):
-  // - Tách dòng và khoảng cách rõ ràng trước Bước / Câu / Bài / Phần
+  // - Tách dòng và khoảng cách rõ ràng trước Bước / Câu / Bài / Phần / Ví dụ
   text = text.replace(/(?<!\n)\s*(?:[.]\s*)?(\b(?:Bước|Bài|Câu|Phần|Ví dụ)\s*\d+\s*:)/gi, '\n\n$1 ');
 
   // - Xóa dấu chấm thừa bị kẹt trước Bước (ví dụ ".$$ .Bước 2" hoặc ".Bước 2" -> "Bước 2")
@@ -92,49 +172,143 @@ export function sanitizeAndFixMathText(rawText: string): string {
   // - Tự động giãn cách sau dấu hai chấm nếu bị dính chữ (ví dụ: "Ví dụ:Tính" -> "Ví dụ: Tính"), bỏ qua URL
   text = text.replace(/(?<!https?|ftp):([A-ZÀ-Ỹa-zà-ỹ0-9])/gu, ': $1');
 
-  // - Tự động giãn cách sau dấu đóng ngoặc đơn nếu dính chữ (ví dụ: "(X)là" -> "(X) là")
-  text = text.replace(/\)([A-ZÀ-Ỹa-zà-ỹ])/gu, ') $1');
+  // - Tự động giãn cách sau dấu đóng ngoặc đơn, ngoặc vuông nếu dính chữ (ví dụ: "(X)là" -> "(X) là")
+  text = text.replace(/([)\]])([A-ZÀ-Ỹa-zà-ỹ0-9])/gu, '$1 $2');
 
   // - Tự động giãn cách sau dấu chấm câu nếu bị dính chữ trước chữ hoa (ví dụ: "5.Ta có" -> "5. Ta có", bảo toàn 3.14 hay 0.05)
   text = text.replace(/\.([A-ZÀ-Ỹ])/gu, '. $1');
 
+  // - Tự động giãn cách giữa markdown bold/italic và chữ xung quanh
+  text = text.replace(/(\*\*[^*]+\*\*|__[^_]+__)([A-ZÀ-Ỹa-zà-ỹ0-9])/gu, '$1 $2');
+  text = text.replace(/([A-ZÀ-Ỹa-zà-ỹ0-9])(\*\*[^*]+\*\*|__[^_]+__)/gu, '$1 $2');
+
   // - Tự động thêm khoảng cách giữa công thức $...$ và từ tiếng Việt dính sát vào nó
-  text = text.replace(/(\$[^\$\n]+\$)([A-ZÀ-Ỹa-zà-ỹ])/gu, '$1 $2');
-  text = text.replace(/([A-ZÀ-Ỹa-zà-ỹ])(\$[^\$\n]+\$)/gu, '$1 $2');
+  text = text.replace(/(\$[^\$\n]+\$)([A-ZÀ-Ỹa-zà-ỹ0-9])/gu, '$1 $2');
+  text = text.replace(/([A-ZÀ-Ỹa-zà-ỹ0-9])(\$[^\$\n]+\$)/gu, '$1 $2');
+
+  // - Tự động giãn cách giữa phần trăm (%) và chữ tiếng Việt (ví dụ: "95%độ tin cậy" -> "95% độ tin cậy")
+  text = text.replace(/(\d+%)([A-ZÀ-Ỹa-zà-ỹ])/gu, '$1 $2');
 
   // B. GIẢI CỨU VĂN BẢN TIẾNG VIỆT BỊ BỌC NHẦM TRONG DẤU $:
-  // Nếu một cặp $...$ chứa nhiều từ tiếng Việt có dấu (ví dụ "$Bước 2: Với mỗi dự án...$"),
-  // KaTeX sẽ nuốt hết khoảng trắng và in nghiêng chữ. Phải gỡ bỏ dấu $ bao ngoài và chỉ giữ lại $ cho công thức thực sự.
   text = text.replace(/(?<!\$)\$([^\$\n]+?)\$(?!\$)/g, (match, inner) => {
-    // Nếu khối math chứa tiếng Việt có dấu cách (chắc chắn là câu/đoạn văn bị bọc nhầm)
-    if (/[À-ỹ]/.test(inner) && /\s+[A-Za-zÀ-ỹ]/.test(inner)) {
-      // Đưa các công thức toán bên trong thành cặp $ riêng
+    // Nếu khối math chứa tiếng Việt (chắc chắn là câu/cụm từ văn bản bị bọc nhầm vào $)
+    if (/[À-ỹ]/.test(inner) && !inner.includes('\\text{')) {
+      // Đưa các công thức và ký hiệu toán học thực sự bên trong thành các cặp $ riêng
       let rescued = inner
+        .replace(/([A-Za-z0-9_^{}\\]+\s*=\s*-?[0-9]+(?:\.[0-9]+)?)/g, '$$$1$$')
         .replace(/(E\([A-Za-z0-9_]+\)\s*=\s*[^,;.\n]+)/g, '$$$1$$')
         .replace(/((?:\\text\{Var\}|Var)\([A-Za-z0-9_]+\)\s*=\s*[^,;.\n]+)/g, '$$$1$$')
-        .replace(/(\\sigma\([A-Za-z0-9_]+\)\s*=\s*\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})/g, '$$$1$$');
+        .replace(/(\\sigma\([A-Za-z0-9_]+\)\s*=\s*\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})/g, '$$$1$$')
+        .replace(/(Z_\{?qs\}?\s*=\s*[^,;.\n]+)/g, '$$$1$$')
+        .replace(/(?<![a-zA-Z0-9$\\])(s\^2|s²|s_x\^2|\\sigma\^2)(?![a-zA-Z0-9$}])/g, '$$$1$$')
+        .replace(/(?<![a-zA-Z0-9$\\])(\\bar\{[a-z]\}|x̄|ȳ)(?![a-zA-Z0-9$}])/g, '$$$1$$')
+        .replace(/(?<![a-zA-Z0-9$\\])(Z_\{?qs\}?|t_\{?qs\}?|F_\{?qs\}?|\\chi\^2_\{?qs\}?)(?![a-zA-Z0-9$}])/g, '$$$1$$')
+        .replace(/(?<![a-zA-Z0-9$\\])(\\alpha|\\beta|\\gamma|\\lambda|\\mu|\\sigma)(?![a-zA-Z0-9$}])/g, '$$$1$$')
+        .replace(/(cỡ mẫu|kích thước mẫu)\s*n\b(?!\$)/gu, '$1 $$n$$')
+        .replace(/(độ lệch chuẩn mẫu hiệu chỉnh|độ lệch chuẩn mẫu)\s*s\b(?!\$)/gu, '$1 $$s$$');
       return rescued;
     }
     return match;
   });
 
-  // C. Khắc phục triệt để lỗi gõ nhầm `=/sqrt`, `=/\sqrt`, `/sqrt`, `\sqrt Var(X)`
+  // Chuẩn hóa biến thống kê đi sau cụm từ mô tả tiếng Việt
+  text = text.replace(/(cỡ mẫu|kích thước mẫu)\s*n\b(?!\$)/giu, '$1 $n$');
+  text = text.replace(/(trung bình mẫu|số bình quân mẫu)\s*(?:\\bar\{x\}|x̄)\b(?!\$)/giu, '$1 $\\bar{x}$');
+  text = text.replace(/(phương sai mẫu hiệu chỉnh|phương sai mẫu)\s*(?:s\^2|s²)\b(?!\$)/giu, '$1 $s^2$');
+  text = text.replace(/(độ lệch chuẩn mẫu hiệu chỉnh|độ lệch chuẩn mẫu)\s*s\b(?!\$)/giu, '$1 $s$');
+
+  // C. KHẮC PHỤC TRIỆT ĐỂ LỖI GÕ NHẦM =/sqrt, =/\sqrt, /\sqrt, /sqrt:
+  text = text.replace(/=\s*\/\s*\\?sqrt\b/gi, '= \\sqrt');
   text = text.replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/gi, '$1 \\sqrt');
   text = text.replace(/(^|[\s(])\/\s*\\?sqrt\b/gi, '$1\\sqrt');
+  text = text.replace(/(^|[^\\])\/sqrt\b/gi, '$1/ \\sqrt');
+  text = text.replace(/(^|[^\\])\/\s*\\sqrt\b/gi, '$1/ \\sqrt');
 
   // Chuẩn hóa \sqrt(...) thành \sqrt{...}
-  text = text.replace(/\\sqrt\s*\(([^)]+)\)/g, '\\sqrt{$1}');
+  text = text.replace(/\\?sqrt\s*\(([^)]+)\)/gi, '\\sqrt{$1}');
 
   // Chuẩn hóa \sqrt Var(X) hoặc \sqrt{Var(X)} thành \sqrt{\text{Var}(X)}
   text = text.replace(/\\sqrt\s*\{?\s*(?:\\text\{)?Var\}?\s*\(([^)]+)\)\s*\}?/gi, '\\sqrt{\\text{Var}($1)}');
 
-  // Chuẩn hóa \sqrt trần không có ngoặc: ví dụ \sqrt X -> \sqrt{X}
+  // Chuẩn hóa \sqrt trần không có ngoặc: ví dụ \sqrt X -> \sqrt{X}, \sqrt 120 -> \sqrt{120}
   text = text.replace(/\\sqrt\s+([A-Za-z0-9_]+)(?![a-zA-Z0-9_{])/g, '\\sqrt{$1}');
 
   // Chuẩn hóa nếu có \sigma(X) = \sqrt{\text{Var}(X)} đứng trần ngoài dấu $
   text = text.replace(/(?<!\$)\s*(\\sigma\s*\([^)]+\)\s*=\s*\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})\s*(?!\$)/g, ' $$$1$$ ');
 
-  // 1. Chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
+  // Chuẩn hóa biểu thức phân số s/\sqrt{n} hoặc s / \sqrt{n} thành \frac{s}{\sqrt{n}}
+  text = text.replace(/\b([a-zA-Z0-9])\s*\/\s*\\sqrt\{([^}]+)\}/g, '\\frac{$1}{\\sqrt{$2}}');
+
+  // D. TỰ ĐỘNG BỌC TIÊU CHUẨN KIỂM ĐỊNH & KÝ HIỆU THỐNG KÊ TRẦN VÀO DẤU $ (FIX TRIỆT ĐỂ LỖI Z_{qs}=):
+  // 1. Z_{qs} = ... hoặc t_{qs} = ... hoặc F_{qs} = ... với số âm, số thập phân hoặc phân số
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])(Z_\{qs\}|Z_qs|t_\{qs\}|t_qs|F_\{qs\}|F_qs|T_\{qs\}|T_qs|\\chi\^2_\{qs\}|\\chi\^2_qs)\s*=\s*(-?[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g,
+    (_m, stat, num) => {
+      const norm = stat.includes('_qs') && !stat.includes('{qs}') ? stat.replace('_qs', '_{qs}') : stat;
+      return `$${norm} = ${num}$`;
+    }
+  );
+
+  // 2. Ký hiệu tiêu chuẩn trần Z_{qs}, t_{qs}, F_{qs}, T_{qs}, Z_qs, t_qs, F_qs, T_qs (KHÔNG đi kèm dấu =)
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])(Z_\{qs\}|Z_qs|t_\{qs\}|t_qs|F_\{qs\}|F_qs|T_\{qs\}|T_qs|\\chi\^2_\{qs\}|\\chi\^2_qs)(?![a-zA-Z0-9$\s]*=)(?![a-zA-Z0-9$}])/g,
+    (_m, stat) => {
+      const norm = stat.includes('_qs') && !stat.includes('{qs}') ? stat.replace('_qs', '_{qs}') : stat;
+      return `$${norm}$`;
+    }
+  );
+
+  // 3. Miền bác bỏ W = (-\infty, ...) hoặc W_\alpha = ... hoặc W = (...)
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])(W(?:_\\alpha|_\{\\alpha\}|_\alpha|)?)\s*=\s*(\([^)\n]+\))(?![0-9$])/g,
+    (_m, w, interval) => {
+      const normW = w.includes('_') ? 'W_\\alpha' : 'W';
+      return `$${normW} = ${interval.trim()}$`;
+    }
+  );
+
+  // 4. Miền bác bỏ W_\alpha, W_α, W_alpha, W_{\alpha} đứng trần
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])(W_\\alpha|W_α|W_alpha|W_\{\\alpha\})(?![a-zA-Z0-9$}])/g,
+    '$W_\\alpha$'
+  );
+
+  // 5. Giá trị tới hạn z_{\alpha}, z_{\alpha/2}, z_{0.025}, z_{0.05}, z_{0.01}, z_{0.005}
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])(z_\\alpha\/2|z_\\alpha|z_0\.025|z_0\.05|z_0\.01|z_0\.005|z_\{[0-9.]+\}|z_\{\\alpha\/2\})(?![a-zA-Z0-9$}])/g,
+    (m) => {
+      if (m === 'z_\\alpha/2' || m === 'z_{\\alpha/2}') return '$z_{\\alpha/2}$';
+      if (m === 'z_\\alpha') return '$z_\\alpha$';
+      const clean = m.includes('{') ? m : m.replace(/_([0-9.]+)/, '_{$1}');
+      return `$${clean}$`;
+    }
+  );
+
+  // 6. Chi bình phương \chi^2 hoặc \chi^2_{qs}
+  text = text.replace(/(?<![a-zA-Z0-9$\\])(?:\\chi\^2_\{?qs\}?|\\chi\^2)(?![a-zA-Z0-9$}])/g, (m) => {
+    return m.includes('qs') ? '$\\chi^2_{qs}$' : '$\\chi^2$';
+  });
+
+  // 7. Hàm Laplace \Phi(z) hoặc \Phi_0(...)
+  text = text.replace(/(?<![a-zA-Z0-9$\\])\\(?:Phi|Phi_0)\s*\(([^)]+)\)(?![a-zA-Z0-9$}])/g, '$\\Phi_0($1)$');
+
+  // 8. Giả thiết H₀, H₁, H_0, H_1
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])(H_0|H_1|H₀|H₁)(?![a-zA-Z0-9$}])/g,
+    (_m, h) => (h === 'H₀' || h === 'H_0' ? '$H_0$' : '$H_1$')
+  );
+
+  // 9. Tham số kiểm định: \alpha = 0.01, p_0 = 0.05, \mu = 100, \sigma = 20
+  text = text.replace(/(?<![a-zA-Z0-9$\\])(\\alpha|\\beta|\\gamma|\\lambda|\\mu|\\sigma|\\varepsilon)\s*=\s*(-?[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g, '$$$1 = $2$$');
+  text = text.replace(/(?<![a-zA-Z0-9$\\])([p\mu\sigma]_0)\s*=\s*(-?[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g, '$$$1 = $2$$');
+  text = text.replace(/(?<![a-zA-Z0-9$\\])\b(f)\s*=\s*([0-9]+\/[0-9]+(?:\s*=\s*[0-9.]+)?|[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g, '$$$1 = $2$$');
+
+  // 8. Trung bình mẫu x̄, ȳ và s²
+  text = text.replace(/x̄/g, '$\\bar{x}$');
+  text = text.replace(/ȳ/g, '$\\bar{y}$');
+  text = text.replace(/s²/g, '$s^2$');
+
+  // 9. Chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
   text = text.replace(/(?<!\$)\bE\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\b(?!\$)/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
   text = text.replace(/(?<!\$)\bE\(X_i\)\s*=\s*p_i\s*[*·\u00B7]\s*r_i\b(?!\$)/g, '$E(X_i) = p_i \\cdot r_i$');
   text = text.replace(/(?<!\$)\b(?:\\text\{Var\}|Var)\(X\)\s*=\s*(?:\\text\{Var\}|Var)\(X_A\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_B\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_C\)\b(?!\$)/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
@@ -158,6 +332,9 @@ export function sanitizeAndFixMathText(rawText: string): string {
   if (singleDollars.length % 2 !== 0 && text.includes('\\$')) {
     text = text.replace(/\\\$/g, '$');
   }
+
+  // Đưa các dấu chấm câu (. , ; : ! ?) nằm nhầm bên trong dấu $ ra ngoài
+  text = text.replace(/(?<!\$)\$([^\$\n]+?)([.,;:!?])\$(?!\$)/g, '$$$1$$$2');
 
   // 4. Hàm cân bằng dấu ngoặc nhọn { } bị thiếu bên trong biểu thức toán
   const balanceBraces = (str: string) => {
@@ -240,8 +417,26 @@ export function cleanLatexString(raw: string): string {
     .replace(/±/g, '\\pm ')
     .replace(/×/g, '\\times ')
     .replace(/·/g, '\\cdot ')
+    .replace(/∈/g, '\\in ')
+    .replace(/∉/g, '\\notin ')
+    .replace(/∪/g, '\\cup ')
+    .replace(/∩/g, '\\cap ')
+    .replace(/⇒/g, '\\implies ')
+    .replace(/⇔/g, '\\iff ')
+    .replace(/→/g, '\\rightarrow ')
     .replace(/∞/g, '\\infty ')
-    .replace(/√/g, '\\sqrt ');
+    .replace(/√/g, '\\sqrt ')
+    .replace(/x̄/g, '\\bar{x}')
+    .replace(/ȳ/g, '\\bar{y}')
+    .replace(/s²/g, 's^2')
+    .replace(/\bZ_qs\b/g, 'Z_{qs}')
+    .replace(/\bt_qs\b/g, 't_{qs}')
+    .replace(/\bF_qs\b/g, 'F_{qs}')
+    .replace(/\bT_qs\b/g, 'T_{qs}')
+    .replace(/\bW_alpha\b/g, 'W_\\alpha')
+    .replace(/\bW_α\b/g, 'W_\\alpha')
+    .replace(/\bz_alpha\b/g, 'z_\\alpha')
+    .replace(/\bz_α\b/g, 'z_\\alpha');
 
   // 5. Chuẩn hóa các ký tự Hy Lạp Unicode thường gặp trong XSTK
   cleaned = cleaned
@@ -299,6 +494,15 @@ export function renderKatexSafe(mathStr: string, isBlock = false): string {
   if (!mathStr || typeof mathStr !== 'string') return '';
   const trimmed = mathStr.trim();
   if (trimmed === 'undefined' || trimmed === 'null' || trimmed === '\\undefined') return '';
+
+  // NGUYÊN TẮC BẢO VỆ CHỐNG DÍNH CHỮ:
+  // Nếu chuỗi chứa từ ngữ tiếng Việt (và không nằm trong lệnh \text{...}),
+  // KaTeX trong math mode sẽ nuốt toàn bộ khoảng trắng và làm dính chữ văn bản.
+  // Do đó, tự động chuyển hướng qua renderMathToHtml để các từ tiếng Việt giữ nguyên dấu cách.
+  if (/[À-ỹ]/.test(trimmed) && !trimmed.includes('\\text{')) {
+    return renderMathToHtml(trimmed);
+  }
+
   try {
     const clean = cleanLatexString(trimmed);
     if (!clean || clean === 'undefined' || clean === 'null' || clean === '\\undefined') return '';
@@ -339,6 +543,9 @@ export const MathFormula: React.FC<MathFormulaProps> = ({
 }) => {
   const html = useMemo(() => {
     if (!math) return '';
+    if (/[À-ỹ]/.test(math) && !math.includes('\\text{')) {
+      return renderMathToHtml(math);
+    }
     return renderKatexSafe(math, block);
   }, [math, block]);
 
@@ -560,6 +767,15 @@ export function parseMathSegments(text: string): MathSegment[] {
     } else if (raw.startsWith('$') && raw.endsWith('$')) {
       isBlock = false;
       mathContent = raw.slice(1, -1);
+    }
+
+    // Nếu mathContent chứa từ ngữ tiếng Việt mà không nằm trong lệnh \text{...},
+    // tức là cả câu hoặc cụm từ tiếng Việt bị bọc nhầm vào dấu math.
+    // Phân rã đệ quy để tách phần tiếng Việt thành text và giữ nguyên công thức toán chuẩn:
+    if (mathContent && /[À-ỹ]/.test(mathContent) && !mathContent.includes('\\text{')) {
+      segments.push(...parseMathSegments(mathContent));
+      lastIndex = match.index + raw.length;
+      continue;
     }
 
     segments.push({
