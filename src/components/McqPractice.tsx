@@ -444,6 +444,14 @@ export const McqPractice: React.FC<McqPracticeProps> = ({ onAddExp, onRecordMist
                       }
                     }
 
+                    const rawOpt = (opt || '').trim();
+                    const formattedOpt =
+                      !rawOpt.includes('$') &&
+                      (rawOpt.includes('\\') || (/^[a-zA-Z0-9_^{}()=+\-*/.,;:~[\]\s|·]+$/.test(rawOpt) && (/[=~<>≤≥∈∉±_^\/]/.test(rawOpt) || /^\[\s*-?[0-9.]+\s*;\s*-?[0-9.]+\s*\]$/.test(rawOpt)))) &&
+                      !/[À-ỹ]/.test(rawOpt)
+                        ? `$${rawOpt}$`
+                        : rawOpt;
+
                     return (
                       <button
                         key={oIdx}
@@ -452,7 +460,7 @@ export const McqPractice: React.FC<McqPracticeProps> = ({ onAddExp, onRecordMist
                       >
                         <span className="font-black shrink-0 text-cyan-400">{String.fromCharCode(65 + oIdx)}.</span>
                         <span className="flex-1 text-slate-100 font-medium">
-                          <MathText text={opt} inline />
+                          <MathText text={formattedOpt} inline />
                         </span>
                       </button>
                     );

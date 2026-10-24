@@ -1430,7 +1430,7 @@ ${
 - Mỗi câu gồm:
   + "title": Tiêu đề mô tả dạng bài (ví dụ: "Khoảng tin cậy cho tỷ lệ nợ xấu", "Công thức Bayes trong kiểm soát rủi ro", "Kiểm định 2 phía mẫu lớn").
   + "question": Nội dung đề bài rõ ràng, số liệu kinh tế/ngân hàng thực tế.
-  + "options": Đúng 4 phương án [A, B, C, D] với các phương án nhiễu (distractors) mô phỏng chính xác các bẫy tư duy kinh điển của sinh viên (nhầm 1 phía vs 2 phía, nhầm \\sigma và \\sigma^2, quên chia \\sqrt{n}, nhầm độ tin cậy 95% z=1.96 với 99% z=2.58).
+  + "options": Đúng 4 phương án [A, B, C, D] với các phương án nhiễu (distractors) mô phỏng chính xác các bẫy tư duy kinh điển của sinh viên (nhầm 1 phía vs 2 phía, nhầm \\sigma và \\sigma^2, quên chia \\sqrt{n}, nhầm độ tin cậy 95% z=1.96 với 99% z=2.58). BẮT BUỘC: Mọi phương án có ký hiệu toán học, khoảng giá trị hoặc công thức (ví dụ: $p \\in [0.0725; 0.1942]$, $Z_{qs} \\approx 2.45$, $\\mu \\in [10; 20]$, $P(A) = 0.5$) PHẢI BỌC TRONG CẶP DẤU $ ... $ ĐỂ HIỂN THỊ KATEX ĐẸP MẮT, TUYỆT ĐỐI KHÔNG ĐỂ CODE TRẦN 'p \\in [...]'!
   + "correctIndex": Số nguyên từ 0 đến 3 chỉ phương án đúng.
   + "explanation": Giải thích sư phạm chi tiết từng bước tại sao phương án này đúng và bẫy sai ở các phương án khác.`
     : `DẠNG ĐỀ TỰ LUẬN:
@@ -1472,8 +1472,22 @@ ${
 
       const exercises = cleanAndParseJson<any[]>(response.text || '[]', []);
       if (Array.isArray(exercises) && exercises.length > 0) {
-        // Sanitize every exercise to ensure strategyHint is valid and never undefined
+        // Sanitize every exercise to ensure strategyHint is valid and options are well-formatted
         exercises.forEach((ex: any, idx: number) => {
+          if (Array.isArray(ex.options)) {
+            ex.options = ex.options.map((opt: any) => {
+              if (typeof opt !== 'string') return String(opt ?? '');
+              let o = opt.trim();
+              if (
+                !o.includes('$') &&
+                (o.includes('\\') || /^[a-zA-Z0-9_^{}()=+\-*/.,;:~[\]\s|·]+$/.test(o) && /[=~<>≤≥∈∉±_^\/]/.test(o)) &&
+                !/[À-ỹ]/.test(o)
+              ) {
+                return `$${o}$`;
+              }
+              return o;
+            });
+          }
           if (!ex.strategyHint || ex.strategyHint === 'undefined' || ex.strategyHint === 'null' || typeof ex.strategyHint !== 'string' || !ex.strategyHint.trim()) {
             ex.strategyHint = ex.hint || ex.strategy || ex.solutionStrategy || ex.steps ||
               `Bước 1: Đọc kỹ giả thiết bài toán, xác định các thông số mẫu quan sát. Bước 2: Áp dụng các công thức thống kê cốt lõi đã cho. Bước 3: Thế số liệu, tính toán kết quả và nêu ý nghĩa kinh tế thực tế.`;
@@ -1510,10 +1524,10 @@ ${
           title: `Công thức Bayes & Xác suất toàn phần #${seed}`,
           question: `Một ngân hàng sử dụng hệ thống AI chấm điểm tín dụng. Tỷ lệ khách hàng rủi ro nợ xấu trong toàn hệ thống là ${3 + seed}%. Nếu một khách hàng nợ xấu, AI nhận diện chính xác với xác suất 95%. Nếu khách hàng tốt, AI phán đoán nhầm là nợ xấu với xác suất 2%. Khi hệ thống báo động một khách hàng có nguy cơ nợ xấu, tính xác suất thực tế người này thực sự bị nợ xấu?`,
           options: [
-            `P(B|A) \\approx ${(0.60 + seed * 0.02).toFixed(4)}`,
-            `P(B|A) \\approx ${(0.95).toFixed(4)}`,
-            `P(B|A) \\approx ${(0.05 + seed * 0.01).toFixed(4)}`,
-            `P(B|A) \\approx ${(0.80).toFixed(4)}`,
+            `$P(B|A) \\approx ${(0.60 + seed * 0.02).toFixed(4)}$`,
+            `$P(B|A) \\approx ${(0.95).toFixed(4)}$`,
+            `$P(B|A) \\approx ${(0.05 + seed * 0.01).toFixed(4)}$`,
+            `$P(B|A) \\approx ${(0.80).toFixed(4)}$`,
           ],
           correctIndex: 0,
           explanation: `Áp dụng công thức Bayes: Mẫu số là xác suất toàn phần $P(A) = (${(3 + seed)/100} \\times 0.95) + (${(97 - seed)/100} \\times 0.02)$. Tử số là $P(H_1)P(A|H_1) = ${(3 + seed)/100} \\times 0.95$. Tính ra xác suất hậu nghiệm xấp xỉ ${(0.60 + seed * 0.02).toFixed(4)}. Bẫy hay gặp: Sinh viên thường nhầm với 95% của đề bài.`,
@@ -1524,10 +1538,10 @@ ${
           title: `Biến ngẫu nhiên liên tục & Tích phân #${seed}`,
           question: `Thời gian hoàn tất một giao dịch chuyển tiền trực tuyến X (phút) là biến ngẫu nhiên liên tục có hàm mật độ $f(x) = k(4 - x)$ với $0 \\le x \\le 2$ và $f(x) = 0$ khi khác. Giá trị của hằng số chuẩn hóa k là:`,
           options: [
-            `k = 1/6 \\approx 0.1667`,
-            `k = 1/4 = 0.2500`,
-            `k = 1/8 = 0.1250`,
-            `k = 1/2 = 0.5000`,
+            `$k = 1/6 \\approx 0.1667$`,
+            `$k = 1/4 = 0.2500$`,
+            `$k = 1/8 = 0.1250$`,
+            `$k = 1/2 = 0.5000$`,
           ],
           correctIndex: 0,
           explanation: `Áp dụng tính chất chuẩn hóa của hàm mật độ: $\\int_0^2 k(4-x)dx = 1 \\iff k [4x - \\frac{x^2}{2}]_0^2 = 1 \\iff k(8 - 2) = 1 \\iff 6k = 1 \\implies k = 1/6$. Bẫy hay gặp: Quên tính tích phân hoặc tích phân sai cận.`,
@@ -1538,10 +1552,10 @@ ${
           title: `Kiểm định giả thuyết thống kê #${seed}`,
           question: `Một ngân hàng thương mại kiểm tra năng suất xử lý hồ sơ trung bình của nhân viên. Khảo sát mẫu $n = ${80 + seed * 10} \\ge 30$, tính được trung bình mẫu $\\bar{x} = 22.4$ hồ sơ/ngày, độ lệch chuẩn $s = 4.2$. Muốn kiểm định giả thiết $H_0: \\mu = 21$ với đối thiết $H_1: \\mu > 21$ ở mức ý nghĩa $\\alpha = 0.05$ ($z_{0.05} = 1.645$). Giá trị tiêu chuẩn kiểm định $Z_{qs}$ là:`,
           options: [
-            `Z_{qs} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}`,
-            `Z_{qs} \\approx ${( (22.4 - 21) / 4.2 ).toFixed(4)}`,
-            `Z_{qs} \\approx ${( (22.4 - 21) / (17.64 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}`,
-            `Z_{qs} \\approx ${( (22.4 - 21) * Math.sqrt(80 + seed * 10) ).toFixed(4)}`,
+            `$Z_{qs} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$`,
+            `$Z_{qs} \\approx ${( (22.4 - 21) / 4.2 ).toFixed(4)}$`,
+            `$Z_{qs} \\approx ${( (22.4 - 21) / (17.64 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$`,
+            `$Z_{qs} \\approx ${( (22.4 - 21) * Math.sqrt(80 + seed * 10) ).toFixed(4)}$`,
           ],
           correctIndex: 0,
           explanation: `Công thức tiêu chuẩn kiểm định trung bình mẫu lớn: $Z_{qs} = \\frac{\\bar{x} - \\mu_0}{\\frac{s}{\\sqrt{n}}} = \\frac{22.4 - 21}{4.2 / \\sqrt{${80 + seed * 10}}} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$. Bẫy kinh điển: Quên chia cho căn bậc hai của cỡ mẫu n.`,
@@ -1552,10 +1566,10 @@ ${
           title: `Ước lượng khoảng tin cậy #${seed} - ${chapterTitle || 'XSTK'}`,
           question: `Khảo sát ngẫu nhiên $n = ${100 + seed * 20}$ khoản giải ngân cho doanh nghiệp vừa và nhỏ, ghi nhận có ${15 + seed} khoản vay có tài sản đảm bảo bằng bất động sản. Khoảng tin cậy đối xứng 95% ($z_{0.025} = 1.96$) cho tỷ lệ khoản vay có tài sản đảm bảo bằng bất động sản là:`,
           options: [
-            `p \\in [${ ( (15 + seed)/(100 + seed*20) - 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]`,
-            `p \\in [${ ( (15 + seed)/(100 + seed*20) - 0.08 ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 0.08 ).toFixed(4)}]`,
-            `p \\in [0.1000; 0.2500]`,
-            `p \\in [${ ( (15 + seed)/(100 + seed*20) - 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]`,
+            `$p \\in [${ ( (15 + seed)/(100 + seed*20) - 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]$`,
+            `$p \\in [${ ( (15 + seed)/(100 + seed*20) - 0.08 ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 0.08 ).toFixed(4)}]$`,
+            `$p \\in [0.1000; 0.2500]$`,
+            `$p \\in [${ ( (15 + seed)/(100 + seed*20) - 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]$`,
           ],
           correctIndex: 0,
           explanation: `Tỷ lệ mẫu $f = \\frac{m}{n} = \\frac{${15 + seed}}{${100 + seed * 20}} = ${( (15 + seed)/(100 + seed*20) ).toFixed(4)}$. Sai số ước lượng: $\\varepsilon = 1.96 \\times \\sqrt{\\frac{f(1-f)}{n}}$. Khoảng tin cậy: $[f - \\varepsilon; f + \\varepsilon]$.`,

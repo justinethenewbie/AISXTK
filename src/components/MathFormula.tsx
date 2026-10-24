@@ -239,19 +239,24 @@ export function sanitizeAndFixMathText(rawText: string): string {
   // Chuẩn hóa biểu thức phân số s/\sqrt{n} hoặc s / \sqrt{n} thành \frac{s}{\sqrt{n}}
   text = text.replace(/\b([a-zA-Z0-9])\s*\/\s*\\sqrt\{([^}]+)\}/g, '\\frac{$1}{\\sqrt{$2}}');
 
-  // D. TỰ ĐỘNG BỌC TIÊU CHUẨN KIỂM ĐỊNH & KÝ HIỆU THỐNG KÊ TRẦN VÀO DẤU $ (FIX TRIỆT ĐỂ LỖI Z_{qs}=):
-  // 1. Z_{qs} = ... hoặc t_{qs} = ... hoặc F_{qs} = ... với số âm, số thập phân hoặc phân số
+  // D. TỰ ĐỘNG BỌC TIÊU CHUẨN KIỂM ĐỊNH & KÝ HIỆU THỐNG KÊ TRẦN VÀO DẤU $ (FIX TRIỆT ĐỂ LỖI Z_{qs}=, Z_{qs} \approx):
+  // 1. Z_{qs} = ... hoặc Z_{qs} \approx ... hoặc Z_{qs} > ... với số âm, số thập phân hoặc phân số
   text = text.replace(
-    /(?<![a-zA-Z0-9$\\])(Z_\{qs\}|Z_qs|t_\{qs\}|t_qs|F_\{qs\}|F_qs|T_\{qs\}|T_qs|\\chi\^2_\{qs\}|\\chi\^2_qs)\s*=\s*(-?[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g,
-    (_m, stat, num) => {
+    /(?<![a-zA-Z0-9$\\])(Z_\{qs\}|Z_qs|t_\{qs\}|t_qs|F_\{qs\}|F_qs|T_\{qs\}|T_qs|\\chi\^2_\{qs\}|\\chi\^2_qs)\s*(=|≈|\\approx|>|<|≥|≤|\\ge|\\le|\\geq|\\leq|\\in|∈)\s*(-?[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g,
+    (_m, stat, op, num) => {
       const norm = stat.includes('_qs') && !stat.includes('{qs}') ? stat.replace('_qs', '_{qs}') : stat;
-      return `$${norm} = ${num}$`;
+      let normOp = op;
+      if (op === '≈') normOp = '\\approx';
+      else if (op === '≥') normOp = '\\ge';
+      else if (op === '≤') normOp = '\\le';
+      else if (op === '∈') normOp = '\\in';
+      return `$${norm} ${normOp} ${num}$`;
     }
   );
 
-  // 2. Ký hiệu tiêu chuẩn trần Z_{qs}, t_{qs}, F_{qs}, T_{qs}, Z_qs, t_qs, F_qs, T_qs (KHÔNG đi kèm dấu =)
+  // 2. Ký hiệu tiêu chuẩn trần Z_{qs}, t_{qs}, F_{qs}, T_{qs}, Z_qs, t_qs, F_qs, T_qs (KHÔNG đi kèm dấu quan hệ)
   text = text.replace(
-    /(?<![a-zA-Z0-9$\\])(Z_\{qs\}|Z_qs|t_\{qs\}|t_qs|F_\{qs\}|F_qs|T_\{qs\}|T_qs|\\chi\^2_\{qs\}|\\chi\^2_qs)(?![a-zA-Z0-9$\s]*=)(?![a-zA-Z0-9$}])/g,
+    /(?<![a-zA-Z0-9$\\])(Z_\{qs\}|Z_qs|t_\{qs\}|t_qs|F_\{qs\}|F_qs|T_\{qs\}|T_qs|\\chi\^2_\{qs\}|\\chi\^2_qs)(?![a-zA-Z0-9$\s]*[=≈<>≤≥]|(?:\s*\\(?:approx|ge|le|geq|leq|in)))(?![a-zA-Z0-9$}])/g,
     (_m, stat) => {
       const norm = stat.includes('_qs') && !stat.includes('{qs}') ? stat.replace('_qs', '_{qs}') : stat;
       return `$${norm}$`;
@@ -303,7 +308,25 @@ export function sanitizeAndFixMathText(rawText: string): string {
   text = text.replace(/(?<![a-zA-Z0-9$\\])([p\mu\sigma]_0)\s*=\s*(-?[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g, '$$$1 = $2$$');
   text = text.replace(/(?<![a-zA-Z0-9$\\])\b(f)\s*=\s*([0-9]+\/[0-9]+(?:\s*=\s*[0-9.]+)?|[0-9]+(?:\.[0-9]+)?)(?![0-9$])/g, '$$$1 = $2$$');
 
-  // 8. Trung bình mẫu x̄, ȳ và s²
+  // 10. Thuộc tập hợp / khoảng tin cậy trần: p \in [a; b], \mu \in [a; b], x \in (...)
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])([a-zA-Z\\](?:_\{?[a-zA-Z0-9]+\}?)?)\s*\\in\s*(\[[^\]\n]+\]|\([^)\n]+\))(?![0-9$])/g,
+    '$$$1 \\in $2$$'
+  );
+
+  // 11. Xấp xỉ trần: Z_{qs} \approx ..., P(...) \approx ..., k \approx ...
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])([a-zA-Z\\](?:_\{?[a-zA-Z0-9]+\}?)?(?:\([A-Za-z0-9_,|\s]+\))?)\s*\\approx\s*(-?[0-9]+(?:\.[0-9]+)?(?:\/[0-9]+(?:\.[0-9]+)?)?)(?![0-9$])/g,
+    '$$$1 \\approx $2$$'
+  );
+
+  // 12. Phân phối xác suất trần: X \sim B(n, p), X \sim N(\mu, \sigma^2)
+  text = text.replace(
+    /(?<![a-zA-Z0-9$\\])([A-Za-z]\b)\s*\\sim\s*([A-Za-z]\([^)\n]+\))(?![0-9$])/g,
+    '$$$1 \\sim $2$$'
+  );
+
+  // 13. Trung bình mẫu x̄, ȳ và s²
   text = text.replace(/x̄/g, '$\\bar{x}$');
   text = text.replace(/ȳ/g, '$\\bar{y}$');
   text = text.replace(/s²/g, '$s^2$');
@@ -364,9 +387,17 @@ export function sanitizeAndFixMathText(rawText: string): string {
     return balanced;
   }
 
-  // - Chỉ khi chuỗi là MỘT CÔNG THỨC TOÁN TRẦN ĐƠN LẺ KHÔNG CHỨA TIẾNG VIỆT (ví dụ "\frac{a}{b}" hoặc "\int_0^1 x dx") thì mới bọc $...$.
+  // - Chỉ khi chuỗi là MỘT CÔNG THỨC TOÁN TRẦN ĐƠN LẺ KHÔNG CHỨA TIẾNG VIỆT (ví dụ "p \in [0.0725; 0.1942]", "Z_{qs} \approx 2.45", "\frac{a}{b}", "k = 1/6" hoặc "\int_0^1 x dx") thì mới bọc $...$.
   // Nếu là đoạn văn tiếng Việt có chứa công thức trần bên trong thì KHÔNG bọc $ toàn bộ chuỗi (để parseMathSegments tự bóc tách từng công thức mà không làm dính chữ văn bản).
-  const isPureMathFormula = !/[À-ỹ]/.test(text) && /^(\s*(\\[a-zA-Z]+|[0-9a-zA-Z_()=+\-*/^.]+\s*=\s*\\[a-zA-Z]+))/i.test(text);
+  const hasVietnamese = /[À-ỹ]/.test(text);
+  const isPureMathFormula =
+    !hasVietnamese &&
+    (
+      // Bất kỳ chuỗi nào có chứa lệnh LaTeX (\in, \approx, \frac, \sqrt, \alpha, \sigma...)
+      /\\[a-zA-Z]+/i.test(text) ||
+      // Hoặc chuỗi toán thuần túy có quan hệ / phép toán: = , ≈ , ≤ , ≥ , ∈ , ~ , ^ , _ , / , [ ... ; ... ]
+      (/^[0-9a-zA-Z_^{}()=+\-*/.,;:~[\]\s|·]+$/.test(text) && (/[=~<>≤≥∈∉±_^\/]/.test(text) || /^\[\s*-?[0-9.]+\s*;\s*-?[0-9.]+\s*\]$/.test(text)))
+    );
   if (isPureMathFormula) {
     return '$' + balanceBraces(text.trim()) + '$';
   }
@@ -662,7 +693,7 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
     return [{ type: 'text', content: text }];
   }
 
-  const regex = /(?:(?<![a-zA-ZÀ-ỹ])(?:(?:\\[a-zA-Z]+|[A-Za-z](?:_[A-Za-z0-9]+)?)(?:\([A-Za-z0-9_]+\))?\s*=\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text)\b)/gu;
+  const regex = /(?:(?<![a-zA-ZÀ-ỹ])(?:(?:\\[a-zA-Z]+|[A-Za-z](?:_\{?[A-Za-z0-9]+\}?)?)(?:\([A-Za-z0-9_,|]+\))?\s*(?:=|∈|\\in|≈|\\approx|~|\\sim|<|>|≤|≥|\\le|\\ge|\\leq|\\geq|≠|\\ne|\\neq)?\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|mp|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text|in|notin|subset|subseteq|cap|cup|setminus|forall|exists|left|right)\b)/gu;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -687,8 +718,17 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
       let finalEndIndex = extracted.endIndex;
 
       while (finalEndIndex < text.length) {
-        const chainMatch = text.slice(finalEndIndex).match(/^\s*([+\-*/=·]|\\cdot|\\times|\\approx|\\le|\\ge|\\ne|\\sim)\s*/);
-        if (!chainMatch) break;
+        const chainMatch = text.slice(finalEndIndex).match(/^\s*([+\-*/=·]|\\cdot|\\times|\\approx|\\le|\\ge|\\ne|\\sim|\\in|\\notin)\s*/);
+        if (!chainMatch) {
+          // Hỗ trợ nối tiếp khoảng số [a; b] hoặc (a; b) ngay sau lệnh (ví dụ: p \in [0.0725; 0.1942])
+          const intervalMatch = text.slice(finalEndIndex).match(/^\s*(\[[^\]\n]+\]|\([^)\n]+\))/);
+          if (intervalMatch) {
+            formula += text.slice(finalEndIndex, finalEndIndex + intervalMatch[0].length);
+            finalEndIndex += intervalMatch[0].length;
+            continue;
+          }
+          break;
+        }
 
         const nextStart = finalEndIndex + chainMatch[0].length;
         if (nextStart < text.length && text[nextStart] === '\\') {
