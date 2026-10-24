@@ -141,6 +141,7 @@ export default function App() {
   const [isPromptHistoryOpen, setIsPromptHistoryOpen] = useState(false);
   const [isGoogleDriveOpen, setIsGoogleDriveOpen] = useState(false);
   const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
+  const [isCampusModalOpen, setIsCampusModalOpen] = useState(false);
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -409,8 +410,15 @@ export default function App() {
 
       {/* Mandatory Login Wall (Facebook-style Auth Gate) */}
       {!currentUser && (
-        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-slate-900 border-2 border-cyan-500/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.3)] text-center space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 relative overflow-hidden">
+          {/* Subtle Campus Blur Backdrop */}
+          <div
+            className="absolute inset-0 bg-cover bg-center filter blur-xs scale-105 pointer-events-none"
+            style={{ backgroundImage: `url('/assets/hub-campus.jpg')` }}
+          />
+          <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md pointer-events-none" />
+
+          <div className="max-w-md w-full bg-slate-900/90 border-2 border-cyan-500/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.3)] text-center space-y-6 relative z-10 backdrop-blur-md">
             <div className="flex justify-center pb-2">
               <HubEdtLogo size="lg" className="justify-center" />
             </div>
@@ -571,6 +579,37 @@ export default function App() {
               </span>
             </div>
           </div>
+
+          {/* HUB Campus Pride Card */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-500/30 text-white rounded-3xl shadow-[0_0_20px_rgba(6,182,212,0.15)] overflow-hidden relative group transition-all hover:border-cyan-400">
+            <div className="relative h-28 overflow-hidden cursor-pointer" onClick={() => setIsCampusModalOpen(true)}>
+              <img
+                src="/assets/hub-campus.jpg"
+                alt="Trường Đại học Ngân hàng TP.HCM (HUB)"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40 inline-block mb-1">
+                    🏛️ I ❤️ HUB 1976
+                  </span>
+                  <p className="text-xs font-black text-white leading-tight drop-shadow">
+                    Đại Học Ngân Hàng TP.HCM
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-2.5 text-[11px] text-slate-300 flex items-center justify-between border-t border-slate-800/80 bg-slate-950/60">
+              <span className="text-slate-400 text-[10px]">Cơ sở Thủ Đức & Q.1</span>
+              <button
+                onClick={() => setIsCampusModalOpen(true)}
+                className="text-[10px] font-bold text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>Xem ảnh</span>
+                <span>↗</span>
+              </button>
+            </div>
+          </div>
         </aside>
 
         {/* Center Primary Work Area (Displays Single Full Page) */}
@@ -660,6 +699,65 @@ export default function App() {
         isOpen={isCheatSheetOpen}
         onClose={() => setIsCheatSheetOpen(false)}
       />
+
+      {/* HUB Campus Pride Gallery Modal */}
+      {isCampusModalOpen && (
+        <div className="fixed inset-0 z-60 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl max-w-3xl w-full overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.4)] flex flex-col max-h-[92vh]">
+            <div className="relative h-64 sm:h-84 overflow-hidden shrink-0">
+              <img
+                src="/assets/hub-campus.jpg"
+                alt="Trường Đại học Ngân hàng TP.HCM (HUB)"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-black/30" />
+              <button
+                onClick={() => setIsCampusModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors cursor-pointer text-sm font-bold"
+              >
+                ✕
+              </button>
+              <div className="absolute bottom-4 left-5 right-5 text-white">
+                <span className="text-[11px] font-black uppercase tracking-wider text-cyan-300 bg-cyan-950/90 px-3 py-1 rounded-full border border-cyan-500/50 inline-block mb-1.5 backdrop-blur-sm">
+                  🏛️ TRƯỜNG ĐẠI HỌC NGÂN HÀNG TP. HỒ CHÍ MINH (HUB)
+                </span>
+                <h3 className="text-lg sm:text-2xl font-black drop-shadow">
+                  Nơi Khởi Nguồn Ước Mơ & Chinh Phục Điểm 10 Xác Suất Thống Kê
+                </h3>
+              </div>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto text-xs sm:text-sm text-slate-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-slate-950/80 rounded-2xl border border-slate-800">
+                  <span className="font-bold text-cyan-300 block mb-1">📍 Cơ Sở 1 (Trung Tâm):</span>
+                  <p className="text-slate-300">36 Tôn Thất Đạm, P. Bến Nghé, Quận 1, TP. Hồ Chí Minh</p>
+                </div>
+                <div className="p-3 bg-slate-950/80 rounded-2xl border border-slate-800">
+                  <span className="font-bold text-cyan-300 block mb-1">📍 Cơ Sở 2 (Khuôn Viên Chính):</span>
+                  <p className="text-slate-300">56 Hoàng Diệu 2, P. Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-cyan-950/40 border border-cyan-500/30 rounded-2xl text-xs space-y-1">
+                <span className="font-black text-cyan-300 block">📚 Khoa Hệ Thống Thông Tin & Bộ Môn Toán Kinh Tế HUB</span>
+                <p className="text-slate-300 leading-relaxed">
+                  Ứng dụng AI Classroom được thiết kế bám sát chuẩn chương trình giảng dạy, đề thi và barem điểm Xác Suất Thống Kê của Đại học Ngân hàng TP.HCM (HUB), đồng hành cùng sinh viên HUB học tập và đạt kết quả xuất sắc!
+                </p>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={() => setIsCampusModalOpen(false)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-black rounded-xl hover:from-cyan-300 hover:to-emerald-300 transition-all cursor-pointer text-xs shadow-md"
+                >
+                  Đóng & Tiếp Tục Học Tập
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

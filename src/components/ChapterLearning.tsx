@@ -380,11 +380,23 @@ export const ChapterLearning: React.FC<ChapterLearningProps> = ({
       </div>
 
       {/* Chapter Header Banner - High Contrast Neon Cyan & Emerald */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-500/40 text-white rounded-3xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.2)] relative overflow-hidden">
+      <div className="relative overflow-hidden border-2 border-cyan-500/40 text-white rounded-3xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.2)] group">
+        {/* Subtle HUB Campus Backdrop */}
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-25 pointer-events-none"
+          style={{ backgroundImage: `url('/assets/hub-campus.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-cyan-950/70 pointer-events-none" />
+
         <div className="relative z-10 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-black text-cyan-300">
-            <GraduationCap className="w-4 h-4 text-cyan-400" />
-            <span>Chương {chapter.id} / 7 • Tiết Học Trực Tiếp Với Giảng Viên AI</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-black text-cyan-300">
+              <GraduationCap className="w-4 h-4 text-cyan-400" />
+              <span>Chương {chapter.id} / 7 • Tiết Học Trực Tiếp Với Giảng Viên AI</span>
+            </div>
+            <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-300 bg-slate-950/80 px-2.5 py-0.5 rounded-full border border-cyan-500/30 backdrop-blur-xs">
+              🏛️ ĐH Ngân Hàng TP.HCM (HUB)
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]">
             {chapter.title}

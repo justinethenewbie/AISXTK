@@ -70,13 +70,19 @@ export const HubExamCheatSheetModal: React.FC<HubExamCheatSheetModalProps> = ({
       <div className="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-[0_0_50px_rgba(6,182,212,0.3)] overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-cyan-500/30 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="p-4 sm:p-5 border-b border-cyan-500/30 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0 relative overflow-hidden">
+          {/* Subtle Campus Backdrop */}
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none filter blur-[1px]"
+            style={{ backgroundImage: `url('/assets/hub-campus.jpg')` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/80 to-transparent pointer-events-none" />
+          <div className="flex items-center gap-3 relative z-10">
             <div className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-2xl border border-cyan-500/40 font-black text-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
               📜
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 relative z-10">
                 <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
                   ĐƯỢC PHÉP MANG VÀO PHÒNG THI HUB
                 </span>
@@ -89,7 +95,7 @@ export const HubExamCheatSheetModal: React.FC<HubExamCheatSheetModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative z-10">
             <button
               onClick={handlePrint}
               className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-colors"
@@ -572,7 +578,7 @@ export const HubExamCheatSheetModal: React.FC<HubExamCheatSheetModalProps> = ({
             <span>Nguồn: Bộ Môn Toán Kinh Tế • Khoa Hệ Thống Thông Tin & KH Dữ Liệu HUB</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative z-10">
             <button
               onClick={handlePrint}
               className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.4)]"

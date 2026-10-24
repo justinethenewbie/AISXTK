@@ -197,8 +197,21 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
   return (
     <div className="space-y-6 text-slate-100">
       {/* Profile Header Banner */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-500/40 text-white p-6 rounded-3xl shadow-[0_0_25px_rgba(6,182,212,0.2)] flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+      <div className="relative overflow-hidden border-2 border-cyan-500/40 text-white p-6 rounded-3xl shadow-[0_0_30px_rgba(6,182,212,0.25)] flex flex-col md:flex-row items-center justify-between gap-6 group">
+        {/* HUB Campus Background with Sophisticated Dark Frosted Gradient Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+          style={{ backgroundImage: `url('/assets/hub-campus.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-cyan-950/80 backdrop-blur-[1px] pointer-events-none" />
+
+        {/* Official University Watermark Badge */}
+        <div className="absolute top-3.5 right-4 hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-950/80 border border-cyan-500/30 rounded-full text-[11px] font-bold text-cyan-300 shadow-sm z-10 backdrop-blur-md">
+          <span>🏛️</span>
+          <span>Trường ĐH Ngân Hàng TP.HCM (HUB)</span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left relative z-10">
           <div className="text-5xl bg-cyan-500/20 p-3.5 rounded-2xl border border-cyan-500/40 backdrop-blur shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0">
             {userProfile.avatarUrl && (userProfile.avatarUrl.startsWith('http') || userProfile.avatarUrl.startsWith('data:')) ? (
               <img src={userProfile.avatarUrl} alt={userProfile.fullName} className="w-14 h-14 rounded-xl object-cover" />
@@ -256,7 +269,9 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
         </div>
 
         {/* Live Mascot Preview */}
-        <Mascot size="sm" equipped={userProfile.equippedMascot} speechText="Huy hiệu của bạn trông rất phong độ!" />
+        <div className="relative z-10 shrink-0">
+          <Mascot size="sm" equipped={userProfile.equippedMascot} speechText="Tự hào sinh viên HUB chinh phục điểm 10 XSTK!" />
+        </div>
       </div>
 
       {/* Navigation Tabs */}
