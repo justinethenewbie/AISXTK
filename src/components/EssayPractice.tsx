@@ -49,7 +49,7 @@ const INITIAL_DEMO_ESSAYS = [
   },
 ];
 
-export function getSafeStrategyHint(essay: any): string {
+function getSafeStrategyHint(essay: any): string {
   if (!essay) return 'Đọc kỹ đề bài, xác định mô hình biến ngẫu nhiên và áp dụng công thức tương ứng.';
   let hint =
     essay.strategyHint ||
