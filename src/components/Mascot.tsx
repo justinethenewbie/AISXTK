@@ -59,7 +59,11 @@ export const Mascot: React.FC<MascotProps> = ({
       <div
         onClick={triggerConfetti}
         onDoubleClick={onDoubleClick}
-        className={`${sizeClasses} relative rounded-3xl bg-gradient-to-br ${mascotInfo.gradient} p-2 shadow-xl flex items-center justify-center border-4 ${mascotInfo.borderColor} hover:scale-105 transition-transform duration-200`}
+        className={`${sizeClasses} relative rounded-3xl ${
+          mascotInfo.imageUrl
+            ? 'bg-slate-950 border-3 ' + mascotInfo.borderColor + ' shadow-[0_0_25px_rgba(6,182,212,0.4)]'
+            : 'bg-gradient-to-br ' + mascotInfo.gradient + ' border-4 ' + mascotInfo.borderColor
+        } p-1.5 shadow-xl flex items-center justify-center hover:scale-105 transition-transform duration-200`}
       >
         {/* Hat Overlay */}
         {equipped?.hat && (
