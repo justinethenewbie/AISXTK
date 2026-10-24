@@ -225,6 +225,21 @@ export const HubExamCheatSheetModal: React.FC<HubExamCheatSheetModalProps> = ({
                       <li>• <strong>Trung vị (Median):</strong> <MathFormula math="\int_{-\infty}^M f(x) dx = 0.5" /></li>
                     </ul>
                   </div>
+
+                  {/* Phân phối Chuẩn & Quy tắc tra bảng Laplace */}
+                  <div className="p-3 bg-slate-900/90 rounded-xl border border-cyan-500/40 space-y-2 md:col-span-2">
+                    <span className="font-bold text-cyan-300 block text-xs">5. Phân Phối Chuẩn & Quy Tắc Tra Bảng Laplace (Mục I.4 Tờ Phao HUB):</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
+                      <div className="space-y-1 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                        <p>• <strong>Ký hiệu:</strong> <MathFormula math="X \sim N(\mu, \sigma^2)" /> với <MathFormula math="E(X) = \mu" />, phương sai <MathFormula math="\text{Var}(X) = \sigma^2" /> (độ lệch chuẩn là <MathFormula math="\sigma" />).</p>
+                        <p>• <strong>Quy chuẩn hóa:</strong> <MathFormula math="Z = \frac{X - \mu}{\sigma} \sim N(0, 1)" />.</p>
+                      </div>
+                      <div className="space-y-1 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                        <p>• <strong>Hàm Laplace:</strong> <MathFormula math="P(X < x) = 0.5 + \Phi_0\left(\frac{x - \mu}{\sigma}\right)" /> (tra Bảng số Phụ lục 2).</p>
+                        <p>• <strong>Xác suất trong khoảng:</strong> <MathFormula math="P(a < X < b) = \Phi_0\left(\frac{b - \mu}{\sigma}\right) - \Phi_0\left(\frac{a - \mu}{\sigma}\right)" />.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -316,6 +316,11 @@
     "recentActivity": [
       {
         "action": "Linh vật đồng hành 🐾",
+        "detail": "Chọn PENGUIN làm bạn đồng hành nhảy nhót học tập!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Linh vật đồng hành 🐾",
         "detail": "Chọn OWL làm bạn đồng hành nhảy nhót học tập!",
         "timestamp": "Vừa xong"
       },
@@ -357,7 +362,7 @@
     ],
     "lastStudyDate": "2026-10-24",
     "equippedMascot": {
-      "species": "owl",
+      "species": "penguin",
       "hat": "hat_grad",
       "outfit": "robe_gold",
       "accessory": "glasses_smart"

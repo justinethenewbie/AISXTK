@@ -379,12 +379,18 @@ export function sanitizeAndFixMathText(rawText: string): string {
  */
 export function cleanLatexString(raw: string): string {
   if (!raw) return '';
-  const sanitized = sanitizeAndFixMathText(raw);
-  let cleaned = sanitized
+  let cleaned = raw
     .trim()
     .replace(/\\?\\?ellipsis/gi, '\\dots')
     .replace(/…/g, '\\dots')
     .replace(/\\\\/g, '\\');
+
+  // Khôi phục các lệnh LaTeX nếu bị JSON nuốt ký tự điều khiển (\f, \b, \t, \r)
+  cleaned = cleaned
+    .replace(/\x08(ar|eta|inom|egin|mathbf)/g, '\\b$1')
+    .replace(/\x0c(rac|orall)/g, '\\f$1')
+    .replace(/\t(imes|ext|heta|au|o|frac|rightarrow)/g, '\\t$1')
+    .replace(/\r(ight|ho|angle)/g, '\\r$1');
 
   // 1. Gỡ bỏ toàn bộ dấu bao quanh ($...$, $$...$$, \(...\), \[...\]) vì KaTeX renderToString nhận chuỗi thuần
   while (/^\s*(\${1,2}|\\\[|\\\()/.test(cleaned) && /(\${1,2}|\\\]|\\\))\s*$/.test(cleaned)) {
@@ -737,17 +743,28 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
  */
 export function parseMathSegments(text: string): MathSegment[] {
   if (!text) return [];
-  const sanitizedText = sanitizeAndFixMathText(text);
+
+  // Phục hồi khoảng trắng cho các từ tiếng Việt bị dính chữ trước khi bóc tách
+  let processedText = fixStuckVietnameseMathWords(text);
 
   const delimiterPattern = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|(?<!\\)\$([^\$\n]+?)(?<!\\)\$|\\\(.*?\\\))/g;
+
+  // Nếu trong chuỗi KHÔNG CÓ bất kỳ dấu phân cách toán học ($ hay \[ hay \():
+  // Cho phép sanitizeAndFixMathText tự động phát hiện và bọc công thức trần vào dấu $
+  if (!delimiterPattern.test(processedText)) {
+    processedText = sanitizeAndFixMathText(processedText);
+  }
+
+  // Reset regex lastIndex sau khi test
+  delimiterPattern.lastIndex = 0;
 
   const segments: MathSegment[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = delimiterPattern.exec(sanitizedText)) !== null) {
+  while ((match = delimiterPattern.exec(processedText)) !== null) {
     if (match.index > lastIndex) {
-      const textChunk = sanitizedText.slice(lastIndex, match.index);
+      const textChunk = processedText.slice(lastIndex, match.index);
       segments.push(...parseNakedLatexInTextSegment(textChunk));
     }
 
@@ -788,8 +805,8 @@ export function parseMathSegments(text: string): MathSegment[] {
     lastIndex = match.index + raw.length;
   }
 
-  if (lastIndex < sanitizedText.length) {
-    const textChunk = sanitizedText.slice(lastIndex);
+  if (lastIndex < processedText.length) {
+    const textChunk = processedText.slice(lastIndex);
     segments.push(...parseNakedLatexInTextSegment(textChunk));
   }
 
