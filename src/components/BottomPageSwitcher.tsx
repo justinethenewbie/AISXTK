@@ -33,13 +33,13 @@ export const BottomPageSwitcher: React.FC<BottomPageSwitcherProps> = ({
 }) => {
   const PRIMARY_TOOLS: Array<{ id: ActiveToolType; label: string; icon: React.ReactNode }> = [
     { id: 'learning', label: 'Lý Thuyết 5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
-    { id: 'image_grading', label: '⚡ Gia Sư AI 1-1 & Giải Toán', icon: <Sparkles className="w-4 h-4 text-cyan-300" /> },
-    { id: 'big_doc_processor', label: '🚀 Xử Lý Big Size (100MB)', icon: <FileText className="w-4 h-4 text-amber-300" /> },
-    { id: 'charts', label: '📊 Phân Tích Dữ Liệu & BCTC', icon: <BarChart3 className="w-4 h-4 text-emerald-400" /> },
+    { id: 'image_grading', label: '⚡ Gia Sư AI 1-1', icon: <Sparkles className="w-4 h-4 text-cyan-300" /> },
+    { id: 'big_doc_processor', label: '🚀 Xử Lý File Lớn', icon: <FileText className="w-4 h-4 text-amber-300" /> },
+    { id: 'charts', label: '📊 Phân Tích Dữ Liệu', icon: <BarChart3 className="w-4 h-4 text-emerald-400" /> },
     { id: 'casio_calc', label: 'Máy Tính Casio', icon: <Calculator className="w-4 h-4 text-cyan-300" /> },
-    { id: 'mcq_generator', label: 'Đề Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
-    { id: 'essay_generator', label: 'Đề Tự Luận', icon: <FileText className="w-4 h-4 text-blue-400" /> },
-    { id: 'mindmap', label: 'Sơ Đồ Tư Duy', icon: <Map className="w-4 h-4 text-cyan-400" /> },
+    { id: 'mcq_generator', label: 'Đề Thi Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
+    { id: 'essay_generator', label: 'Đề Thi Tự Luận', icon: <FileText className="w-4 h-4 text-blue-400" /> },
+    { id: 'mindmap', label: 'Bản Đồ Tư Duy', icon: <Map className="w-4 h-4 text-cyan-400" /> },
   ];
 
   return (

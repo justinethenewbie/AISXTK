@@ -49,7 +49,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             activeTool === 'essay_generator' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5 shadow-[0_4px_12px_rgba(6,182,212,0.5)]' : ''
           }`}
         >
-          📝 Đề Tự Luận & Soạn Thảo Word
+          📝 Đề Thi Tự Luận
         </button>
 
         <button
@@ -67,7 +67,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             activeTool === 'image_grading' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5 shadow-[0_4px_12px_rgba(6,182,212,0.5)]' : ''
           }`}
         >
-          ⚡ Gia Sư AI 1-1 & Giải Toán
+          ⚡ Gia Sư AI 1-1
         </button>
 
         <button
@@ -76,7 +76,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             activeTool === 'big_doc_processor' ? 'text-amber-300 font-black border-b-2 border-amber-400 pb-0.5 shadow-[0_4px_12px_rgba(251,191,36,0.5)]' : ''
           }`}
         >
-          🚀 Xử Lý Big Size (100MB)
+          🚀 Xử Lý File Lớn
         </button>
 
         <button
@@ -94,7 +94,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             activeTool === 'mcq_generator' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5' : ''
           }`}
         >
-          Đề Trắc Nghiệm (Word/PDF)
+          Đề Thi Trắc Nghiệm
         </button>
 
         <button
@@ -103,7 +103,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             activeTool === 'essay_generator' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5' : ''
           }`}
         >
-          Đề Tự Luận
+          Đề Thi Tự Luận
         </button>
 
         <button
@@ -112,7 +112,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             activeTool === 'mindmap' ? 'text-cyan-300 font-black border-b-2 border-cyan-400 pb-0.5' : ''
           }`}
         >
-          Sơ Đồ Tư Duy
+          Bản Đồ Tư Duy
         </button>
       </nav>
 
