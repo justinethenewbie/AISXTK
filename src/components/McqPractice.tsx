@@ -261,17 +261,56 @@ export const McqPractice: React.FC<McqPracticeProps> = ({ onAddExp, onRecordMist
         </div>
 
         {/* User specific expectations */}
-        <div>
-          <label className="block text-xs text-slate-200 font-bold mb-1.5">
-            5. Yêu cầu & Kỳ vọng cụ thể của bạn (Tùy chọn):
-          </label>
-          <input
-            type="text"
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs text-slate-200 font-bold">
+              5. Yêu cầu & Kỳ vọng riêng của bạn (AI Thinking bám sát 100%):
+            </label>
+            <span className="text-[10px] text-cyan-400 font-mono font-semibold">
+              Tùy chỉnh dạng bẫy thi & nội dung
+            </span>
+          </div>
+          <textarea
+            rows={3}
             value={userExpectations}
             onChange={(e) => setUserExpectations(e.target.value)}
-            placeholder="Ví dụ: Tập trung vào công thức Bayes, phân phối Poisson, tích phân liên tục và bảng số liệu..."
-            className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white placeholder-slate-400 text-xs outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium"
+            placeholder="Nhập chi tiết bất kỳ yêu cầu nào của bạn. Ví dụ: Tập trung vào các câu hỏi bẫy thi phân phối chuẩn, nhầm lẫn giữa sigma và sigma^2, công thức Bayes và kỹ năng bấm máy Casio fx-580..."
+            className="w-full p-3 rounded-2xl border border-cyan-500/40 bg-slate-950 text-white placeholder-slate-500 text-xs outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium leading-relaxed resize-none shadow-inner"
           />
+
+          {/* Quick suggestion prompt chips */}
+          <div className="space-y-1">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+              ⚡ Gợi ý yêu cầu nhanh (Click để chọn):
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                '⚡ Bẫy trắc nghiệm: Quên chia căn n trong KTC',
+                '🎲 Xác suất điều kiện & Công thức nhân biến cố độc lập',
+                '📉 Phân phối chuẩn: Quy tắc 3-sigma & Bảng tra Laplace',
+                '🔢 Kỹ năng bấm máy Menu 6 Thống kê 1 biến Casio 580',
+                '🏢 Tỷ lệ phế phẩm & Kiểm định giả thuyết tỷ lệ 2 phía',
+                '⏱️ Bộ câu hỏi phân loại điểm 9-10 thi kết thúc học phần',
+              ].map((chip, cIdx) => (
+                <button
+                  key={cIdx}
+                  type="button"
+                  onClick={() => {
+                    const cleanChip = chip.replace(/^[^\s]+\s*/, '');
+                    setUserExpectations((prev) => (prev ? `${prev}. ${cleanChip}` : cleanChip));
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/50 text-[11px] text-slate-300 hover:text-cyan-300 transition-all cursor-pointer font-medium"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-cyan-300 font-semibold bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-500/30">
+            <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>AI Thinking 2.0: Tự động phân tích các bẫy đề thi kinh điển, tạo phương án nhiễu thông minh và giải thích vì sao đúng/sai từng câu.</span>
+          </div>
         </div>
 
         {/* Action Button */}

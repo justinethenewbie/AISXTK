@@ -800,17 +800,56 @@ export const EssayPractice: React.FC<EssayPracticeProps> = ({ onAddExp, onRecord
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs text-slate-200 font-bold mb-1.5">
-                5. Yêu cầu & Kỳ vọng riêng của bạn (Tùy chọn):
-              </label>
-              <input
-                type="text"
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs text-slate-200 font-bold">
+                  5. Yêu cầu & Kỳ vọng riêng của bạn (AI Thinking bám sát 100%):
+                </label>
+                <span className="text-[10px] text-cyan-400 font-mono font-semibold">
+                  Tùy chỉnh sâu ngữ cảnh & dạng toán
+                </span>
+              </div>
+              <textarea
+                rows={3}
                 value={userExpectations}
                 onChange={(e) => setUserExpectations(e.target.value)}
-                placeholder="Ví dụ: Cần bài toán tính tỷ lệ thu hồi nợ xấu, hàm mật độ liên tục, tìm hằng số k và phương sai..."
-                className="w-full p-3 rounded-xl border border-cyan-500/30 bg-slate-950 text-white placeholder-slate-400 text-xs outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium"
+                placeholder="Nhập chi tiết bất kỳ yêu cầu nào của bạn. Ví dụ: Cần bài toán về kiểm toán ngân hàng, bảng số liệu ghép nhóm 120 khách hàng, tính khoảng tin cậy 95% cho doanh thu trung bình và kiểm định mục tiêu tăng trưởng..."
+                className="w-full p-3 rounded-2xl border border-cyan-500/40 bg-slate-950 text-white placeholder-slate-500 text-xs outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium leading-relaxed resize-none shadow-inner"
               />
+
+              {/* Quick suggestion prompt chips */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                  ⚡ Gợi ý yêu cầu nhanh (Click để chọn):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    '🏦 Thẩm định rủi ro tín dụng & Tỷ lệ nợ xấu ngân hàng',
+                    '🎲 Công thức Bayes & Xác suất toàn phần có bẫy',
+                    '📊 Bảng số liệu ghép nhóm 100 mẫu & Bấm máy Casio 580',
+                    '🎯 Ước lượng khoảng tin cậy 95% & Kiểm định 2 phía',
+                    '📈 Biến ngẫu nhiên liên tục: Hàm mật độ & Kỳ vọng, Phương sai',
+                    '💡 Tính cỡ mẫu tối thiểu n khi thay đổi độ tin cậy sang 99%',
+                  ].map((chip, cIdx) => (
+                    <button
+                      key={cIdx}
+                      type="button"
+                      onClick={() => {
+                        const cleanChip = chip.replace(/^[^\s]+\s*/, '');
+                        setUserExpectations((prev) => (prev ? `${prev}. ${cleanChip}` : cleanChip));
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/50 text-[11px] text-slate-300 hover:text-cyan-300 transition-all cursor-pointer font-medium"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px] text-cyan-300 font-semibold bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-500/30">
+                <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>AI Thinking 2.0: Phân tích sâu yêu cầu của bạn, thiết kế bài toán thực tế ngân hàng/tài chính kèm lời giải từng bước chuẩn KaTeX.</span>
+              </div>
             </div>
 
             <button

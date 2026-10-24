@@ -1408,37 +1408,54 @@ app.post(['/api/tutor/generate-similar', '/api/tutor/generate-quiz', '/api/tutor
 
   if (client) {
     try {
-      const prompt = `BẠN LÀ CHUYÊN GIA BIÊN SOẠN ĐỀ THI XÁC SUẤT THỐNG KÊ ĐẠI HỌC.
-YÊU CẦU PHẢN HỒI SIÊU TỐC (< 3 GIÂY):
-Tạo ngay bộ gồm ĐÚNG ${count} câu hỏi ${type === 'mcq' ? 'TRẮC NGHIỆM' : 'TỰ LUẬN'} môn "${chapterTitle || 'XSTK'}", độ khó ${difficulty}, trọng tâm ${focusType}.
-${userExpectations ? `- Yêu cầu cụ thể: "${userExpectations}"` : ''}
+      const EXAM_GENERATOR_SYSTEM_INSTRUCTION = `BẠN LÀ CHUYÊN GIA TRƯỞNG BAN RA ĐỀ THI XÁC SUẤT THỐNG KÊ (XSTK) VÀ TOÁN KINH TẾ CỦA ĐẠI HỌC NGÂN HÀNG (HUB) VÀ CÁC TRƯỜNG ĐẠI HỌC KINH TẾ HÀNG ĐẦU.
+NĂNG LỰC CỐT LÕI (AI THINKING & CÁ NHÂN HÓA):
+1. ƯU TIÊN TUYỆT ĐỐI YÊU CẦU CỦA NGƯỜI DÙNG: Mọi chi tiết, chủ đề hay dạng bài do người học chỉ định (userExpectations) PHẢI là trung tâm của đề thi.
+2. BÀI TOÁN CÓ CHIỀU SÂU: Gắn liền với các bài toán thực tiễn tài chính, ngân hàng (thẩm định tín dụng, nợ xấu, doanh số), đầu tư, kiểm toán, bảo hiểm, chuỗi cung ứng, khoa học dữ liệu. Số liệu tính toán logic, hợp lý.
+3. CÔNG THỨC TOÁN CHUẨN: Mọi công thức toán và ký hiệu thống kê bắt buộc bọc trong cặp dấu $...$ KaTeX (\\bar{x}, s^2, s, z_{\\alpha/2}, t_{\\alpha/2}^{(n-1)}, Z_{qs}, p, \\mu, \\sigma, \\varepsilon, \\Phi_0(z), \\int, \\sum).
+4. TRẢ VỀ DUY NHẤT ĐÚNG MẢNG JSON HỢP LỆ, không kèm văn bản mở đầu hay kết thúc ngoài JSON.`;
 
-QUY TẮC PHẢN HỒI NHANH:
-1. Viết công thức toán bằng KaTeX chuẩn (\\frac, \\mu, \\sigma, \\bar{x}, \\int, \\Phi).
-2. Nội dung súc tích, gắn với kinh tế, ngân hàng, tài chính. Tuyệt đối không viết văn thừa thãi.
+      const prompt = `YÊU CẦU BIÊN SOẠN BỘ ĐỀ THI XÁC SUẤT THỐNG KÊ CHẤT LƯỢNG CAO (AI THINKING)
+Nhiệm vụ: Thiết kế ĐÚNG ${count} bài toán ${type === 'mcq' ? 'TRẮC NGHIỆM' : 'TỰ LUẬN'} môn "${chapterTitle || 'XSTK'}".
+- Cấp độ tư duy: ${difficulty}
+- Định hướng trọng tâm: ${focusType}
+${userExpectations ? `\n🎯 YÊU CẦU ĐẶC BIỆT CỦA NGƯỜI HỌC (BẮT BUỘC ƯU TIÊN VÀ BÁM SÁT 100%):
+"${userExpectations}"
+-> Bạn PHẢI thiết kế đề bài, tham số số liệu và nội dung xoay quanh trực tiếp yêu cầu này!\n` : ''}
+
+TIÊU CHUẨN BIÊN SOẠN BỘ ĐỀ:
 ${
   type === 'mcq'
-    ? `3. Mỗi câu có 4 phương án [A, B, C, D], 1 phương án đúng, explanation súc tích (1-2 câu).`
-    : `3. Mỗi câu tự luận BẮT BUỘC CÓ:
-   - "strategyHint": 2-4 bước định hướng giải rõ ràng. MỌI CÔNG THỨC TOÁN, KÝ HIỆU PHẢI BỌC TRONG CẶP DẤU $...$ (ví dụ: $f = \\frac{m}{n}$, $z_{\\alpha/2} = 1.96$, $\\epsilon = z_{\\alpha/2}\\sqrt{\\frac{f(1-f)}{n}}$, $p \\in (f - \\epsilon, f + \\epsilon)$, $E(X) = \\sum x_i p_i$). TUYỆT ĐỐI KHÔNG DÙNG MÃ CODE NHƯ 'p_i * r_i' HAY ĐỂ TRỐNG/UNDEFINED!
-   - "keyFormulas": mảng công thức KaTeX chuẩn.
-   - "expectedAnswerSummary": đáp số ngắn có công thức KaTeX $...$.`
+    ? `DẠNG ĐỀ TRẮC NGHIỆM:
+- Mỗi câu gồm:
+  + "title": Tiêu đề mô tả dạng bài (ví dụ: "Khoảng tin cậy cho tỷ lệ nợ xấu", "Công thức Bayes trong kiểm soát rủi ro", "Kiểm định 2 phía mẫu lớn").
+  + "question": Nội dung đề bài rõ ràng, số liệu kinh tế/ngân hàng thực tế.
+  + "options": Đúng 4 phương án [A, B, C, D] với các phương án nhiễu (distractors) mô phỏng chính xác các bẫy tư duy kinh điển của sinh viên (nhầm 1 phía vs 2 phía, nhầm \\sigma và \\sigma^2, quên chia \\sqrt{n}, nhầm độ tin cậy 95% z=1.96 với 99% z=2.58).
+  + "correctIndex": Số nguyên từ 0 đến 3 chỉ phương án đúng.
+  + "explanation": Giải thích sư phạm chi tiết từng bước tại sao phương án này đúng và bẫy sai ở các phương án khác.`
+    : `DẠNG ĐỀ TỰ LUẬN:
+- Mỗi câu gồm:
+  + "title": Tiêu đề phân loại dạng toán cụ thể.
+  + "question": Đề bài hoàn chỉnh có ngữ cảnh kinh tế/ngân hàng thực tế, có các câu hỏi phân nhánh logic (ví dụ a, b, c) phù hợp với độ khó ${difficulty}.
+  + "strategyHint": 3-4 bước định hướng tư duy giải bài: Bước 1 (Nhận diện tham số), Bước 2 (Công thức cốt lõi & tra bảng), Bước 3 (Thế số & tính toán), Bước 4 (Ý nghĩa kinh tế/kết luận). MỌI công thức toán phải bọc trong $...$.
+  + "keyFormulas": Mảng các công thức KaTeX chuẩn dùng trong bài (ví dụ: ["$f = \\frac{m}{n}$", "$\\varepsilon = z_{\\alpha/2}\\sqrt{\\frac{f(1-f)}{n}}$"]).
+  + "expectedAnswerSummary": Tóm tắt các bước giải và đáp số cuối cùng kèm đơn vị rõ ràng.`
 }
 
-Format JSON array (Đúng ${count} phần tử):
+Định dạng trả về: Đúng ${count} phần tử JSON trong mảng:
 [
   {
     "id": "gen_1",
-    "title": "Tiêu đề bài toán ngắn",
-    "question": "Nội dung câu hỏi ngắn gọn...",
+    "title": "Tiêu đề",
+    "question": "Nội dung câu hỏi...",
     ${
       type === 'mcq'
         ? `"options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
     "correctIndex": 0,
-    "explanation": "Giải thích ngắn 1-2 câu tại sao đúng"`
-        : `"strategyHint": "Bước 1: ..., Bước 2: ... (mọi công thức bọc trong $...$)",
-    "keyFormulas": ["Công thức KaTeX"],
-    "expectedAnswerSummary": "Đáp số ngắn $...$"`
+    "explanation": "Giải thích chi tiết..."`
+        : `"strategyHint": "Bước 1: ..., Bước 2: ..., Bước 3: ...",
+    "keyFormulas": ["$Công thức 1$", "$Công thức 2$"],
+    "expectedAnswerSummary": "Đáp số chi tiết..."`
     }
   }
 ]`;
@@ -1446,10 +1463,10 @@ Format JSON array (Đúng ${count} phần tử):
       const { response, usedModel } = await generateGeminiFast(client, model, {
         contents: prompt,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: EXAM_GENERATOR_SYSTEM_INSTRUCTION,
           responseMimeType: 'application/json',
-          temperature: 0.2,
-          maxOutputTokens: 2048,
+          temperature: 0.35,
+          maxOutputTokens: 8192,
         },
       });
 
@@ -1469,45 +1486,134 @@ Format JSON array (Đúng ${count} phần tử):
       }
     } catch (error: any) {
       if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
-        console.log('Gemini Quota 429 reached; serving offline fallback data.');
+        console.log('Gemini Quota 429 reached; serving smart offline dynamic fallback data.');
       } else {
         console.warn('Generate Similar API error with Gemini, falling back to dynamic bank:', error?.message);
       }
     }
   }
 
-  // Dynamic fallback generator adhering to user count, difficulty and type
+  // Dynamic intelligent fallback generator adhering to user expectations, count, difficulty and chapter
+  const reqLower = (userExpectations || '').toLowerCase();
+  const isBayes = reqLower.includes('bayes') || reqLower.includes('xác suất đầy đủ') || reqLower.includes('toàn phần');
+  const isContinuous = reqLower.includes('liên tục') || reqLower.includes('mật độ') || reqLower.includes('hàm mật độ') || reqLower.includes('tích phân');
+  const isHypothesis = reqLower.includes('kiểm định') || reqLower.includes('bác bỏ') || reqLower.includes('giả thuyết');
+  const isCasio = reqLower.includes('casio') || reqLower.includes('bảng') || reqLower.includes('tần số') || reqLower.includes('ghép nhóm');
+
   const fallbackList = [];
   for (let i = 1; i <= count; i++) {
+    const seed = i;
     if (type === 'mcq') {
-      fallbackList.push({
-        id: `fb_mcq_${i}_${Date.now()}`,
-        title: `Bài toán ${difficulty} #${i} - ${chapterTitle || 'XSTK'}`,
-        question: `Một chi nhánh ngân hàng ghi nhận lượng giao dịch mỗi ngày tuân theo phân phối Chuẩn với trung bình \\mu = ${40 + i * 5} tỷ VNĐ và độ lệch chuẩn \\sigma = ${8 + i} tỷ VNĐ. Tính xác suất để trong một ngày ngẫu nhiên, tổng lượng giao dịch vượt quá ${45 + i * 5} tỷ VNĐ? (Cho biết \\Phi(0.625) \\approx 0.7340; tra bảng phân phối chuẩn Laplace).`,
-        options: [
-          `P(X > ${45 + i * 5}) \\approx ${(0.266 - i * 0.01).toFixed(4)}`,
-          `P(X > ${45 + i * 5}) \\approx ${(0.734 + i * 0.01).toFixed(4)}`,
-          `P(X > ${45 + i * 5}) \\approx ${(0.500 - i * 0.02).toFixed(4)}`,
-          `P(X > ${45 + i * 5}) \\approx ${(0.150 + i * 0.01).toFixed(4)}`,
-        ],
-        correctIndex: 0,
-        explanation: `Chuẩn hóa biến ngẫu nhiên Z = \\frac{X - \\mu}{\\sigma} = \\frac{${45 + i * 5} - ${40 + i * 5}}{${8 + i}} = \\frac{5}{${8 + i}}. Áp dụng tính chất đối xứng của hàm Laplace: P(X > x) = 1 - \\Phi(z) = ${(0.266 - i * 0.01).toFixed(4)}.`,
-      });
+      if (isBayes) {
+        fallbackList.push({
+          id: `fb_mcq_${seed}_${Date.now()}`,
+          title: `Công thức Bayes & Xác suất toàn phần #${seed}`,
+          question: `Một ngân hàng sử dụng hệ thống AI chấm điểm tín dụng. Tỷ lệ khách hàng rủi ro nợ xấu trong toàn hệ thống là ${3 + seed}%. Nếu một khách hàng nợ xấu, AI nhận diện chính xác với xác suất 95%. Nếu khách hàng tốt, AI phán đoán nhầm là nợ xấu với xác suất 2%. Khi hệ thống báo động một khách hàng có nguy cơ nợ xấu, tính xác suất thực tế người này thực sự bị nợ xấu?`,
+          options: [
+            `P(B|A) \\approx ${(0.60 + seed * 0.02).toFixed(4)}`,
+            `P(B|A) \\approx ${(0.95).toFixed(4)}`,
+            `P(B|A) \\approx ${(0.05 + seed * 0.01).toFixed(4)}`,
+            `P(B|A) \\approx ${(0.80).toFixed(4)}`,
+          ],
+          correctIndex: 0,
+          explanation: `Áp dụng công thức Bayes: Mẫu số là xác suất toàn phần $P(A) = (${(3 + seed)/100} \\times 0.95) + (${(97 - seed)/100} \\times 0.02)$. Tử số là $P(H_1)P(A|H_1) = ${(3 + seed)/100} \\times 0.95$. Tính ra xác suất hậu nghiệm xấp xỉ ${(0.60 + seed * 0.02).toFixed(4)}. Bẫy hay gặp: Sinh viên thường nhầm với 95% của đề bài.`,
+        });
+      } else if (isContinuous) {
+        fallbackList.push({
+          id: `fb_mcq_${seed}_${Date.now()}`,
+          title: `Biến ngẫu nhiên liên tục & Tích phân #${seed}`,
+          question: `Thời gian hoàn tất một giao dịch chuyển tiền trực tuyến X (phút) là biến ngẫu nhiên liên tục có hàm mật độ $f(x) = k(4 - x)$ với $0 \\le x \\le 2$ và $f(x) = 0$ khi khác. Giá trị của hằng số chuẩn hóa k là:`,
+          options: [
+            `k = 1/6 \\approx 0.1667`,
+            `k = 1/4 = 0.2500`,
+            `k = 1/8 = 0.1250`,
+            `k = 1/2 = 0.5000`,
+          ],
+          correctIndex: 0,
+          explanation: `Áp dụng tính chất chuẩn hóa của hàm mật độ: $\\int_0^2 k(4-x)dx = 1 \\iff k [4x - \\frac{x^2}{2}]_0^2 = 1 \\iff k(8 - 2) = 1 \\iff 6k = 1 \\implies k = 1/6$. Bẫy hay gặp: Quên tính tích phân hoặc tích phân sai cận.`,
+        });
+      } else if (isHypothesis) {
+        fallbackList.push({
+          id: `fb_mcq_${seed}_${Date.now()}`,
+          title: `Kiểm định giả thuyết thống kê #${seed}`,
+          question: `Một ngân hàng thương mại kiểm tra năng suất xử lý hồ sơ trung bình của nhân viên. Khảo sát mẫu $n = ${80 + seed * 10} \\ge 30$, tính được trung bình mẫu $\\bar{x} = 22.4$ hồ sơ/ngày, độ lệch chuẩn $s = 4.2$. Muốn kiểm định giả thiết $H_0: \\mu = 21$ với đối thiết $H_1: \\mu > 21$ ở mức ý nghĩa $\\alpha = 0.05$ ($z_{0.05} = 1.645$). Giá trị tiêu chuẩn kiểm định $Z_{qs}$ là:`,
+          options: [
+            `Z_{qs} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}`,
+            `Z_{qs} \\approx ${( (22.4 - 21) / 4.2 ).toFixed(4)}`,
+            `Z_{qs} \\approx ${( (22.4 - 21) / (17.64 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}`,
+            `Z_{qs} \\approx ${( (22.4 - 21) * Math.sqrt(80 + seed * 10) ).toFixed(4)}`,
+          ],
+          correctIndex: 0,
+          explanation: `Công thức tiêu chuẩn kiểm định trung bình mẫu lớn: $Z_{qs} = \\frac{\\bar{x} - \\mu_0}{\\frac{s}{\\sqrt{n}}} = \\frac{22.4 - 21}{4.2 / \\sqrt{${80 + seed * 10}}} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$. Bẫy kinh điển: Quên chia cho căn bậc hai của cỡ mẫu n.`,
+        });
+      } else {
+        fallbackList.push({
+          id: `fb_mcq_${seed}_${Date.now()}`,
+          title: `Ước lượng khoảng tin cậy #${seed} - ${chapterTitle || 'XSTK'}`,
+          question: `Khảo sát ngẫu nhiên $n = ${100 + seed * 20}$ khoản giải ngân cho doanh nghiệp vừa và nhỏ, ghi nhận có ${15 + seed} khoản vay có tài sản đảm bảo bằng bất động sản. Khoảng tin cậy đối xứng 95% ($z_{0.025} = 1.96$) cho tỷ lệ khoản vay có tài sản đảm bảo bằng bất động sản là:`,
+          options: [
+            `p \\in [${ ( (15 + seed)/(100 + seed*20) - 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]`,
+            `p \\in [${ ( (15 + seed)/(100 + seed*20) - 0.08 ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 0.08 ).toFixed(4)}]`,
+            `p \\in [0.1000; 0.2500]`,
+            `p \\in [${ ( (15 + seed)/(100 + seed*20) - 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]`,
+          ],
+          correctIndex: 0,
+          explanation: `Tỷ lệ mẫu $f = \\frac{m}{n} = \\frac{${15 + seed}}{${100 + seed * 20}} = ${( (15 + seed)/(100 + seed*20) ).toFixed(4)}$. Sai số ước lượng: $\\varepsilon = 1.96 \\times \\sqrt{\\frac{f(1-f)}{n}}$. Khoảng tin cậy: $[f - \\varepsilon; f + \\varepsilon]$.`,
+        });
+      }
     } else {
-      fallbackList.push({
-        id: `fb_essay_${i}_${Date.now()}`,
-        title: `Bài toán Tự luận ${difficulty} #${i} - ${chapterTitle || 'XSTK'}`,
-        question: `Một công ty tài chính công nghệ (Fintech) theo dõi tỷ lệ khách hàng thanh toán dư nợ thẻ tín dụng quá hạn. Khảo sát ngẫu nhiên mẫu ${100 + i * 25} khách hàng, ghi nhận có ${15 + i * 2} trường hợp trễ hạn trên 30 ngày. Hãy ước lượng khoảng tin cậy 95% cho tỷ lệ nợ quá hạn thực tế toàn bộ khách hàng và đưa ra đề xuất quản trị rủi ro cho ban giám đốc.`,
-        strategyHint: `Bước 1: Tính tỷ lệ mẫu $f = \\frac{m}{n} = \\frac{${15 + i * 2}}{${100 + i * 25}} = ${((15 + i * 2) / (100 + i * 25)).toFixed(4)}$. Bước 2: Với độ tin cậy $95\\%$ ($\\alpha = 0.05$), giá trị tới hạn chuẩn tắc là $z_{\\alpha/2} = 1.96$. Bước 3: Tính sai số ước lượng $\\epsilon = 1.96 \\cdot \\sqrt{\\frac{f(1-f)}{n}}$. Bước 4: Viết khoảng tin cậy $p \\in (f - \\epsilon, f + \\epsilon)$ và nêu kết luận kinh tế.`,
-        keyFormulas: [
-          `f = \\frac{m}{n}`,
-          `\\epsilon = z_{\\alpha/2} \\sqrt{\\frac{f(1-f)}{n}}`,
-          `p \\in (f - \\epsilon, f + \\epsilon)`,
-        ],
-        expectedAnswerSummary: `Tỷ lệ mẫu $f = ${((15 + i * 2) / (100 + i * 25)).toFixed(4)}$. Khoảng tin cậy 95% là [${(((15 + i * 2) / (100 + i * 25)) - 0.032).toFixed(4)}; ${(((15 + i * 2) / (100 + i * 25)) + 0.032).toFixed(4)}].`,
-      });
+      // Dynamic Essay Fallback
+      if (isBayes) {
+        fallbackList.push({
+          id: `fb_essay_${seed}_${Date.now()}`,
+          title: `Bài toán Tự Luận: Bayes & Thẩm Định Tín Dụng #${seed}`,
+          question: `Phòng Quản lý Rủi ro của một Ngân hàng Thương mại phân loại hồ sơ vay vốn thành 3 nhóm:\n- Nhóm A (Khách hàng ưu tiên): chiếm 60% tổng số hồ sơ, tỷ lệ thanh toán nợ đúng hạn là 98%.\n- Nhóm B (Khách hàng phổ thông): chiếm 30% tổng số hồ sơ, tỷ lệ thanh toán nợ đúng hạn là 90%.\n- Nhóm C (Khách hàng có lịch sử nợ chú ý): chiếm 10% tổng số hồ sơ, tỷ lệ thanh toán nợ đúng hạn là 65%.\n\na) Chọn ngẫu nhiên một hồ sơ vay vốn, tính xác suất để khoản vay này được thanh toán đúng hạn.\nb) Biết rằng một hồ sơ vay vốn đã bị phát sinh nợ quá hạn, tính xác suất hồ sơ này thuộc Nhóm C. Nêu khuyến nghị quản trị rủi ro cho giám đốc chi nhánh.`,
+          strategyHint: `Bước 1: Gọi $H_1, H_2, H_3$ lần lượt là biến cố hồ sơ thuộc Nhóm A, B, C. Đây là hệ đầy đủ với $P(H_1) = 0.60, P(H_2) = 0.30, P(H_3) = 0.10$.\nBước 2: Gọi A là biến cố khoản vay thanh toán đúng hạn. Xác suất điều kiện: $P(A|H_1) = 0.98, P(A|H_2) = 0.90, P(A|H_3) = 0.65$.\nBước 3: Câu a: Áp dụng công thức xác suất toàn phần $P(A) = \\sum_{i=1}^3 P(H_i)P(A|H_i) = 0.60 \\times 0.98 + 0.30 \\times 0.90 + 0.10 \\times 0.65 = 0.9230$ (92.30%).\nBước 4: Câu b: Biến cố nợ quá hạn là $\\bar{A}$, suy ra $P(\\bar{A}) = 1 - 0.9230 = 0.0770$. Áp dụng công thức Bayes: $P(H_3|\\bar{A}) = \\frac{P(H_3)P(\\bar{A}|H_3)}{P(\\bar{A})} = \\frac{0.10 \\times (1 - 0.65)}{0.0770} = \\frac{0.0350}{0.0770} \\approx 0.4545$ (45.45%). Kết luận: Mặc dù Nhóm C chỉ chiếm 10% số lượng hồ sơ nhưng lại chiếm đến 45.45% các trường hợp nợ quá hạn, cần siết chặt điều kiện phê duyệt nhóm này.`,
+          keyFormulas: [
+            `P(A) = \\sum_{i=1}^n P(H_i) \\cdot P(A|H_i)`,
+            `P(H_k|\\bar{A}) = \\frac{P(H_k) \\cdot P(\\bar{A}|H_k)}{P(\\bar{A})}`,
+          ],
+          expectedAnswerSummary: `a) Xác suất thanh toán đúng hạn: $P(A) = 92.30\\%$; b) Xác suất thuộc Nhóm C khi nợ quá hạn: $P(H_3|\\bar{A}) = 45.45\\%$.`,
+        });
+      } else if (isContinuous) {
+        fallbackList.push({
+          id: `fb_essay_${seed}_${Date.now()}`,
+          title: `Bài toán Tự Luận: Hàm Mật Độ & Kỳ Vọng Doanh Thu #${seed}`,
+          question: `Lợi nhuận ròng X (đơn vị: tỷ VNĐ) từ một danh mục đầu tư tài chính trong năm là biến ngẫu nhiên liên tục có hàm mật độ xác suất:\n$$f(x) = \\begin{cases} k(4 - x^2) & \\text{khi } 0 \\le x \\le 2 \\\\ 0 & \\text{khi } x < 0 \\text{ hoặc } x > 2 \\end{cases}$$\n\na) Tìm hằng số chuẩn hóa k.\nb) Tính kỳ vọng $E(X)$ và phương sai $\\text{Var}(X)$ của lợi nhuận ròng danh mục đầu tư.\nc) Tìm xác suất để trong năm tới, danh mục đạt mức lợi nhuận vượt quá 1.5 tỷ VNĐ.`,
+          strategyHint: `Bước 1: Tính chất chuẩn hóa: $\\int_0^2 k(4 - x^2)dx = 1 \\iff k[4x - \\frac{x^3}{3}]_0^2 = 1 \\iff k(8 - \\frac{8}{3}) = 1 \\iff \\frac{16}{3}k = 1 \\implies k = \\frac{3}{16}$.\nBước 2: Kỳ vọng: $E(X) = \\int_0^2 x \\cdot f(x)dx = \\frac{3}{16}\\int_0^2 (4x - x^3)dx = \\frac{3}{16}[2x^2 - \\frac{x^4}{4}]_0^2 = \\frac{3}{16}(8 - 4) = 0.75$ (tỷ VNĐ).\nBước 3: $E(X^2) = \\frac{3}{16}\\int_0^2 (4x^2 - x^4)dx = \\frac{3}{16}[\\frac{4x^3}{3} - \\frac{x^5}{5}]_0^2 = 0.80$. Suy ra $\\text{Var}(X) = E(X^2) - [E(X)]^2 = 0.80 - (0.75)^2 = 0.2375$.\nBước 4: Xác suất: $P(X > 1.5) = \\frac{3}{16}\\int_{1.5}^2 (4 - x^2)dx = \\frac{3}{16}[4x - \\frac{x^3}{3}]_{1.5}^2 \\approx 0.1172$ (11.72%).`,
+          keyFormulas: [
+            `\\int_{-\\infty}^{+\\infty} f(x)dx = 1`,
+            `E(X) = \\int_{-\\infty}^{+\\infty} x \\cdot f(x)dx`,
+            `\\text{Var}(X) = E(X^2) - [E(X)]^2`,
+          ],
+          expectedAnswerSummary: `a) $k = \\frac{3}{16} = 0.1875$; b) $E(X) = 0.75$ tỷ VNĐ, $\\text{Var}(X) = 0.2375$; c) $P(X > 1.5) = 11.72\\%$.`,
+        });
+      } else {
+        const sampleN = 100 + seed * 20;
+        const meanX = (42 + seed * 1.5).toFixed(2);
+        const stdS = (6.5 + seed * 0.4).toFixed(2);
+        fallbackList.push({
+          id: `fb_essay_${seed}_${Date.now()}`,
+          title: `Bài toán Tự Luận: Thống Kê Mẫu & Ước Lượng Khoảng #${seed}`,
+          question: `Phòng Kế toán - Kiểm toán của Ngân hàng tiến hành kiểm tra thời gian xử lý thủ tục cấp tín dụng doanh nghiệp tại các chi nhánh. Mẫu ngẫu nhiên gồm $n = ${sampleN}$ giao dịch cho kết quả thời gian xử lý trung bình là $\\bar{x} = ${meanX}$ giờ, độ lệch chuẩn mẫu hiệu chỉnh $s = ${stdS}$ giờ.\n\na) Với độ tin cậy 95%, hãy ước lượng khoảng tin cậy đối xứng cho thời gian xử lý hồ sơ trung bình của toàn ngân hàng.\nb) Nếu muốn sai số ước lượng không vượt quá 0.8 giờ với độ tin cậy 99%, ngân hàng cần khảo sát thêm ít nhất bao nhiêu hồ sơ nữa?\nc) Ban điều hành đặt mục tiêu thời gian xử lý hồ sơ trung bình không quá 40 giờ. Với mức ý nghĩa 5%, hãy kiểm định xem mục tiêu này có đang bị vi phạm hay không?`,
+          strategyHint: `Bước 1: Do cỡ mẫu $n = ${sampleN} \\ge 30$, áp dụng định lý giới hạn trung tâm và phân phối chuẩn tắc $Z$.\nBước 2: Câu a: Độ tin cậy 95% $\\implies z_{0.025} = 1.96$. Sai số ước lượng: $\\varepsilon = 1.96 \\cdot \\frac{${stdS}}{\\sqrt{${sampleN}}}$. Khoảng tin cậy: $(\\bar{x} - \\varepsilon, \\bar{x} + \\varepsilon)$.\nBước 3: Câu b: Độ tin cậy 99% $\\implies z_{0.005} = 2.58$. Cỡ mẫu tối thiểu: $n_{min} = \\frac{(2.58)^2 \\cdot s^2}{\\varepsilon_0^2} = \\frac{6.6564 \\times (${stdS})^2}{(0.8)^2}$. Làm tròn lên số nguyên và trừ đi $n = ${sampleN}$ ban đầu để ra số hồ sơ cần khảo sát THÊM.\nBước 4: Câu c: Giả thiết $H_0: \\mu = 40$ vs $H_1: \\mu > 40$. Mức ý nghĩa $\\alpha = 0.05 \\implies z_{0.05} = 1.645$. Tiêu chuẩn: $Z_{qs} = \\frac{\\bar{x} - 40}{s / \\sqrt{n}}$. So sánh với 1.645 để kết luận.`,
+          keyFormulas: [
+            `\\varepsilon = z_{\\alpha/2} \\cdot \\frac{s}{\\sqrt{n}}`,
+            `n_{min} = \\frac{z_{\\alpha/2}^2 \\cdot s^2}{\\varepsilon_0^2}`,
+            `Z_{qs} = \\frac{\\bar{x} - \\mu_0}{\\frac{s}{\\sqrt{n}}}`,
+          ],
+          expectedAnswerSummary: `a) KTC 95% cho thời gian trung bình: [${(Number(meanX) - 1.96 * Number(stdS) / Math.sqrt(sampleN)).toFixed(2)}; ${(Number(meanX) + 1.96 * Number(stdS) / Math.sqrt(sampleN)).toFixed(2)}] giờ; b) Cần khảo sát thêm số hồ sơ tương ứng; c) Giá trị $Z_{qs}$ và kết luận kiểm định.`,
+        });
+      }
     }
   }
+
+  return res.json({
+    success: true,
+    isFallback: true,
+    notice: 'Đề thi đã được khởi tạo và sẵn sàng thực hành!',
+    exercises: fallbackList,
+  });
 
   return res.json({
     success: true,
