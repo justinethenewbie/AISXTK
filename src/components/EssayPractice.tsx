@@ -22,7 +22,7 @@ import { CHAPTERS_DATA } from '../data/curriculumData';
 import { OFFICIAL_HUB_EXAMS, HubExamPaper, HubExamQuestion } from '../data/hubExamArchiveData';
 import { HubExamCheatSheetModal } from './HubExamCheatSheetModal';
 import { InteractiveCanvas } from './InteractiveCanvas';
-import { MathFormula, MathText } from './MathFormula';
+import { MathFormula, MathText, fixStuckVietnameseMathWords } from './MathFormula';
 import { exportExercisesToWord, exportExercisesToPdf } from '../utils/exportUtils';
 import { aiFetch } from '../utils/apiHelper';
 
@@ -38,7 +38,7 @@ const INITIAL_DEMO_ESSAYS = [
     question:
       'Một công ty tài chính đầu tư vào 3 dự án độc lập A, B, C với xác suất thành công lần lượt là $P(A) = 0.7$, $P(B) = 0.8$, $P(C) = 0.6$. Nếu dự án thành công, công ty thu về lợi nhuận tương ứng là 100 triệu, 150 triệu và 200 triệu đồng; nếu thất bại thì lợi nhuận bằng 0. Gọi $X$ là tổng lợi nhuận công ty thu được.\n\na) Hãy lập luận xác định các giá trị có thể có của biến ngẫu nhiên $X$.\nb) Tính kỳ vọng $E(X)$ và độ lệch chuẩn $\\sigma(X)$ của tổng lợi nhuận công ty.',
     strategyHint:
-      'Bước 1: Do 3 dự án độc lập, áp dụng tính chất tuyến tính của kỳ vọng: $E(X) = E(X_A) + E(X_B) + E(X_C)$.\n\nBước 2: Với mỗi dự án $i$, kỳ vọng thành phần là $E(X_i) = p_i \\cdot r_i$.\n\nBước 3: Do các biến cố độc lập, phương sai tổng bằng tổng các phương sai: $\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$, từ đó suy ra độ lệch chuẩn $\\sigma(X) = \\sqrt{\\text{Var}(X)}$.',
+      'Bước 1: Do 3 dự án độc lập, áp dụng tính chất tuyến tính của kỳ vọng:\n$$E(X) = E(X_A) + E(X_B) + E(X_C)$$\n\nBước 2: Với mỗi dự án $i$, kỳ vọng thành phần là $E(X_i) = p_i \\cdot r_i$.\n\nBước 3: Do các biến cố độc lập, phương sai tổng bằng tổng các phương sai:\n$$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$$\ntừ đó suy ra độ lệch chuẩn: $$\\sigma(X) = \\sqrt{\\text{Var}(X)}$$',
     keyFormulas: [
       'E(X) = \\sum_{i=1}^{n} E(X_i)',
       '\\text{Var}(X) = E(X^2) - [E(X)]^2',
@@ -68,14 +68,22 @@ export function getSafeStrategyHint(essay: any): string {
     return 'Bước 1: Phân tích các dữ kiện giả thiết của bài toán.\n\nBước 2: Xác định dạng phân phối hoặc công thức thống kê tương ứng.\n\nBước 3: Lập luận chặt chẽ và tính toán kết quả.';
   }
 
-  // Tách dòng rõ ràng trước mỗi Bước X:
-  hint = hint.replace(/(?<!\n)\s*(?:[.]\s*)?(\bBước\s*\d+\s*:)/gi, '\n\n$1');
+  // Phục hồi các từ ngữ toán - thống kê bị dính chữ (nếu có từ trước)
+  hint = fixStuckVietnameseMathWords(hint);
 
-  // Chuẩn hóa an toàn không nhân đôi dấu $
-  hint = hint.replace(/\${0,2}E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\${0,2}/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
-  hint = hint.replace(/\${0,2}E\(X_i\)\s*=\s*p_i\s*[*·\u00B7]\s*r_i\${0,2}/g, '$E(X_i) = p_i \\cdot r_i$');
-  hint = hint.replace(/\${0,2}(?:\\text\{Var\}|Var)\(X\)\s*=\s*(?:\\text\{Var\}|Var)\(X_A\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_B\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_C\)\${0,2}/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
-  hint = hint.replace(/\${0,2}\bf\s*=\s*m\s*\/\s*n\b\${0,2}/g, '$f = \\frac{m}{n}$');
+  // Tách dòng rõ ràng trước mỗi Bước X và xóa dấu chấm thừa
+  hint = hint.replace(/(?:\.\s*)?\n*\s*(\bBước\s*\d+\s*:)/gi, '\n\n$1 ');
+
+  // Khắc phục triệt để lỗi gõ nhầm =/sqrt hoặc =/\sqrt hoặc \sqrt Var(X)
+  hint = hint.replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/gi, '$1 \\sqrt');
+  hint = hint.replace(/(^|[\s(])\/\s*\\?sqrt\b/gi, '$1\\sqrt');
+  hint = hint.replace(/\\sqrt\s*\{?\s*(?:\\text\{)?Var\}?\s*\(([^)]+)\)\s*\}?/gi, '\\sqrt{\\text{Var}($1)}');
+
+  // Chuẩn hóa an toàn các công thức xác suất nếu chưa được delimit
+  hint = hint.replace(/(?<!\$)\bE\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\b(?!\$)/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
+  hint = hint.replace(/(?<!\$)\bE\(X_i\)\s*=\s*p_i\s*[*·\u00B7]\s*r_i\b(?!\$)/g, '$E(X_i) = p_i \\cdot r_i$');
+  hint = hint.replace(/(?<!\$)\b(?:\\text\{Var\}|Var)\(X\)\s*=\s*(?:\\text\{Var\}|Var)\(X_A\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_B\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_C\)\b(?!\$)/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
+  hint = hint.replace(/(?<!\$)\bf\s*=\s*m\s*\/\s*n\b(?!\$)/g, '$f = \\frac{m}{n}$');
 
   return hint.trim();
 }

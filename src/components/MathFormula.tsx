@@ -8,11 +8,66 @@ interface MathFormulaProps {
 }
 
 /**
+ * Phục hồi khoảng trắng cho các cụm từ thuật ngữ toán - thống kê bị dính chữ (sticky words)
+ */
+export function fixStuckVietnameseMathWords(raw: string): string {
+  if (!raw || typeof raw !== 'string') return '';
+  let res = raw;
+  const phrases: [RegExp, string][] = [
+    [/Vớimỗidựáni/gi, 'Với mỗi dự án $i$'],
+    [/Vớimỗidựán/gi, 'Với mỗi dự án '],
+    [/mỗidựán/gi, 'mỗi dự án '],
+    [/dựáni/gi, 'dự án $i$'],
+    [/dựán/gi, 'dự án '],
+    [/kỳvọngthànhphầnlà/gi, 'kỳ vọng thành phần là '],
+    [/kỳvọngthànhphần/gi, 'kỳ vọng thành phần '],
+    [/thànhphầnlà/gi, 'thành phần là '],
+    [/thànhphần/gi, 'thành phần '],
+    [/kỳvọng/gi, 'kỳ vọng '],
+    [/Docácbiếncốđộclập/gi, 'Do các biến cố độc lập, '],
+    [/cácbiếncốđộclập/gi, 'các biến cố độc lập'],
+    [/biếncốđộclập/gi, 'biến cố độc lập'],
+    [/biếncố/gi, 'biến cố '],
+    [/độclập/gi, 'độc lập '],
+    [/phươngsaitổngbằngtổngcácphươngsai/gi, 'phương sai tổng bằng tổng các phương sai'],
+    [/phươngsaitổng/gi, 'phương sai tổng '],
+    [/tổngbằngtổngcácphươngsai/gi, 'tổng bằng tổng các phương sai'],
+    [/tổngbằngtổng/gi, 'tổng bằng tổng '],
+    [/cácphươngsai/gi, 'các phương sai '],
+    [/phươngsai/gi, 'phương sai '],
+    [/từđósuyrađộlệchchuẩn/gi, 'từ đó suy ra độ lệch chuẩn '],
+    [/từđósuyra/gi, 'từ đó suy ra '],
+    [/từđó/gi, 'từ đó '],
+    [/suyrađộlệchchuẩn/gi, 'suy ra độ lệch chuẩn '],
+    [/suyra/gi, 'suy ra '],
+    [/độlệchchuẩn/gi, 'độ lệch chuẩn '],
+    [/biếnngẫunhiên/gi, 'biến ngẫu nhiên '],
+    [/xácsuất/gi, 'xác suất '],
+    [/phânphốixácsuất/gi, 'phân phối xác suất '],
+    [/phânphốichuẩn/gi, 'phân phối chuẩn '],
+    [/phânphối/gi, 'phân phối '],
+    [/khoảngướclượng/gi, 'khoảng ước lượng '],
+    [/ướclượng/gi, 'ước lượng '],
+    [/kiểmđịnhgiảthuyết/gi, 'kiểm định giả thuyết '],
+    [/kiểmđịnh/gi, 'kiểm định '],
+    [/giảthuyết/gi, 'giả thuyết '],
+    [/tiêuchuẩn/gi, 'tiêu chuẩn '],
+    [/đồngthời/gi, 'đồng thời ']
+  ];
+  for (const [re, rep] of phrases) {
+    res = res.replace(re, rep);
+  }
+  res = res.replace(/,\s*,/g, ',');
+  res = res.replace(/[ \t]{2,}/g, ' ');
+  return res;
+}
+
+/**
  * Auto-fix LaTeX syntax errors, swallowed control characters, Unicode minus, escaped dollars (\$), missing closing braces, and un-delimited LaTeX commands.
  */
 export function sanitizeAndFixMathText(rawText: string): string {
   if (!rawText || typeof rawText !== 'string') return '';
-  let text = rawText.trim();
+  let text = fixStuckVietnameseMathWords(rawText.trim());
 
   // Chống lỗi hiển thị "undefined" hoặc "null"
   if (text === 'undefined' || text === 'null') {
@@ -25,72 +80,77 @@ export function sanitizeAndFixMathText(rawText: string): string {
   text = text.replace(/\${3,}/g, '$');
 
   // A. Khắc phục lỗi dính chữ (Sticky text):
-  // - Tách dòng và khoảng cách rõ ràng trước Bước / Câu / Bài
-  text = text.replace(/(?<!\n)\s*(?:[.]\s*)?(\b(?:Bước|Bài|Câu)\s*\d+\s*:)/gi, '\n\n$1 ');
+  // - Tách dòng và khoảng cách rõ ràng trước Bước / Câu / Bài / Phần
+  text = text.replace(/(?<!\n)\s*(?:[.]\s*)?(\b(?:Bước|Bài|Câu|Phần|Ví dụ)\s*\d+\s*:)/gi, '\n\n$1 ');
+
+  // - Xóa dấu chấm thừa bị kẹt trước Bước (ví dụ ".$$ .Bước 2" hoặc ".Bước 2" -> "Bước 2")
+  text = text.replace(/(?:^|\n)\s*\.\s*(\b(?:Bước|Bài|Câu|Phần)\s*\d+)/gi, '\n$1');
+
   // - Tự động giãn cách sau dấu phẩy, chấm phẩy nếu bị dính chữ (ví dụ: "i,kỳ vọng" -> "i, kỳ vọng")
   text = text.replace(/([,;])([A-ZÀ-Ỹa-zà-ỹ])/gu, '$1 $2');
+
   // - Tự động giãn cách sau dấu hai chấm nếu bị dính chữ (ví dụ: "Ví dụ:Tính" -> "Ví dụ: Tính"), bỏ qua URL
   text = text.replace(/(?<!https?|ftp):([A-ZÀ-Ỹa-zà-ỹ0-9])/gu, ': $1');
+
   // - Tự động giãn cách sau dấu đóng ngoặc đơn nếu dính chữ (ví dụ: "(X)là" -> "(X) là")
   text = text.replace(/\)([A-ZÀ-Ỹa-zà-ỹ])/gu, ') $1');
+
   // - Tự động giãn cách sau dấu chấm câu nếu bị dính chữ trước chữ hoa (ví dụ: "5.Ta có" -> "5. Ta có", bảo toàn 3.14 hay 0.05)
   text = text.replace(/\.([A-ZÀ-Ỹ])/gu, '. $1');
 
-  // B. Đưa các từ tiếng Việt và đơn vị đo lường bị kẹp nhầm bên trong dấu $ ra ngoài văn bản thường:
-  // (KaTeX trong math mode không có dấu cách sẽ làm dính chặt các chữ tiếng Việt lại với nhau)
-  text = text.replace(/\$([^$]+?)\s+([a-zA-ZÀ-ỹ()]+(?:[\s]+[a-zA-ZÀ-ỹ()0-9^/]+)*)\$/g, (match, mathPart, textPart) => {
-    if (/[À-ỹ]|\b(?:triệu|đồng|nghìn|tỷ|sản phẩm|khách|người|chi tiết|chiếc|vé|bóng|phế phẩm|chính phẩm|đơn vị)\b/i.test(textPart)) {
-      return `$${mathPart}$ ${textPart}`;
+  // - Tự động thêm khoảng cách giữa công thức $...$ và từ tiếng Việt dính sát vào nó
+  text = text.replace(/(\$[^\$\n]+\$)([A-ZÀ-Ỹa-zà-ỹ])/gu, '$1 $2');
+  text = text.replace(/([A-ZÀ-Ỹa-zà-ỹ])(\$[^\$\n]+\$)/gu, '$1 $2');
+
+  // B. GIẢI CỨU VĂN BẢN TIẾNG VIỆT BỊ BỌC NHẦM TRONG DẤU $:
+  // Nếu một cặp $...$ chứa nhiều từ tiếng Việt có dấu (ví dụ "$Bước 2: Với mỗi dự án...$"),
+  // KaTeX sẽ nuốt hết khoảng trắng và in nghiêng chữ. Phải gỡ bỏ dấu $ bao ngoài và chỉ giữ lại $ cho công thức thực sự.
+  text = text.replace(/(?<!\$)\$([^\$\n]+?)\$(?!\$)/g, (match, inner) => {
+    // Nếu khối math chứa tiếng Việt có dấu cách (chắc chắn là câu/đoạn văn bị bọc nhầm)
+    if (/[À-ỹ]/.test(inner) && /\s+[A-Za-zÀ-ỹ]/.test(inner)) {
+      // Đưa các công thức toán bên trong thành cặp $ riêng
+      let rescued = inner
+        .replace(/(E\([A-Za-z0-9_]+\)\s*=\s*[^,;.\n]+)/g, '$$$1$$')
+        .replace(/((?:\\text\{Var\}|Var)\([A-Za-z0-9_]+\)\s*=\s*[^,;.\n]+)/g, '$$$1$$')
+        .replace(/(\\sigma\([A-Za-z0-9_]+\)\s*=\s*\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})/g, '$$$1$$');
+      return rescued;
     }
     return match;
   });
 
-  // Đưa các tiêu đề tiếng Việt ở đầu khối $ ra ngoài: ví dụ "$Bước 1: E(X) = 1$" -> "Bước 1: $E(X) = 1$"
-  text = text.replace(/\$([A-Za-zÀ-ỹ0-9\s,.:]+?[:.-]\s*)([A-Za-z0-9_\\].*?)\$/g, (match, prefix, math) => {
-    if (/[À-ỹ]|\b(?:Bước|Bài|Câu|Phần|Giả sử|Xét|Với)\b/i.test(prefix)) {
-      return `${prefix.trim()} $${math.trim()}$`;
-    }
-    return match;
-  });
+  // C. Khắc phục triệt để lỗi gõ nhầm `=/sqrt`, `=/\sqrt`, `/sqrt`, `\sqrt Var(X)`
+  text = text.replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/gi, '$1 \\sqrt');
+  text = text.replace(/(^|[\s(])\/\s*\\?sqrt\b/gi, '$1\\sqrt');
 
-  // Gỡ bỏ dấu $ cho các đoạn văn bản thuần tiếng Việt bị kẹp nhầm trong $ mà không hề chứa công thức toán
-  text = text.replace(/(?<!\$)\$([A-Za-zÀ-ỹ\s,.:!?()]+)\$(?!\$)/g, (match, inner) => {
-    if (/[À-ỹ]/.test(inner) && !/[=+\-*/\\^_{}<>]/.test(inner)) {
-      return ` ${inner.trim()} `;
-    }
-    return match;
-  });
+  // Chuẩn hóa \sqrt(...) thành \sqrt{...}
+  text = text.replace(/\\sqrt\s*\(([^)]+)\)/g, '\\sqrt{$1}');
 
-  // Khắc phục lỗi gõ nhầm `=/sqrt` hoặc `=/\sqrt` hoặc `/sqrt`
-  text = text.replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/g, '$1 \\sqrt');
-  text = text.replace(/(^|\s)\/\s*\\?sqrt\b/g, '$1\\sqrt');
-  text = text.replace(/(?<!\\)\bsqrt\s*\(/g, '\\sqrt(');
+  // Chuẩn hóa \sqrt Var(X) hoặc \sqrt{Var(X)} thành \sqrt{\text{Var}(X)}
+  text = text.replace(/\\sqrt\s*\{?\s*(?:\\text\{)?Var\}?\s*\(([^)]+)\)\s*\}?/gi, '\\sqrt{\\text{Var}($1)}');
 
-  // 1. Tự động chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
-  // Dùng \${0,2} để nếu đã có dấu $ hoặc $$ bao quanh thì chuẩn hóa về đúng 1 cặp $ duy nhất, không nhân đôi $
-  text = text.replace(/\${0,2}E\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\${0,2}/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
-  text = text.replace(/\${0,2}E\(X_i\)\s*=\s*p_i\s*[*·\u00B7]\s*r_i\${0,2}/g, '$E(X_i) = p_i \\cdot r_i$');
-  text = text.replace(/\${0,2}(?:\\text\{Var\}|Var)\(X\)\s*=\s*(?:\\text\{Var\}|Var)\(X_A\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_B\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_C\)\${0,2}/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
-  text = text.replace(/\${0,2}\bf\s*=\s*m\s*\/\s*n\b\${0,2}/g, '$f = \\frac{m}{n}$');
-  text = text.replace(/\${0,2}\\sigma\(X\)\s*=\s*\\sqrt\{?\\text\{Var\}\(X\)\}?\${0,2}/g, '$\\sigma(X) = \\sqrt{\\text{Var}(X)}$');
+  // Chuẩn hóa \sqrt trần không có ngoặc: ví dụ \sqrt X -> \sqrt{X}
+  text = text.replace(/\\sqrt\s+([A-Za-z0-9_]+)(?![a-zA-Z0-9_{])/g, '\\sqrt{$1}');
 
-  // Chuẩn hóa \sqrt Var(X) trần hoặc \sqrt {Var(X)}
-  text = text.replace(/\\sqrt\s*\{?\s*(?:\\text\{)?Var\}?\(([A-Za-z0-9_]+)\)\s*\}?/g, '\\sqrt{\\text{Var}($1)}');
-  text = text.replace(/\\sqrt\s+([A-Za-z0-9_()]+)(?![a-zA-Z0-9_{])/g, '\\sqrt{$1}');
+  // Chuẩn hóa nếu có \sigma(X) = \sqrt{\text{Var}(X)} đứng trần ngoài dấu $
+  text = text.replace(/(?<!\$)\s*(\\sigma\s*\([^)]+\)\s*=\s*\\sqrt\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})\s*(?!\$)/g, ' $$$1$$ ');
 
-  // 1. Khôi phục các lệnh LaTeX nếu bị JSON nuốt ký tự điều khiển (\f, \b, \t, \r)
+  // 1. Chuẩn hóa các công thức toán xác suất dạng pseudo-code sang KaTeX inline math chuẩn ($...$)
+  text = text.replace(/(?<!\$)\bE\(X\)\s*=\s*E\(X_A\)\s*\+\s*E\(X_B\)\s*\+\s*E\(X_C\)\b(?!\$)/g, '$E(X) = E(X_A) + E(X_B) + E(X_C)$');
+  text = text.replace(/(?<!\$)\bE\(X_i\)\s*=\s*p_i\s*[*·\u00B7]\s*r_i\b(?!\$)/g, '$E(X_i) = p_i \\cdot r_i$');
+  text = text.replace(/(?<!\$)\b(?:\\text\{Var\}|Var)\(X\)\s*=\s*(?:\\text\{Var\}|Var)\(X_A\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_B\)\s*\+\s*(?:\\text\{Var\}|Var)\(X_C\)\b(?!\$)/g, '$\\text{Var}(X) = \\text{Var}(X_A) + \\text{Var}(X_B) + \\text{Var}(X_C)$');
+  text = text.replace(/(?<!\$)\bf\s*=\s*m\s*\/\s*n\b(?!\$)/g, '$f = \\frac{m}{n}$');
+
+  // Khôi phục các lệnh LaTeX nếu bị JSON nuốt ký tự điều khiển (\f, \b, \t, \r)
   text = text
     .replace(/\x08(ar|eta|inom|egin|mathbf)/g, '\\b$1')
     .replace(/\x0c(rac|orall)/g, '\\f$1')
     .replace(/\t(imes|ext|heta|au|o|frac|rightarrow)/g, '\\t$1')
     .replace(/\r(ight|ho|angle)/g, '\\r$1');
 
-  // 2. Chuẩn hóa dấu trừ Unicode (−) về dấu trừ toán học (-)
+  // Chuẩn hóa dấu trừ Unicode (−) về dấu trừ toán học (-)
   text = text.replace(/−/g, '-');
 
-  // 3. SỬA LỖI `\$` LÀM VỠ CÔNG THỨC Ở BẢN ĐỒ TƯ DUY:
-  // Nếu có dấu `\$` nằm sau các lệnh LaTeX hoặc trước dấu chấm câu (; , . ) làm lẻ cặp dấu $,
-  // chuyển `\$` về lại dấu đóng `$` chuẩn.
+  // SỬA LỖI \$ LÀM VỠ CÔNG THỨC Ở BẢN ĐỒ TƯ DUY:
   text = text.replace(/\\\$(?=\s*[;,.।)|\]\s]|$)/g, '$');
 
   // Đếm số lượng dấu $ đơn (không tính $$). Nếu vẫn bị lẻ do còn 1 dấu \$ bị escape nhầm, gỡ bỏ dấu \ đó:
@@ -162,11 +222,14 @@ export function cleanLatexString(raw: string): string {
   // 2. Thoát dấu % bên trong công thức KaTeX (trong LaTeX, % là ghi chú dẫn tới mất phần còn lại)
   cleaned = cleaned.replace(/(?<!\\)%/g, '\\%');
 
-  // 3. Khắc phục lỗi gõ nhầm `=/sqrt` hoặc `=/\sqrt` hoặc `/sqrt`
+  // 3. Khắc phục lỗi gõ nhầm `=/sqrt` hoặc `=/\sqrt` hoặc `/sqrt` hoặc `\sqrt Var(X)`
   cleaned = cleaned
-    .replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/g, '$1 \\sqrt')
-    .replace(/(^|\s)\/\s*\\?sqrt\b/g, '$1\\sqrt')
-    .replace(/\bsqrt\s*\(/g, '\\sqrt(');
+    .replace(/([=+\-*/(,])\s*\/\s*\\?sqrt\b/gi, '$1 \\sqrt')
+    .replace(/(^|[\s(])\/\s*\\?sqrt\b/gi, '$1\\sqrt')
+    .replace(/\\sqrt\s*\(([^)]+)\)/g, '\\sqrt{$1}')
+    .replace(/\\sqrt\s*\{?\s*(?:\\text\{)?Var\}?\s*\(([^)]+)\)\s*\}?/gi, '\\sqrt{\\text{Var}($1)}')
+    .replace(/\\sqrt\s+([A-Za-z0-9_]+)(?![a-zA-Z0-9_{])/g, '\\sqrt{$1}')
+    .replace(/(?<!\\)\bsqrt\s*\(/g, '\\sqrt(');
 
   // 4. Chuyển đổi các ký tự toán học Unicode về lệnh LaTeX chuẩn
   cleaned = cleaned
@@ -386,7 +449,7 @@ function parseNakedLatexInTextSegment(text: string): MathSegment[] {
     return [{ type: 'text', content: text }];
   }
 
-  const regex = /(?:(?<![a-zA-ZÀ-ỹ])(?:[A-Za-z](?:_[A-Za-z0-9]+)?(?:\([A-Za-z0-9_]+\))?\s*=\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text)\b)/gu;
+  const regex = /(?:(?<![a-zA-ZÀ-ỹ])(?:(?:\\[a-zA-Z]+|[A-Za-z](?:_[A-Za-z0-9]+)?)(?:\([A-Za-z0-9_]+\))?\s*=\s*)?\\(?:frac|tfrac|cfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|mu|sigma|alpha|beta|gamma|lambda|theta|phi|Phi|epsilon|Delta|delta|omega|Omega|pi|rho|tau|chi|dots|ldots|cdots|cdot|times|pm|le|ge|leq|geq|ne|neq|approx|sim|infty|to|rightarrow|Rightarrow|leftarrow|implies|iff|hat|bar|vec|mathbf|mathbb|text)\b)/gu;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
