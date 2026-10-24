@@ -10,6 +10,7 @@ import { HubEdtLogo } from './components/HubEdtLogo';
 import { PixelAmbientBackground } from './components/PixelAmbientBackground';
 import { FloatingPixelMascot } from './components/FloatingPixelMascot';
 import { getMascotById } from './data/mascotCatalog';
+import { evaluateStreakOnAccess, recordStudyInteraction, getLocalDateString } from './utils/streakManager';
 
 // Feature Components
 import { ChapterLearning } from './components/ChapterLearning';
@@ -70,6 +71,7 @@ const INITIAL_PROFILE: UserProfile = {
   studyHours: 14.5,
   streakDays: 7,
   lastActiveDate: new Date().toISOString().split('T')[0],
+  lastStudyDate: new Date().toISOString().split('T')[0],
   unlockedLootboxes: 2,
   inventory: INITIAL_MASCOT_ITEMS,
   equippedMascot: {
@@ -135,6 +137,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBugReportOpen, setIsBugReportOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [streakToast, setStreakToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -144,9 +147,26 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Synchronize profile with currentUser if available
+  // Auto-dismiss streak celebration toast
+  useEffect(() => {
+    if (streakToast) {
+      const timer = setTimeout(() => setStreakToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [streakToast]);
+
+  // Real-time calculation of today's study status
+  const todayStr = getLocalDateString();
+  const activeLastStudyDate = currentUser ? currentUser.lastStudyDate : profile.lastStudyDate;
+  const hasStudiedToday = Boolean(activeLastStudyDate && activeLastStudyDate === todayStr);
+
+  // Synchronize profile with currentUser and evaluate real-time streak on access (Login does NOT increase streak!)
   useEffect(() => {
     if (currentUser) {
+      const streakEval = evaluateStreakOnAccess(currentUser.streakDays, currentUser.lastStudyDate);
+      if (streakEval.streakDays !== currentUser.streakDays) {
+        setCurrentUser((prev) => (prev ? { ...prev, streakDays: streakEval.streakDays } : null));
+      }
       setProfile((prev) => ({
         ...prev,
         fullName: currentUser.fullName,
@@ -155,16 +175,28 @@ export default function App() {
         gpa: currentUser.gpa,
         level: currentUser.level,
         exp: currentUser.exp,
-        streakDays: currentUser.streakDays,
+        streakDays: streakEval.streakDays,
+        lastStudyDate: currentUser.lastStudyDate,
         studyHours: currentUser.studyHours,
       }));
+    } else {
+      setProfile((prev) => {
+        const streakEval = evaluateStreakOnAccess(prev.streakDays, prev.lastStudyDate);
+        return {
+          ...prev,
+          streakDays: streakEval.streakDays,
+        };
+      });
     }
   }, [currentUser]);
 
   const handleLoginSuccess = (user: AppUser) => {
-    setCurrentUser(user);
+    // Evaluate real-time streak on login (DOES NOT increment streak)
+    const streakEval = evaluateStreakOnAccess(user.streakDays, user.lastStudyDate);
+    const updatedUser = { ...user, streakDays: streakEval.streakDays };
+    setCurrentUser(updatedUser);
     try {
-      localStorage.setItem('edt_current_user', JSON.stringify(user));
+      localStorage.setItem('edt_current_user', JSON.stringify(updatedUser));
     } catch (e) {
       console.error(e);
     }
@@ -195,16 +227,26 @@ export default function App() {
         newNextExp = Math.round(newNextExp * 1.5);
       }
 
-      const updated = {
+      // REAL-TIME STREAK CALCULATION:
+      // Tương tác học tập thực tế: gia hạn / tích lũy streak!
+      const streakResult = recordStudyInteraction(prev.streakDays, prev.lastStudyDate);
+      if (streakResult.isNewIncrement && streakResult.celebrationMessage) {
+        setStreakToast(streakResult.celebrationMessage);
+      }
+
+      const updated: UserProfile = {
         ...prev,
         exp: newExp,
         level: newLevel,
         nextLevelExp: newNextExp,
         studyHours: parseFloat((prev.studyHours + 0.2).toFixed(1)),
+        streakDays: streakResult.streakDays,
+        lastStudyDate: streakResult.lastStudyDate,
+        lastActiveDate: streakResult.lastStudyDate,
         ...(gpaValue ? { gpa: gpaValue } : {}),
       };
 
-      // Sync progress to persistent users_database.json if logged in
+      // Sync progress & real-time streak to persistent users_database.json if logged in
       if (currentUser) {
         fetch('/api/auth/save-progress', {
           method: 'POST',
@@ -216,6 +258,7 @@ export default function App() {
             exercisesCount: exercisesCount || 1,
             gpa: gpaValue || currentUser.gpa,
             activityDetail: activityDetail || `Hoàn thành bài tập & nhận +${amount} EXP`,
+            isStudyInteraction: true,
           }),
         })
           .then((r) => r.json())
@@ -484,8 +527,25 @@ export default function App() {
               equipped={profile.equippedMascot}
               speechText={`Cùng ${getMascotById(profile.equippedMascot?.species || 'owl').name} chinh phục điểm 10 XSTK nhé!`}
             />
-            <div className="text-xs font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 py-1 px-3 rounded-full inline-block">
-              Chuỗi học: {currentUser ? currentUser.streakDays : profile.streakDays} ngày liên tục 🔥
+            <div
+              className={`text-xs font-bold py-1.5 px-3 rounded-2xl flex flex-col items-center justify-center gap-0.5 border transition-all ${
+                hasStudiedToday
+                  ? 'text-cyan-300 bg-cyan-950/70 border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                  : 'text-amber-300 bg-amber-950/70 border-amber-500/40'
+              }`}
+              title={
+                hasStudiedToday
+                  ? 'Hôm nay bạn đã hoàn thành bài học! Chuỗi streak đang được giữ vững.'
+                  : 'Bạn chưa học hôm nay. Hoàn thành 1 bài tập hoặc hỏi Gia Sư AI để duy trì chuỗi!'
+              }
+            >
+              <div className="flex items-center gap-1">
+                <span>Chuỗi học:</span>
+                <span className="font-black text-amber-400">{currentUser ? currentUser.streakDays : profile.streakDays} ngày 🔥</span>
+              </div>
+              <span className="text-[10px] font-semibold text-slate-300">
+                {hasStudiedToday ? '✓ Hôm nay đã học tập' : '⏳ Cần học 1 bài để giữ streak'}
+              </span>
             </div>
           </div>
         </aside>
@@ -495,6 +555,23 @@ export default function App() {
           {renderToolView(activeTool)}
         </main>
       </div>
+
+      {/* Real-time Streak Celebration Toast */}
+      {streakToast && (
+        <div className="fixed top-20 right-6 z-50 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-slate-950 font-black px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.6)] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 border border-amber-300/60">
+          <span className="text-2xl animate-bounce">🔥</span>
+          <div className="text-xs sm:text-sm text-left">
+            <p className="font-extrabold text-white">{streakToast}</p>
+            <p className="text-[11px] text-amber-100 font-medium">Hệ thống đã tự động lưu chuỗi vào hồ sơ học tập thời gian thực!</p>
+          </div>
+          <button
+            onClick={() => setStreakToast(null)}
+            className="ml-2 text-white/80 hover:text-white p-1 rounded-lg hover:bg-black/20 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Floating Pixel Mascot Cheerleader (Encourages user, auto-hides during study) */}
       <FloatingPixelMascot

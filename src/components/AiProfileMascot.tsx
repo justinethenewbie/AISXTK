@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserProfile, MascotItem, BadgeItem, WeeklyAchievement, MascotSpecies } from '../types/xstk';
 import { Mascot } from './Mascot';
 import { MASCOT_CATALOG, getMascotById } from '../data/mascotCatalog';
+import { getLocalDateString } from '../utils/streakManager';
 import {
   Award,
   Flame,
@@ -331,6 +332,15 @@ export const AiProfileMascot: React.FC<AiProfileMascotProps> = ({
                 <Flame className="w-5 h-5 fill-cyan-400 text-cyan-400" />
                 <span>{userProfile.streakDays} Ngày</span>
               </p>
+              {(() => {
+                const todayStr = getLocalDateString();
+                const hasStudiedToday = Boolean(userProfile.lastStudyDate && userProfile.lastStudyDate === todayStr);
+                return (
+                  <p className={`text-[10px] font-bold mt-1 ${hasStudiedToday ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {hasStudiedToday ? 'Hôm nay: Đã học ✓' : 'Hôm nay: Chưa học ⏳'}
+                  </p>
+                );
+              })()}
             </div>
 
             <div className="p-4 bg-slate-900 border-2 border-cyan-500/30 rounded-2xl shadow-md">

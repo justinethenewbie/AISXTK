@@ -129,7 +129,8 @@
         "detail": "Phân tích & giải chi tiết bài toán bằng AI Multimodal",
         "timestamp": "Vừa xong"
       }
-    ]
+    ],
+    "lastStudyDate": "2026-10-24"
   },
   {
     "id": "USR-DEV-001",
@@ -171,7 +172,8 @@
         "detail": "Kiểm toán kho dữ liệu người dùng users_database.json",
         "timestamp": "30 phút trước"
       }
-    ]
+    ],
+    "lastStudyDate": "2026-10-24"
   },
   {
     "id": "USR-2026-089",
@@ -203,7 +205,8 @@
         "detail": "Giải tích phân suy rộng cận âm vô cực đến dương vô cực",
         "timestamp": "1 giờ trước"
       }
-    ]
+    ],
+    "lastStudyDate": "2026-10-24"
   },
   {
     "id": "USR-2026-112",
@@ -235,7 +238,8 @@
         "detail": "Giải bài toán tìm hằng số k hàm mật độ",
         "timestamp": "Hôm qua"
       }
-    ]
+    ],
+    "lastStudyDate": "2026-10-24"
   },
   {
     "id": "USR-2026-205",
@@ -267,7 +271,8 @@
         "detail": "Tra cứu giá trị tới hạn z_alpha và t_alpha",
         "timestamp": "5 giờ trước"
       }
-    ]
+    ],
+    "lastStudyDate": "2026-10-24"
   },
   {
     "id": "USR-2026-301",
@@ -299,6 +304,7 @@
         "detail": "Chấm barem lời giải bài toán xác suất có điều kiện",
         "timestamp": "Hôm qua"
       }
-    ]
+    ],
+    "lastStudyDate": "2026-10-24"
   }
 ]

@@ -3033,6 +3033,7 @@ interface DevUserRecord {
   exp: number;
   level: number;
   streakDays: number;
+  lastStudyDate?: string;
   studyHours: number;
   exercisesSolved: number;
   accuracyRate: number;
@@ -3044,6 +3045,60 @@ interface DevUserRecord {
     detail: string;
     timestamp: string;
   }>;
+}
+
+// ==========================================
+// REAL-TIME STREAK CALCULATION ENGINE
+// ==========================================
+function getLocalDateString(d: Date = new Date()): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function calculateStreakOnStudy(currentStreak: number, lastStudyDate?: string): { streakDays: number; lastStudyDate: string; isNewIncrement: boolean } {
+  const todayStr = getLocalDateString();
+  if (!lastStudyDate) {
+    return { streakDays: 1, lastStudyDate: todayStr, isNewIncrement: true };
+  }
+
+  const dToday = new Date(todayStr + 'T00:00:00').getTime();
+  const dLast = new Date(lastStudyDate + 'T00:00:00').getTime();
+  const diffDays = Math.round((dToday - dLast) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    // Đã học hôm nay rồi: giữ nguyên streak, không tăng trùng lặp
+    return { streakDays: Math.max(1, currentStreak || 1), lastStudyDate: todayStr, isNewIncrement: false };
+  } else if (diffDays === 1) {
+    // Đã học hôm qua và hôm nay học tiếp: TĂNG STREAK +1!
+    return { streakDays: (currentStreak || 0) + 1, lastStudyDate: todayStr, isNewIncrement: true };
+  } else {
+    // Bỏ lỡ từ 1 ngày trở lên: bắt đầu chuỗi mới từ 1
+    return { streakDays: 1, lastStudyDate: todayStr, isNewIncrement: true };
+  }
+}
+
+function checkStreakOnLogin(currentStreak: number, lastStudyDate?: string): { streakDays: number; hasStudiedToday: boolean } {
+  const todayStr = getLocalDateString();
+  if (!lastStudyDate) {
+    return { streakDays: 0, hasStudiedToday: false };
+  }
+
+  const dToday = new Date(todayStr + 'T00:00:00').getTime();
+  const dLast = new Date(lastStudyDate + 'T00:00:00').getTime();
+  const diffDays = Math.round((dToday - dLast) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    // Đã học hôm nay
+    return { streakDays: Math.max(1, currentStreak || 1), hasStudiedToday: true };
+  } else if (diffDays === 1) {
+    // Đã học hôm qua, hôm nay chưa học: giữ nguyên streak chờ học (KHÔNG TỰ TĂNG)
+    return { streakDays: Math.max(1, currentStreak || 1), hasStudiedToday: false };
+  } else {
+    // Bị gián đoạn chuỗi
+    return { streakDays: 0, hasStudiedToday: false };
+  }
 }
 
 // ==========================================
@@ -3264,7 +3319,8 @@ app.post('/api/auth/register', (req, res) => {
     gpa: 3.5,
     exp: 100,
     level: 1,
-    streakDays: 1,
+    streakDays: 0,
+    lastStudyDate: undefined,
     studyHours: 0.5,
     exercisesSolved: 0,
     accuracyRate: 100,
@@ -3288,6 +3344,7 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // AUTH: Đăng nhập (hoặc Đăng nhập Demo Sinh Viên/Giảng Viên)
+// LƯU Ý QUAN TRỌNG: Đăng nhập chỉ kiểm tra trạng thái Streak, TUYỆT ĐỐI KHÔNG TĂNG STREAK!
 app.post('/api/auth/login', (req, res) => {
   const { email, password, demoUserRole, fullName, university } = req.body;
   const users = getUsersDatabase();
@@ -3322,7 +3379,8 @@ app.post('/api/auth/login', (req, res) => {
       gpa: 3.5,
       exp: 150,
       level: 1,
-      streakDays: 1,
+      streakDays: 0,
+      lastStudyDate: undefined,
       studyHours: 1.0,
       exercisesSolved: 5,
       accuracyRate: 90,
@@ -3336,10 +3394,17 @@ app.post('/api/auth/login', (req, res) => {
     users.unshift(targetUser);
   } else {
     targetUser.lastActive = 'Đang online';
+
+    // KIỂM TRA STREAK THỜI GIAN THỰC KHI TRUY CẬP (Đăng nhập không tăng streak)
+    const streakCheck = checkStreakOnLogin(targetUser.streakDays, targetUser.lastStudyDate);
+    targetUser.streakDays = streakCheck.streakDays;
+
     if (!targetUser.recentActivity) targetUser.recentActivity = [];
     targetUser.recentActivity.unshift({
       action: 'Đăng nhập',
-      detail: 'Đăng nhập thành công vào hệ thống AI Classroom',
+      detail: streakCheck.hasStudiedToday
+        ? 'Đăng nhập thành công (Hôm nay đã hoàn thành mục tiêu học tập 🔥)'
+        : 'Đăng nhập thành công (Cần học 1 bài tập hôm nay để duy trì streak ⏳)',
       timestamp: 'Vừa xong',
     });
   }
@@ -3354,9 +3419,10 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// AUTH: Cập nhật tiến độ học tập của người dùng vào users_database.json
+// AUTH: Cập nhật tiến độ học tập & TÍCH LŨY STREAK THỜI GIAN THỰC vào users_database.json
+// Streak CHỈ ĐƯỢC TÍNH VÀ GIA HẠN khi người dùng thực sự tương tác học tập!
 app.post('/api/auth/save-progress', (req, res) => {
-  const { userId, expGained, exercisesCount, gpa, studyHours, activityDetail } = req.body;
+  const { userId, expGained, exercisesCount, gpa, studyHours, activityDetail, isStudyInteraction = true } = req.body;
   if (!userId) {
     return res.status(400).json({ success: false, error: 'Thiếu userId!' });
   }
@@ -3374,6 +3440,20 @@ app.post('/api/auth/save-progress', (req, res) => {
     if (studyHours) user.studyHours = parseFloat((user.studyHours + Number(studyHours)).toFixed(1));
     user.lastActive = 'Vừa xong';
 
+    // REAL-TIME STREAK CALCULATION:
+    // Chỉ tăng khi có tương tác học tập thực tế
+    let streakResult = {
+      streakDays: user.streakDays || 0,
+      lastStudyDate: user.lastStudyDate || '',
+      isNewIncrement: false,
+    };
+
+    if (isStudyInteraction) {
+      streakResult = calculateStreakOnStudy(user.streakDays, user.lastStudyDate);
+      user.streakDays = streakResult.streakDays;
+      user.lastStudyDate = streakResult.lastStudyDate;
+    }
+
     if (!user.recentActivity) user.recentActivity = [];
     if (activityDetail) {
       user.recentActivity.unshift({
@@ -3381,11 +3461,27 @@ app.post('/api/auth/save-progress', (req, res) => {
         detail: activityDetail,
         timestamp: 'Vừa xong',
       });
-      if (user.recentActivity.length > 20) user.recentActivity.pop();
+    }
+
+    if (streakResult.isNewIncrement) {
+      user.recentActivity.unshift({
+        action: 'Chuỗi Streak 🔥',
+        detail: `Duy trì chuỗi học tập đạt ${user.streakDays} ngày liên tục!`,
+        timestamp: 'Vừa xong',
+      });
+    }
+
+    if (user.recentActivity.length > 20) {
+      user.recentActivity = user.recentActivity.slice(0, 20);
     }
 
     saveUsersDatabase(users);
-    return res.json({ success: true, user, message: 'Tiến độ đã được lưu bền vững vào users_database.json!' });
+    return res.json({
+      success: true,
+      user,
+      streakResult,
+      message: 'Tiến độ học tập và chuỗi Streak đã được lưu bền vững vào users_database.json!',
+    });
   }
 
   return res.json({ success: false, error: 'Không tìm thấy người dùng trong users_database.json' });

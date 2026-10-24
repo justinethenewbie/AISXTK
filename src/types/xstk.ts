@@ -34,6 +34,7 @@ export interface UserProfile {
   studyHours: number;
   streakDays: number;
   lastActiveDate: string;
+  lastStudyDate?: string; // YYYY-MM-DD của ngày gần nhất tương tác học tập
   unlockedLootboxes: number;
   inventory: MascotItem[];
   equippedMascot: EquippedMascot;
@@ -226,6 +227,7 @@ export interface AppUser {
   exp: number;
   level: number;
   streakDays: number;
+  lastStudyDate?: string; // YYYY-MM-DD của ngày gần nhất tương tác học tập
   studyHours: number;
   exercisesSolved: number;
   accuracyRate: number;
