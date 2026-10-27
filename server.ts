@@ -87,16 +87,24 @@ function getGeminiClients(): { client: GoogleGenAI; keyMask: string; index: numb
 
 function getGeminiClient(): GoogleGenAI | null {
   const clients = getGeminiClients();
-  return clients.length > 0 ? clients[0].client : null;
+  if (clients.length > 0) return clients[0].client;
+  const shopKey = process.env.SHOPAIKEY_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  if (shopKey && shopKey !== 'MY_KEY' && shopKey !== 'MOCK_KEY') {
+    return new GoogleGenAI({ apiKey: 'AIza_MOCK_PROXY_FOR_SHOPAIKEY' });
+  }
+  return null;
 }
 
 // API Key status endpoint (Server-Managed via Render environment variables)
 app.get('/api/settings/get-api-key-status', (_req, res) => {
   const keys = getAllGeminiKeys();
+  const shopKey = process.env.SHOPAIKEY_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  const hasShop = !!(shopKey && shopKey !== 'MY_KEY' && shopKey !== 'MOCK_KEY');
   res.json({
-    hasKey: keys.length > 0,
-    keyCount: keys.length,
+    hasKey: keys.length > 0 || hasShop,
+    keyCount: keys.length + (hasShop ? 1 : 0),
     isServerManaged: true,
+    activeProvider: hasShop ? 'OpenAI GPT-4o (ShopAIKey)' : 'Google Gemini',
   });
 });
 
@@ -152,6 +160,10 @@ async function callShopAIKey(
   };
   if (isJson) {
     body.response_format = { type: 'json_object' };
+    const hasJson = messages.some((m) => typeof m.content === 'string' && /json/i.test(m.content));
+    if (!hasJson) {
+      messages[messages.length - 1].content += '\n(Return response in valid JSON object format)';
+    }
   }
 
   const res = await fetch(`${baseUrl}/chat/completions`, {
@@ -421,13 +433,31 @@ PHONG THÁI SƯ PHẠM VÀ BẢN SẮC CỦA "BÁC GẤU TIẾN SĨ":
    - Toàn bộ công thức toán, biến số đều kẹp trong $...$ hoặc $$...$$.
    - Dấu gạch chéo ngược trong JSON luôn double-escape ("\\\\frac", "\\\\sqrt", "\\\\bar", "\\\\mu", "\\\\sigma").`;
 
-// Endpoint Test Connection: Validate Server-Side Gemini API Key Pool (Key 1 & Key 2)
+// Endpoint Test Connection: Validate Server-Side AI API Keys (ShopAIKey GPT-4o or Gemini Pool)
 app.post('/api/tutor/test-connection', async (req, res) => {
+  const shopKey = process.env.SHOPAIKEY_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  if (shopKey && shopKey !== 'MY_KEY' && shopKey !== 'MOCK_KEY') {
+    try {
+      const targetModel = process.env.SHOPAIKEY_MODEL || 'gpt-4o';
+      const result = await callShopAIKey(shopKey, targetModel, 'Trả về đúng duy nhất cụm từ: "CONNECTED_SUCCESS"');
+      return res.json({
+        success: true,
+        message: `Đã kết nối thành công với OpenAI (${targetModel}) qua ShopAIKey API! Key: ${shopKey.slice(0, 6)}...`,
+        provider: 'ShopAIKey',
+        model: targetModel,
+        reply: result.text?.trim(),
+      });
+    } catch (shopErr: any) {
+      console.warn('ShopAIKey test connection failed:', shopErr?.message);
+      // Fall through to test Gemini if available
+    }
+  }
+
   const clients = getGeminiClients();
   if (clients.length === 0) {
     return res.json({
       success: false,
-      error: 'Máy chủ chưa nhận được API Key từ biến môi trường. Vui lòng thiết lập biến GEMINI_API_KEY trên Render Dashboard.',
+      error: 'Máy chủ chưa nhận được API Key từ biến môi trường. Vui lòng thiết lập biến SHOPAIKEY_API_KEY hoặc GEMINI_API_KEY trên Render Dashboard.',
     });
   }
 
@@ -1507,57 +1537,69 @@ app.post(['/api/tutor/generate-similar', '/api/tutor/generate-quiz', '/api/tutor
 
   if (client) {
     try {
-      const EXAM_GENERATOR_SYSTEM_INSTRUCTION = `BẠN LÀ CHUYÊN GIA TRƯỞNG BAN RA ĐỀ THI XÁC SUẤT THỐNG KÊ (XSTK) VÀ TOÁN KINH TẾ CỦA ĐẠI HỌC NGÂN HÀNG (HUB) VÀ CÁC TRƯỜNG ĐẠI HỌC KINH TẾ HÀNG ĐẦU.
-NĂNG LỰC CỐT LÕI (AI THINKING & CÁ NHÂN HÓA):
-1. ƯU TIÊN TUYỆT ĐỐI YÊU CẦU CỦA NGƯỜI DÙNG: Mọi chi tiết, chủ đề hay dạng bài do người học chỉ định (userExpectations) PHẢI là trung tâm của đề thi.
-2. BÀI TOÁN CÓ CHIỀU SÂU: Gắn liền với các bài toán thực tiễn tài chính, ngân hàng (thẩm định tín dụng, nợ xấu, doanh số), đầu tư, kiểm toán, bảo hiểm, chuỗi cung ứng, khoa học dữ liệu. Số liệu tính toán logic, hợp lý.
-3. CÔNG THỨC TOÁN CHUẨN: Mọi công thức toán và ký hiệu thống kê bắt buộc bọc trong cặp dấu $...$ KaTeX (\\bar{x}, s^2, s, z_{\\alpha/2}, t_{\\alpha/2}^{(n-1)}, Z_{qs}, p, \\mu, \\sigma, \\varepsilon, \\Phi_0(z), \\int, \\sum).
-4. TRẢ VỀ DUY NHẤT ĐÚNG MẢNG JSON HỢP LỆ, không kèm văn bản mở đầu hay kết thúc ngoài JSON.`;
+      const EXAM_GENERATOR_SYSTEM_INSTRUCTION = `BẠN LÀ CHUYÊN GIA TRƯỞNG BAN BIÊN SOẠN ĐỀ THI XÁC SUẤT THỐNG KÊ (XSTK) VÀ TOÁN KINH TẾ CỦA ĐẠI HỌC NGÂN HÀNG (HUB) VÀ CÁC TRƯỜNG ĐẠI HỌC KINH TẾ HÀNG ĐẦU.
 
-      const prompt = `YÊU CẦU BIÊN SOẠN BỘ ĐỀ THI XÁC SUẤT THỐNG KÊ CHẤT LƯỢNG CAO (AI THINKING)
+QUY TẮC CỐT LÕI (AI THINKING & ĐỀ BÀI VĂN CẢNH ĐÒI HỎI TƯ DUY BÓC TÁCH):
+1. TUYỆT ĐỐI CẤM RA ĐỀ "CHO SẴN THAM SỐ THÔ": Không được viết đề bài kiểu máy móc: "Cho mẫu n=500, p=0.05...", "Cho x̄=10, s=2...".
+2. BẮT BUỘC ĐỀ DẠNG VĂN CẢNH KINH TẾ / NGÂN HÀNG / THỰC TẾ:
+   - Toàn bộ bài toán phải đặt trong câu chuyện thực tế sinh động: Thẩm định tín dụng, tỷ lệ nợ xấu, kiểm soát chất lượng linh kiện công nghệ, khảo sát mức lương ngành tài chính, quản lý rủi ro danh mục đầu tư, logistics kho bãi, tỷ lệ hoàn đơn thương mại điện tử.
+3. ẨN THAM SỐ ĐỂ NGƯỜI HỌC TỰ SUY LUẬN BÓC TÁCH:
+   - Bài toán tỷ lệ (p, f): Kể câu chuyện có số liệu thành phần. Ví dụ: "Kiểm tra ngẫu nhiên một lô linh kiện vi mạch tại phân xưởng, chuyên viên kiểm soát chất lượng ghi nhận có 475 sản phẩm đạt chuẩn và 25 sản phẩm xuất hiện lỗi kỹ thuật...". Thí sinh phải tự tư duy: Cỡ mẫu $n = 475 + 25 = 500$, tỷ lệ mẫu phế phẩm $f = \\frac{25}{500} = 0.05$.
+   - Bài toán trung bình (μ, x̄, s): Cho bảng phân phối tần số rời rạc hoặc danh sách giá trị giao dịch / doanh thu của các chi nhánh để thí sinh tự bấm máy Casio hoặc tính toán tìm $\\bar{x}$ và $s$.
+   - Bài toán xác suất (Bayes, xác suất toàn phần): Đưa vào bối cảnh hệ thống phân loại nợ, phân xưởng sản xuất A/B/C với tỷ lệ phế phẩm từng phân xưởng, thí sinh phải tự phân tích hệ biến cố đầy đủ.
+4. ƯU TIÊN 100% YÊU CẦU CỦA NGƯỜI HỌC (userExpectations):
+   - Mọi chi tiết, chủ đề hay dạng bài do người học chỉ định trong userExpectations PHẢI là trung tâm đề bài.
+5. CÔNG THỨC TOÁN CHUẨN KATEX:
+   - Mọi công thức và ký hiệu thống kê ($n, f, \\bar{x}, s^2, s, z_{\\alpha/2}, t_{\\alpha/2}^{(n-1)}, Z_{qs}, T_{qs}, p, \\mu, \\sigma, \\varepsilon, \\Phi_0(z), \\int, \\sum$) BẮT BUỘC bọc trong cặp dấu $...$.
+   - Với trắc nghiệm: Các phương án options [A, B, C, D] có ký hiệu toán học hoặc khoảng giá trị ($p \\in [a; b]$, $\\mu \\in [c; d]$) BẮT BUỘC bọc trong $...$ KaTeX.
+6. ĐỊNH DẠNG ĐẦU RA: Bắt buộc trả về đúng định dạng JSON Object chứa mảng "exercises".`;
+
+      const prompt = `YÊU CẦU BIÊN SOẠN BỘ ĐỀ THI XÁC SUẤT THỐNG KÊ TƯ DUY BÓC TÁCH SỐ LIỆU (AI THINKING)
 Nhiệm vụ: Thiết kế ĐÚNG ${count} bài toán ${type === 'mcq' ? 'TRẮC NGHIỆM' : 'TỰ LUẬN'} môn "${chapterTitle || 'XSTK'}".
 - Cấp độ tư duy: ${difficulty}
 - Định hướng trọng tâm: ${focusType}
-${userExpectations ? `\n🎯 YÊU CẦU ĐẶC BIỆT CỦA NGƯỜI HỌC (BẮT BUỘC ƯU TIÊN VÀ BÁM SÁT 100%):
+${userExpectations ? `\n🎯 YÊU CẦU CỦA NGƯỜI HỌC (BẮT BUỘC ƯU TIÊN VÀ BÁM SÁT 100%):
 "${userExpectations}"
--> Bạn PHẢI thiết kế đề bài, tham số số liệu và nội dung xoay quanh trực tiếp yêu cầu này!\n` : ''}
+-> Bạn PHẢI thiết kế đề bài, văn cảnh tình huống và số liệu bóc tách xoay quanh trực tiếp yêu cầu này!\n` : ''}
 
 TIÊU CHUẨN BIÊN SOẠN BỘ ĐỀ:
 ${
   type === 'mcq'
     ? `DẠNG ĐỀ TRẮC NGHIỆM:
 - Mỗi câu gồm:
-  + "title": Tiêu đề mô tả dạng bài (ví dụ: "Khoảng tin cậy cho tỷ lệ nợ xấu", "Công thức Bayes trong kiểm soát rủi ro", "Kiểm định 2 phía mẫu lớn").
-  + "question": Nội dung đề bài rõ ràng, số liệu kinh tế/ngân hàng thực tế.
-  + "options": Đúng 4 phương án [A, B, C, D] với các phương án nhiễu (distractors) mô phỏng chính xác các bẫy tư duy kinh điển của sinh viên (nhầm 1 phía vs 2 phía, nhầm \\sigma và \\sigma^2, quên chia \\sqrt{n}, nhầm độ tin cậy 95% z=1.96 với 99% z=2.58). BẮT BUỘC: Mọi phương án có ký hiệu toán học, khoảng giá trị hoặc công thức (ví dụ: $p \\in [0.0725; 0.1942]$, $Z_{qs} \\approx 2.45$, $\\mu \\in [10; 20]$, $P(A) = 0.5$) PHẢI BỌC TRONG CẶP DẤU $ ... $ ĐỂ HIỂN THỊ KATEX ĐẸP MẮT, TUYỆT ĐỐI KHÔNG ĐỂ CODE TRẦN 'p \\in [...]'!
+  + "title": Tiêu đề mô tả dạng bài (ví dụ: "Bóc tách tỷ lệ lỗi trong kiểm định chất lượng", "Công thức Bayes trong kiểm soát rủi ro tín dụng", "Kiểm định 2 phía doanh thu trung bình").
+  + "question": Nội dung đề bài dạng văn cảnh thực tế ẩn tham số (thí sinh phải tự suy luận bóc tách ra n, f, x̄, s từ câu chuyện thực tế).
+  + "options": Đúng 4 phương án [A, B, C, D] với các phương án nhiễu (distractors) mô phỏng chính xác các bẫy tư duy kinh điển của sinh viên (quên cộng mẫu để tìm n, nhầm 1 phía vs 2 phía, nhầm \\sigma và \\sigma^2, quên chia \\sqrt{n}, lấy nhầm z=1.96 thay vì 2.58). BẮT BUỘC: Mọi phương án có ký hiệu toán học hoặc khoảng giá trị (ví dụ: $p \\in [0.0725; 0.1942]$, $Z_{qs} \\approx 2.45$, $\\mu \\in [10; 20]$, $P(A) = 0.5$) PHẢI BỌC TRONG CẶP DẤU $ ... $ ĐỂ HIỂN THỊ KATEX.
   + "correctIndex": Số nguyên từ 0 đến 3 chỉ phương án đúng.
-  + "explanation": Giải thích sư phạm chi tiết từng bước tại sao phương án này đúng và bẫy sai ở các phương án khác.`
+  + "explanation": Giải thích sư phạm chi tiết từng bước: Bước 1 bóc tách tham số từ văn cảnh -> Bước 2 áp dụng công thức KaTeX -> Bước 3 tính toán đáp số -> Bước 4 chỉ ra bẫy sai ở các phương án khác.`
     : `DẠNG ĐỀ TỰ LUẬN:
 - Mỗi câu gồm:
   + "title": Tiêu đề phân loại dạng toán cụ thể.
-  + "question": Đề bài hoàn chỉnh có ngữ cảnh kinh tế/ngân hàng thực tế, có các câu hỏi phân nhánh logic (ví dụ a, b, c) phù hợp với độ khó ${difficulty}.
-  + "strategyHint": 3-4 bước định hướng tư duy giải bài: Bước 1 (Nhận diện tham số), Bước 2 (Công thức cốt lõi & tra bảng), Bước 3 (Thế số & tính toán), Bước 4 (Ý nghĩa kinh tế/kết luận). MỌI công thức toán phải bọc trong $...$.
+  + "question": Đề bài tình huống kinh tế/ngân hàng hoàn chỉnh ẩn số liệu, có các câu hỏi phân nhánh logic (ví dụ a, b, c) phù hợp với độ khó ${difficulty}.
+  + "strategyHint": 3-4 bước định hướng tư duy giải bài: Bước 1 (Bóc tách dữ liệu văn cảnh và nhận diện tham số $n, f, \\bar{x}, s$), Bước 2 (Công thức cốt lõi & tra bảng), Bước 3 (Thế số & tính toán), Bước 4 (Ý nghĩa kinh tế/kết luận ra quyết định). MỌI công thức toán phải bọc trong $...$.
   + "keyFormulas": Mảng các công thức KaTeX chuẩn dùng trong bài (ví dụ: ["$f = \\frac{m}{n}$", "$\\varepsilon = z_{\\alpha/2}\\sqrt{\\frac{f(1-f)}{n}}$"]).
   + "expectedAnswerSummary": Tóm tắt các bước giải và đáp số cuối cùng kèm đơn vị rõ ràng.`
 }
 
-Định dạng trả về: Đúng ${count} phần tử JSON trong mảng:
-[
-  {
-    "id": "gen_1",
-    "title": "Tiêu đề",
-    "question": "Nội dung câu hỏi...",
-    ${
-      type === 'mcq'
-        ? `"options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
-    "correctIndex": 0,
-    "explanation": "Giải thích chi tiết..."`
-        : `"strategyHint": "Bước 1: ..., Bước 2: ..., Bước 3: ...",
-    "keyFormulas": ["$Công thức 1$", "$Công thức 2$"],
-    "expectedAnswerSummary": "Đáp số chi tiết..."`
+Định dạng trả về: Trả về duy nhất đúng JSON Object với cấu trúc:
+{
+  "exercises": [
+    {
+      "id": "gen_1",
+      "title": "Tiêu đề",
+      "question": "Nội dung câu hỏi dạng văn cảnh ẩn số liệu...",
+      ${
+        type === 'mcq'
+          ? `"options": ["$Phương án A$", "$Phương án B$", "$Phương án C$", "$Phương án D$"],
+      "correctIndex": 0,
+      "explanation": "Giải thích chi tiết bóc tách tham số và đáp án..."`
+          : `"strategyHint": "Bước 1: Bóc tách tham số..., Bước 2: ..., Bước 3: ...",
+      "keyFormulas": ["$Công thức 1$", "$Công thức 2$"],
+      "expectedAnswerSummary": "Đáp số chi tiết..."`
+      }
     }
-  }
-]`;
+  ]
+}`;
 
       const { response, usedModel } = await generateGeminiFast(client, model, {
         contents: prompt,
@@ -1569,10 +1611,29 @@ ${
         },
       });
 
-      const exercises = cleanAndParseJson<any[]>(response.text || '[]', []);
+      const parsed = cleanAndParseJson<any>(response.text || '{}', null);
+      let exercises: any[] = [];
+      if (Array.isArray(parsed)) {
+        exercises = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        if (Array.isArray(parsed.exercises)) {
+          exercises = parsed.exercises;
+        } else if (Array.isArray(parsed.questions)) {
+          exercises = parsed.questions;
+        } else if (Array.isArray(parsed.data)) {
+          exercises = parsed.data;
+        } else if (Array.isArray(parsed.items)) {
+          exercises = parsed.items;
+        } else {
+          const found = Object.values(parsed).find(Array.isArray);
+          if (found) exercises = found as any[];
+        }
+      }
+
       if (Array.isArray(exercises) && exercises.length > 0) {
         // Sanitize every exercise to ensure strategyHint is valid and options are well-formatted
         exercises.forEach((ex: any, idx: number) => {
+          if (!ex.id) ex.id = `gen_${type}_${idx + 1}_${Date.now()}`;
           if (Array.isArray(ex.options)) {
             ex.options = ex.options.map((opt: any) => {
               if (typeof opt !== 'string') return String(opt ?? '');
@@ -1589,19 +1650,30 @@ ${
           }
           if (!ex.strategyHint || ex.strategyHint === 'undefined' || ex.strategyHint === 'null' || typeof ex.strategyHint !== 'string' || !ex.strategyHint.trim()) {
             ex.strategyHint = ex.hint || ex.strategy || ex.solutionStrategy || ex.steps ||
-              `Bước 1: Đọc kỹ giả thiết bài toán, xác định các thông số mẫu quan sát. Bước 2: Áp dụng các công thức thống kê cốt lõi đã cho. Bước 3: Thế số liệu, tính toán kết quả và nêu ý nghĩa kinh tế thực tế.`;
+              `Bước 1: Đọc kỹ giả thiết đề bài văn cảnh, bóc tách các thông số mẫu quan sát ($n, f, \\bar{x}, s$). Bước 2: Áp dụng các công thức thống kê cốt lõi đã cho. Bước 3: Thế số liệu, tính toán kết quả và nêu ý nghĩa kinh tế thực tế.`;
           }
           if (!ex.keyFormulas || !Array.isArray(ex.keyFormulas) || ex.keyFormulas.length === 0) {
             ex.keyFormulas = [`E(X) = \\sum x_i p_i`, `\\sigma = \\sqrt{\\text{Var}(X)}`];
           }
         });
-        return res.json({ success: true, exercises, isAiGenerated: true, model: usedModel });
+
+        const providerName = (process.env.SHOPAIKEY_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim())
+          ? `OpenAI ${usedModel || 'GPT-4o'} (ShopAIKey)`
+          : `Google Gemini (${usedModel || 'AI'})`;
+
+        return res.json({
+          success: true,
+          exercises,
+          isAiGenerated: true,
+          model: usedModel || 'gpt-4o',
+          provider: providerName,
+        });
       }
     } catch (error: any) {
       if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
         console.log('Gemini Quota 429 reached; serving smart offline dynamic fallback data.');
       } else {
-        console.warn('Generate Similar API error with Gemini, falling back to dynamic bank:', error?.message);
+        console.warn('Generate Similar API error, falling back to dynamic bank:', error?.message);
       }
     }
   }
@@ -1611,7 +1683,6 @@ ${
   const isBayes = reqLower.includes('bayes') || reqLower.includes('xác suất đầy đủ') || reqLower.includes('toàn phần');
   const isContinuous = reqLower.includes('liên tục') || reqLower.includes('mật độ') || reqLower.includes('hàm mật độ') || reqLower.includes('tích phân');
   const isHypothesis = reqLower.includes('kiểm định') || reqLower.includes('bác bỏ') || reqLower.includes('giả thuyết');
-  const isCasio = reqLower.includes('casio') || reqLower.includes('bảng') || reqLower.includes('tần số') || reqLower.includes('ghép nhóm');
 
   const fallbackList = [];
   for (let i = 1; i <= count; i++) {
@@ -1621,15 +1692,20 @@ ${
         fallbackList.push({
           id: `fb_mcq_${seed}_${Date.now()}`,
           title: `Công thức Bayes & Xác suất toàn phần #${seed}`,
-          question: `Một ngân hàng sử dụng hệ thống AI chấm điểm tín dụng. Tỷ lệ khách hàng rủi ro nợ xấu trong toàn hệ thống là ${3 + seed}%. Nếu một khách hàng nợ xấu, AI nhận diện chính xác với xác suất 95%. Nếu khách hàng tốt, AI phán đoán nhầm là nợ xấu với xác suất 2%. Khi hệ thống báo động một khách hàng có nguy cơ nợ xấu, tính xác suất thực tế người này thực sự bị nợ xấu?`,
+          question: `Một ngân hàng thương mại sử dụng hệ thống AI phân loại rủi ro tín dụng. Tỷ lệ khách hàng nợ xấu trong toàn hệ thống là ${3 + seed}%. Nếu khách hàng thuộc diện nợ xấu, mô hình AI phát hiện chính xác với xác suất 95%. Nếu khách hàng có tín dụng tốt, AI phán đoán nhầm là nợ xấu với xác suất 2%. Khi hệ thống gửi cảnh báo một hồ sơ có nguy cơ nợ xấu, tính xác suất thực tế khách hàng này thực sự bị nợ xấu?`,
           options: [
-            `$P(B|A) \\approx ${(0.60 + seed * 0.02).toFixed(4)}$`,
-            `$P(B|A) \\approx ${(0.95).toFixed(4)}$`,
-            `$P(B|A) \\approx ${(0.05 + seed * 0.01).toFixed(4)}$`,
-            `$P(B|A) \\approx ${(0.80).toFixed(4)}$`,
+            `$P(H_1|A) \\approx ${(0.60 + seed * 0.02).toFixed(4)}$`,
+            `$P(H_1|A) \\approx ${(0.95).toFixed(4)}$`,
+            `$P(H_1|A) \\approx ${(0.05 + seed * 0.01).toFixed(4)}$`,
+            `$P(H_1|A) \\approx ${(0.80).toFixed(4)}$`,
           ],
           correctIndex: 0,
-          explanation: `Áp dụng công thức Bayes: Mẫu số là xác suất toàn phần $P(A) = (${(3 + seed)/100} \\times 0.95) + (${(97 - seed)/100} \\times 0.02)$. Tử số là $P(H_1)P(A|H_1) = ${(3 + seed)/100} \\times 0.95$. Tính ra xác suất hậu nghiệm xấp xỉ ${(0.60 + seed * 0.02).toFixed(4)}. Bẫy hay gặp: Sinh viên thường nhầm với 95% của đề bài.`,
+          explanation: `Bóc tách bài toán theo công thức Bayes:
+1. Đặt $H_1$: "Khách nợ xấu" ($P(H_1) = ${(3 + seed)/100}$), $H_2$: "Khách tốt" ($P(H_2) = ${(97 - seed)/100}$).
+2. Biến cố A: "AI báo động nợ xấu". Xác suất điều kiện: $P(A|H_1) = 0.95, P(A|H_2) = 0.02$.
+3. Xác suất toàn phần mẫu số: $P(A) = P(H_1)P(A|H_1) + P(H_2)P(A|H_2) = ${(3 + seed)/100} \\times 0.95 + ${(97 - seed)/100} \\times 0.02$.
+4. Xác suất hậu nghiệm: $P(H_1|A) = \\frac{P(H_1)P(A|H_1)}{P(A)} \\approx ${(0.60 + seed * 0.02).toFixed(4)}$.
+Bẫy hay gặp: Sinh viên chọn nhầm 95% do không cập nhật xác suất tiên nghiệm.`,
         });
       } else if (isContinuous) {
         fallbackList.push({
@@ -1648,8 +1724,8 @@ ${
       } else if (isHypothesis) {
         fallbackList.push({
           id: `fb_mcq_${seed}_${Date.now()}`,
-          title: `Kiểm định giả thuyết thống kê #${seed}`,
-          question: `Một ngân hàng thương mại kiểm tra năng suất xử lý hồ sơ trung bình của nhân viên. Khảo sát mẫu $n = ${80 + seed * 10} \\ge 30$, tính được trung bình mẫu $\\bar{x} = 22.4$ hồ sơ/ngày, độ lệch chuẩn $s = 4.2$. Muốn kiểm định giả thiết $H_0: \\mu = 21$ với đối thiết $H_1: \\mu > 21$ ở mức ý nghĩa $\\alpha = 0.05$ ($z_{0.05} = 1.645$). Giá trị tiêu chuẩn kiểm định $Z_{qs}$ là:`,
+          title: `Kiểm định giả thuyết thống kê văn cảnh #${seed}`,
+          question: `Tại một trung tâm chăm sóc khách hàng của ngân hàng, quản lý theo dõi thời gian phục vụ một lượt giao dịch. Kiểm tra ngẫu nhiên ${80 + seed * 10} cuộc gọi gần nhất, tính được thời gian trung bình là 22.4 phút và độ lệch chuẩn mẫu hiệu chỉnh là 4.2 phút. Muốn kiểm định giả thiết $H_0: \\mu = 21$ với đối thiết $H_1: \\mu > 21$ ở mức ý nghĩa $\\alpha = 0.05$ ($z_{0.05} = 1.645$). Giá trị tiêu chuẩn kiểm định $Z_{qs}$ là:`,
           options: [
             `$Z_{qs} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$`,
             `$Z_{qs} \\approx ${( (22.4 - 21) / 4.2 ).toFixed(4)}$`,
@@ -1657,25 +1733,38 @@ ${
             `$Z_{qs} \\approx ${( (22.4 - 21) * Math.sqrt(80 + seed * 10) ).toFixed(4)}$`,
           ],
           correctIndex: 0,
-          explanation: `Công thức tiêu chuẩn kiểm định trung bình mẫu lớn: $Z_{qs} = \\frac{\\bar{x} - \\mu_0}{\\frac{s}{\\sqrt{n}}} = \\frac{22.4 - 21}{4.2 / \\sqrt{${80 + seed * 10}}} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$. Bẫy kinh điển: Quên chia cho căn bậc hai của cỡ mẫu n.`,
+          explanation: `Bóc tách tham số từ văn cảnh: Cỡ mẫu $n = ${80 + seed * 10} \\ge 30$, $\\bar{x} = 22.4$, $s = 4.2$, $\\mu_0 = 21$. Tiêu chuẩn kiểm định: $Z_{qs} = \\frac{\\bar{x} - \\mu_0}{s / \\sqrt{n}} = \\frac{22.4 - 21}{4.2 / \\sqrt{${80 + seed * 10}}} \\approx ${( (22.4 - 21) / (4.2 / Math.sqrt(80 + seed * 10)) ).toFixed(4)}$. Bẫy kinh điển: Quên chia cho căn bậc hai của cỡ mẫu n.`,
         });
       } else {
+        // Narrative deductive problem with hidden parameters
+        const goodItems = 475 + seed * 5;
+        const badItems = 25 + seed;
+        const totalN = goodItems + badItems;
+        const f = badItems / totalN;
+        const eps = 1.96 * Math.sqrt((f * (1 - f)) / totalN);
+        const lower = Math.max(0, f - eps).toFixed(4);
+        const upper = (f + eps).toFixed(4);
         fallbackList.push({
           id: `fb_mcq_${seed}_${Date.now()}`,
-          title: `Ước lượng khoảng tin cậy #${seed} - ${chapterTitle || 'XSTK'}`,
-          question: `Khảo sát ngẫu nhiên $n = ${100 + seed * 20}$ khoản giải ngân cho doanh nghiệp vừa và nhỏ, ghi nhận có ${15 + seed} khoản vay có tài sản đảm bảo bằng bất động sản. Khoảng tin cậy đối xứng 95% ($z_{0.025} = 1.96$) cho tỷ lệ khoản vay có tài sản đảm bảo bằng bất động sản là:`,
+          title: `Ước lượng tỷ lệ văn cảnh ẩn số liệu #${seed} - ${chapterTitle || 'XSTK'}`,
+          question: `Tại một phân xưởng sản xuất thiết bị điện tử viễn thông, chuyên viên kiểm soát chất lượng tiến hành kiểm tra ngẫu nhiên một lô hàng vừa xuất xưởng và ghi nhận được ${goodItems} linh kiện đạt tiêu chuẩn chất lượng cao cùng ${badItems} linh kiện xuất hiện lỗi vi mạch. Hãy ước lượng khoảng tin cậy đối xứng 95% ($z_{0.025} = 1.96$) cho tỷ lệ linh kiện lỗi của toàn phân xưởng.`,
           options: [
-            `$p \\in [${ ( (15 + seed)/(100 + seed*20) - 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 1.96 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]$`,
-            `$p \\in [${ ( (15 + seed)/(100 + seed*20) - 0.08 ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 0.08 ).toFixed(4)}]$`,
-            `$p \\in [0.1000; 0.2500]$`,
-            `$p \\in [${ ( (15 + seed)/(100 + seed*20) - 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}; ${ ( (15 + seed)/(100 + seed*20) + 2.58 * Math.sqrt(((15 + seed)/(100 + seed*20))*(1 - (15 + seed)/(100 + seed*20))/(100 + seed*20)) ).toFixed(4)}]$`,
+            `$p \\in [${lower}; ${upper}]$`,
+            `$p \\in [${(f - 0.02).toFixed(4)}; ${(f + 0.02).toFixed(4)}]$`,
+            `$p \\in [0.0100; 0.1200]$`,
+            `$p \\in [${Math.max(0, f - 2.58 * Math.sqrt((f * (1 - f)) / totalN)).toFixed(4)}; ${(f + 2.58 * Math.sqrt((f * (1 - f)) / totalN)).toFixed(4)}]$`,
           ],
           correctIndex: 0,
-          explanation: `Tỷ lệ mẫu $f = \\frac{m}{n} = \\frac{${15 + seed}}{${100 + seed * 20}} = ${( (15 + seed)/(100 + seed*20) ).toFixed(4)}$. Sai số ước lượng: $\\varepsilon = 1.96 \\times \\sqrt{\\frac{f(1-f)}{n}}$. Khoảng tin cậy: $[f - \\varepsilon; f + \\varepsilon]$.`,
+          explanation: `Tư duy bóc tách đề bài văn cảnh:
+1. Cỡ mẫu tổng thể không cho trực tiếp mà bằng tổng linh kiện kiểm tra: $n = ${goodItems} + ${badItems} = ${totalN}$.
+2. Tỷ lệ mẫu phế phẩm quan sát: $f = \\frac{m}{n} = \\frac{${badItems}}{${totalN}} \\approx ${f.toFixed(4)}$.
+3. Sai số ước lượng: $\\varepsilon = 1.96 \\times \\sqrt{\\frac{f(1-f)}{n}} \\approx ${eps.toFixed(4)}$.
+4. Khoảng tin cậy: $[f - \\varepsilon; f + \\varepsilon] = [${lower}; ${upper}]$.
+Bẫy thường gặp: Lấy nhầm $n = ${goodItems}$ hoặc nhầm $f$ với tỷ lệ sản phẩm đạt.`,
         });
       }
     } else {
-      // Dynamic Essay Fallback
+      // Dynamic Essay Fallback with narrative deductive structure
       if (isBayes) {
         fallbackList.push({
           id: `fb_essay_${seed}_${Date.now()}`,
@@ -1702,20 +1791,22 @@ ${
           expectedAnswerSummary: `a) $k = \\frac{3}{16} = 0.1875$; b) $E(X) = 0.75$ tỷ VNĐ, $\\text{Var}(X) = 0.2375$; c) $P(X > 1.5) = 11.72\\%$.`,
         });
       } else {
-        const sampleN = 100 + seed * 20;
-        const meanX = (42 + seed * 1.5).toFixed(2);
-        const stdS = (6.5 + seed * 0.4).toFixed(2);
+        const goodItems = 460 + seed * 10;
+        const badItems = 40 + seed * 2;
+        const totalN = goodItems + badItems;
+        const f = badItems / totalN;
         fallbackList.push({
           id: `fb_essay_${seed}_${Date.now()}`,
-          title: `Bài toán Tự Luận: Thống Kê Mẫu & Ước Lượng Khoảng #${seed}`,
-          question: `Phòng Kế toán - Kiểm toán của Ngân hàng tiến hành kiểm tra thời gian xử lý thủ tục cấp tín dụng doanh nghiệp tại các chi nhánh. Mẫu ngẫu nhiên gồm $n = ${sampleN}$ giao dịch cho kết quả thời gian xử lý trung bình là $\\bar{x} = ${meanX}$ giờ, độ lệch chuẩn mẫu hiệu chỉnh $s = ${stdS}$ giờ.\n\na) Với độ tin cậy 95%, hãy ước lượng khoảng tin cậy đối xứng cho thời gian xử lý hồ sơ trung bình của toàn ngân hàng.\nb) Nếu muốn sai số ước lượng không vượt quá 0.8 giờ với độ tin cậy 99%, ngân hàng cần khảo sát thêm ít nhất bao nhiêu hồ sơ nữa?\nc) Ban điều hành đặt mục tiêu thời gian xử lý hồ sơ trung bình không quá 40 giờ. Với mức ý nghĩa 5%, hãy kiểm định xem mục tiêu này có đang bị vi phạm hay không?`,
-          strategyHint: `Bước 1: Do cỡ mẫu $n = ${sampleN} \\ge 30$, áp dụng định lý giới hạn trung tâm và phân phối chuẩn tắc $Z$.\nBước 2: Câu a: Độ tin cậy 95% $\\implies z_{0.025} = 1.96$. Sai số ước lượng: $\\varepsilon = 1.96 \\cdot \\frac{${stdS}}{\\sqrt{${sampleN}}}$. Khoảng tin cậy: $(\\bar{x} - \\varepsilon, \\bar{x} + \\varepsilon)$.\nBước 3: Câu b: Độ tin cậy 99% $\\implies z_{0.005} = 2.58$. Cỡ mẫu tối thiểu: $n_{min} = \\frac{(2.58)^2 \\cdot s^2}{\\varepsilon_0^2} = \\frac{6.6564 \\times (${stdS})^2}{(0.8)^2}$. Làm tròn lên số nguyên và trừ đi $n = ${sampleN}$ ban đầu để ra số hồ sơ cần khảo sát THÊM.\nBước 4: Câu c: Giả thiết $H_0: \\mu = 40$ vs $H_1: \\mu > 40$. Mức ý nghĩa $\\alpha = 0.05 \\implies z_{0.05} = 1.645$. Tiêu chuẩn: $Z_{qs} = \\frac{\\bar{x} - 40}{s / \\sqrt{n}}$. So sánh với 1.645 để kết luận.`,
+          title: `Bài toán Tự Luận: Phân Tích Văn Cảnh & Bóc Tách Tỷ Lệ Lỗi #${seed}`,
+          question: `Bộ phận Quản trị Vận hành của một hệ thống bán lẻ công nghệ kiểm tra ngẫu nhiên một lô thiết bị thanh toán POS. Kết quả ghi nhận có ${goodItems} máy hoạt động trơn tru và ${badItems} máy bị lỗi ngắt kết nối tín hiệu.\n\na) Bóc tách số liệu văn cảnh và ước lượng khoảng tin cậy đối xứng 95% ($z_{0.025} = 1.96$) cho tỷ lệ thiết bị gặp lỗi kết nối của toàn hệ thống.\nb) Nếu đơn vị cung ứng cam kết tỷ lệ lỗi không vượt quá 5%, với mức ý nghĩa 5% ($z_{0.05} = 1.645$), hãy kiểm định xem cam kết của nhà cung ứng có đáng tin cậy hay không?\nc) Để sai số ước lượng tỷ lệ máy lỗi không vượt quá 1.5% với độ tin cậy 95%, kỹ thuật viên cần khảo sát thêm ít nhất bao nhiêu thiết bị nữa?`,
+          strategyHint: `Bước 1 (Bóc tách dữ liệu văn cảnh): Xác định cỡ mẫu $n = ${goodItems} + ${badItems} = ${totalN}$. Tỷ lệ máy lỗi mẫu quan sát $f = \\frac{${badItems}}{${totalN}} \\approx ${f.toFixed(4)}$ (${(f * 100).toFixed(2)}%).\nBước 2 (Ước lượng KTC 95%): Độ tin cậy 95% $\\implies z_{0.025} = 1.96$. Sai số: $\\varepsilon = 1.96 \\cdot \\sqrt{\\frac{f(1-f)}{n}}$. Khoảng tin cậy: $[f - \\varepsilon, f + \\varepsilon]$.\nBước 3 (Kiểm định cam kết): Giả thiết $H_0: p = 0.05$ vs $H_1: p > 0.05$. Tiêu chuẩn: $Z_{qs} = \\frac{f - 0.05}{\\sqrt{\\frac{0.05 \\times 0.95}{${totalN}}}}$. So sánh với miền bác bỏ $W_\\alpha = (1.645; +\\infty)$ để đưa ra kết luận.\nBước 4 (Cỡ mẫu tối thiểu): $n_{min} = \\frac{z_{0.025}^2 \\cdot f(1-f)}{\\varepsilon_0^2} = \\frac{(1.96)^2 \\cdot ${f.toFixed(4)} \\cdot ${(1 - f).toFixed(4)}}{(0.015)^2}$. Làm tròn lên số nguyên và trừ đi $n = ${totalN}$ ban đầu để tìm số máy cần kiểm tra THÊM.`,
           keyFormulas: [
-            `\\varepsilon = z_{\\alpha/2} \\cdot \\frac{s}{\\sqrt{n}}`,
-            `n_{min} = \\frac{z_{\\alpha/2}^2 \\cdot s^2}{\\varepsilon_0^2}`,
-            `Z_{qs} = \\frac{\\bar{x} - \\mu_0}{\\frac{s}{\\sqrt{n}}}`,
+            `f = \\frac{m}{n}`,
+            `\\varepsilon = z_{\\alpha/2} \\cdot \\sqrt{\\frac{f(1-f)}{n}}`,
+            `Z_{qs} = \\frac{f - p_0}{\\sqrt{\\frac{p_0(1-p_0)}{n}}}`,
+            `n_{min} = \\frac{z_{\\alpha/2}^2 \\cdot f(1-f)}{\\varepsilon_0^2}`,
           ],
-          expectedAnswerSummary: `a) KTC 95% cho thời gian trung bình: [${(Number(meanX) - 1.96 * Number(stdS) / Math.sqrt(sampleN)).toFixed(2)}; ${(Number(meanX) + 1.96 * Number(stdS) / Math.sqrt(sampleN)).toFixed(2)}] giờ; b) Cần khảo sát thêm số hồ sơ tương ứng; c) Giá trị $Z_{qs}$ và kết luận kiểm định.`,
+          expectedAnswerSummary: `a) KTC 95% cho tỷ lệ máy lỗi: [${Math.max(0, f - 1.96 * Math.sqrt(f * (1 - f) / totalN)).toFixed(4)}; ${(f + 1.96 * Math.sqrt(f * (1 - f) / totalN)).toFixed(4)}]; b) Giá trị tiêu chuẩn $Z_{qs}$ và kết luận kiểm định; c) Số lượng máy POS cần khảo sát thêm.`,
         });
       }
     }
@@ -1724,14 +1815,7 @@ ${
   return res.json({
     success: true,
     isFallback: true,
-    notice: 'Đề thi đã được khởi tạo và sẵn sàng thực hành!',
-    exercises: fallbackList,
-  });
-
-  return res.json({
-    success: true,
-    isFallback: true,
-    notice: 'Đề thi đã được khởi tạo và sẵn sàng thực hành!',
+    notice: 'Đề thi đã được khởi tạo theo chuẩn văn cảnh bóc tách số liệu và sẵn sàng thực hành!',
     exercises: fallbackList,
   });
 });

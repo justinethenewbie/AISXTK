@@ -61,7 +61,8 @@ export const McqPractice: React.FC<McqPracticeProps> = ({ onAddExp, onRecordMist
       if (data.success && data.exercises && data.exercises.length > 0) {
         setMcqList(data.exercises);
         if (data.isAiGenerated) {
-          setGenerationNotice('✨ Đề thi trắc nghiệm đã được sinh trực tiếp bằng Google Gemini AI theo đúng yêu cầu của bạn!');
+          const aiName = data.provider || (data.model ? `AI (${data.model})` : 'AI');
+          setGenerationNotice(`✨ Đề thi trắc nghiệm đã được biên soạn trực tiếp bởi ${aiName} theo đúng yêu cầu và tư duy bóc tách của bạn!`);
         } else if (data.notice) {
           setGenerationNotice(data.notice);
         }
