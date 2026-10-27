@@ -37,6 +37,28 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.get('/health', (_req, res) => res.status(200).json({ status: 'ok', port: PORT }));
 app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok', port: PORT }));
 
+// Immediate port binding so Render / Cloud port-scan discovers open port within 10ms
+const primaryServer = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[HTTP Server] Primary listener ACTIVE on http://0.0.0.0:${PORT}`);
+});
+primaryServer.on('error', (err: any) => {
+  if (err?.code !== 'EADDRINUSE') {
+    console.error('[HTTP Server] Primary listen error:', err);
+  }
+});
+
+// Dual-port binding: If primary port is 3000, also bind to Render's default 10000 to guarantee instant scan success
+if (PORT !== 10000 && !parsedPort) {
+  try {
+    const secondaryServer = app.listen(10000, '0.0.0.0', () => {
+      console.log('[HTTP Server] Secondary listener ACTIVE on http://0.0.0.0:10000 (Render compatibility)');
+    });
+    secondaryServer.on('error', () => {
+      // Ignore if port 10000 is occupied or restricted
+    });
+  } catch {}
+}
+
 /**
  * Collect all configured Gemini API Keys (supporting single key, dual key, or key pool)
  */
@@ -104,17 +126,94 @@ function getTargetModel(req?: express.Request): string {
 let globalKeyRotationIndex = 0;
 
 /**
- * High-Intelligence Gemini execution with multi-key pooling and automatic model fallback
- * Prioritizes smartest and most responsive models (gemini-3.5-flash, gemini-3.1-flash-lite, gemini-flash-latest, gemini-3.7-flash, gemini-3.8-flash)
+ * ShopAIKey / OpenAI Format Integration
+ * Supports GPT-4o, GPT-4o-mini, and Claude via ShopAIKey OpenAI-compatible proxy
+ */
+async function callShopAIKey(
+  shopKey: string,
+  model: string,
+  prompt: string,
+  systemInstruction?: string,
+  isJson?: boolean
+): Promise<{ text: string }> {
+  const baseUrl = (process.env.SHOPAIKEY_BASE_URL || process.env.OPENAI_BASE_URL || 'https://api.shopaikey.com/v1').replace(/\/+$/, '');
+  const chosenModel = model || process.env.SHOPAIKEY_MODEL || 'gpt-4o';
+
+  const messages: any[] = [];
+  if (systemInstruction) {
+    messages.push({ role: 'system', content: systemInstruction });
+  }
+  messages.push({ role: 'user', content: prompt });
+
+  const body: any = {
+    model: chosenModel,
+    messages,
+    temperature: 0.35,
+  };
+  if (isJson) {
+    body.response_format = { type: 'json_object' };
+  }
+
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${shopKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`ShopAIKey HTTP ${res.status}: ${errText}`);
+  }
+
+  const data = (await res.json()) as any;
+  const text = data?.choices?.[0]?.message?.content || '';
+  return { text };
+}
+
+/**
+ * High-Intelligence execution with ShopAIKey (GPT-4o) prioritization and Gemini fallback
  */
 async function generateGeminiFast(
   _client: GoogleGenAI | null,
   reqModel: string,
   generateParams: { contents: any; config?: any }
 ) {
+  // 1. Check if ShopAIKey (or OpenAI key) is provided
+  const shopKey = process.env.SHOPAIKEY_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  if (shopKey && shopKey !== 'MY_KEY' && shopKey !== 'MOCK_KEY') {
+    try {
+      const targetModel = process.env.SHOPAIKEY_MODEL || 'gpt-4o';
+      let promptText = '';
+      if (typeof generateParams.contents === 'string') {
+        promptText = generateParams.contents;
+      } else if (Array.isArray(generateParams.contents)) {
+        promptText = generateParams.contents
+          .map((c: any) => (typeof c === 'string' ? c : c?.text || JSON.stringify(c)))
+          .join('\n');
+      } else if (generateParams.contents?.text) {
+        promptText = generateParams.contents.text;
+      } else {
+        promptText = JSON.stringify(generateParams.contents);
+      }
+
+      const sysInst = generateParams.config?.systemInstruction;
+      const isJson = generateParams.config?.responseMimeType === 'application/json';
+
+      console.log(`[AI Engine] Routing request to ShopAIKey (${targetModel})...`);
+      const result = await callShopAIKey(shopKey, targetModel, promptText, sysInst, isJson);
+      return { response: result, usedModel: targetModel, keyIndex: 1, keyMask: `${shopKey.slice(0, 6)}...` };
+    } catch (shopErr: any) {
+      console.warn('[AI Engine] ShopAIKey request failed, falling back to Gemini pool:', shopErr?.message);
+    }
+  }
+
+  // 2. Fallback to Gemini Key Pool
   const clients = getGeminiClients();
   if (clients.length === 0) {
-    throw new Error('Chưa có Gemini API Key hợp lệ trên máy chủ Render. Vui lòng thiết lập biến môi trường GEMINI_API_KEY trên Render Dashboard.');
+    throw new Error('Chưa có API Key hợp lệ trên máy chủ. Vui lòng thiết lập SHOPAIKEY_API_KEY hoặc GEMINI_API_KEY trên Render Dashboard.');
   }
 
   const target = reqModel || 'gemini-3.5-flash';
@@ -4148,14 +4247,6 @@ async function setupServer() {
     }
   }
 }
-
-// Start listening immediately so port is open without delay
-app.listen(PORT, HOST, () => {
-  console.log(`Server listening on http://${HOST}:${PORT}`);
-  console.log(`  ➜  Local:   http://localhost:${PORT}/`);
-  console.log(`  ➜  Network: http://${HOST}:${PORT}/`);
-  console.log(`ready in 150 ms`);
-});
 
 setupServer().catch((err) => {
   console.error('Server setup error:', err);
