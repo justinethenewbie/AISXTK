@@ -4,8 +4,35 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
+// Polyfill DOMMatrix for PDFParse in serverless / Bun environments
+if (!(globalThis as any).DOMMatrix) {
+  (globalThis as any).DOMMatrix = class DOMMatrix {
+    constructor() {}
+  };
+}
+import { PDFParse } from 'pdf-parse';
 
 dotenv.config();
+
+/**
+ * Trích xuất 100% nội dung chữ và công thức toán học từ tệp PDF dạng base64
+ */
+async function extractTextFromPdfBase64(base64Data: string): Promise<string> {
+  if (!base64Data || typeof base64Data !== 'string') return '';
+  try {
+    const cleanData = base64Data.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(cleanData, 'base64');
+    const parser = new PDFParse(new Uint8Array(buffer));
+    const result = await parser.getText();
+    if (result && typeof result.text === 'string' && result.text.trim().length > 0) {
+      console.log(`[PDF Extractor] Trích xuất thành công ${result.text.length} ký tự từ ${result.total || 1} trang PDF.`);
+      return result.text.trim();
+    }
+  } catch (err: any) {
+    console.warn('[PDF Extractor] Error extracting PDF text:', err?.message);
+  }
+  return '';
+}
 
 const app = express();
 
@@ -142,7 +169,8 @@ async function callShopAIKey(
   model: string,
   prompt: string,
   systemInstruction?: string,
-  isJson?: boolean
+  isJson?: boolean,
+  images?: Array<{ mimeType: string; data: string }>
 ): Promise<{ text: string }> {
   const baseUrl = (process.env.SHOPAIKEY_BASE_URL || process.env.OPENAI_BASE_URL || 'https://api.shopaikey.com/v1').replace(/\/+$/, '');
   const chosenModel = model || process.env.SHOPAIKEY_MODEL || 'gpt-4o';
@@ -151,7 +179,27 @@ async function callShopAIKey(
   if (systemInstruction) {
     messages.push({ role: 'system', content: systemInstruction });
   }
-  messages.push({ role: 'user', content: prompt });
+
+  if (images && images.length > 0) {
+    const userContent: any[] = [];
+    if (prompt && prompt.trim()) {
+      userContent.push({ type: 'text', text: prompt });
+    }
+    for (const img of images) {
+      if (img.mimeType && (img.mimeType.startsWith('image/') || img.mimeType === 'image/jpeg' || img.mimeType === 'image/png' || img.mimeType === 'image/webp')) {
+        userContent.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:${img.mimeType};base64,${img.data}`,
+            detail: 'high',
+          },
+        });
+      }
+    }
+    messages.push({ role: 'user', content: userContent });
+  } else {
+    messages.push({ role: 'user', content: prompt });
+  }
 
   const body: any = {
     model: chosenModel,
@@ -160,9 +208,18 @@ async function callShopAIKey(
   };
   if (isJson) {
     body.response_format = { type: 'json_object' };
-    const hasJson = messages.some((m) => typeof m.content === 'string' && /json/i.test(m.content));
+    const hasJson = messages.some((m) => {
+      if (typeof m.content === 'string') return /json/i.test(m.content);
+      if (Array.isArray(m.content)) return m.content.some((c: any) => c.text && /json/i.test(c.text));
+      return false;
+    });
     if (!hasJson) {
-      messages[messages.length - 1].content += '\n(Return response in valid JSON object format)';
+      const lastMsg = messages[messages.length - 1];
+      if (Array.isArray(lastMsg.content)) {
+        lastMsg.content.push({ type: 'text', text: '\n(Return response in valid JSON object format)' });
+      } else {
+        lastMsg.content += '\n(Return response in valid JSON object format)';
+      }
     }
   }
 
@@ -199,14 +256,27 @@ async function generateGeminiFast(
     try {
       const targetModel = process.env.SHOPAIKEY_MODEL || 'gpt-4o';
       let promptText = '';
+      const inlineImages: Array<{ mimeType: string; data: string }> = [];
+
       if (typeof generateParams.contents === 'string') {
         promptText = generateParams.contents;
       } else if (Array.isArray(generateParams.contents)) {
-        promptText = generateParams.contents
-          .map((c: any) => (typeof c === 'string' ? c : c?.text || JSON.stringify(c)))
-          .join('\n');
+        const textParts: string[] = [];
+        for (const c of generateParams.contents) {
+          if (typeof c === 'string') {
+            textParts.push(c);
+          } else if (c?.text) {
+            textParts.push(c.text);
+          } else if (c?.inlineData) {
+            inlineImages.push(c.inlineData);
+          }
+        }
+        promptText = textParts.join('\n');
       } else if (generateParams.contents?.text) {
         promptText = generateParams.contents.text;
+        if (generateParams.contents?.inlineData) {
+          inlineImages.push(generateParams.contents.inlineData);
+        }
       } else {
         promptText = JSON.stringify(generateParams.contents);
       }
@@ -214,8 +284,8 @@ async function generateGeminiFast(
       const sysInst = generateParams.config?.systemInstruction;
       const isJson = generateParams.config?.responseMimeType === 'application/json';
 
-      console.log(`[AI Engine] Routing request to ShopAIKey (${targetModel})...`);
-      const result = await callShopAIKey(shopKey, targetModel, promptText, sysInst, isJson);
+      console.log(`[AI Engine] Routing request to ShopAIKey (${targetModel}) with ${inlineImages.length} image(s)...`);
+      const result = await callShopAIKey(shopKey, targetModel, promptText, sysInst, isJson, inlineImages);
       return { response: result, usedModel: targetModel, keyIndex: 1, keyMask: `${shopKey.slice(0, 6)}...` };
     } catch (shopErr: any) {
       console.warn('[AI Engine] ShopAIKey request failed, falling back to Gemini pool:', shopErr?.message);
@@ -1176,7 +1246,7 @@ function buildDynamicComprehensiveMultimodalSolve(textContent?: string, chapterT
 
 // Endpoint 1: Evaluate / Grade Student Submission (Image / Canvas / Text) & Full Multimodal Solver
 app.post(['/api/tutor/evaluate', '/api/tutor/solve-multimodal'], async (req, res) => {
-  const {
+  let {
     imageBase64,
     textContent,
     chapterTitle,
@@ -1185,11 +1255,23 @@ app.post(['/api/tutor/evaluate', '/api/tutor/solve-multimodal'], async (req, res
     baremRubric
   } = req.body;
 
+  // Bóc tách nội dung văn bản nếu người dùng tải lên tệp PDF
+  if (imageBase64 && (imageBase64.startsWith('data:application/pdf') || (typeof imageBase64 === 'string' && imageBase64.includes('JVBERi0x')))) {
+    try {
+      const pdfText = await extractTextFromPdfBase64(imageBase64);
+      if (pdfText && pdfText.length > 0) {
+        textContent = (textContent ? `${textContent}\n\n` : '') + `NỘI DUNG VĂN BẢN TRÍCH XUẤT TỪ FILE PDF ĐÍNH KÈM:\n"""\n${pdfText}\n"""`;
+      }
+    } catch (err: any) {
+      console.warn('PDF extraction warning in evaluate:', err?.message);
+    }
+  }
+
   const isSolveMode = mode === 'solve' || strategyOnly === true;
   const client = getGeminiClient();
   const model = getTargetModel(req);
 
-  // If Gemini client is online, attempt AI generation with multimodal vision
+  // If client is online, attempt AI generation with multimodal vision
   if (client) {
     try {
       const parts: any[] = [];
@@ -4029,44 +4111,53 @@ app.post('/api/big-doc/parse-and-segment', async (req, res) => {
     const model = getTargetModel(req);
     let extractedText = (rawText || '').trim();
 
-    // Multimodal AI extraction if fileBase64 is present and client is active
-    if (client && fileBase64 && fileBase64.length > 50) {
+    // 1. Trích xuất 100% nội dung chữ và công thức toán học nếu là tệp PDF
+    if (fileBase64 && (fileBase64.startsWith('data:application/pdf') || fileType === 'pdf' || fileName.toLowerCase().endsWith('.pdf'))) {
+      const pdfText = await extractTextFromPdfBase64(fileBase64);
+      if (pdfText && pdfText.length > 10) {
+        extractedText = pdfText;
+        console.log(`[BigDoc Parser] Đã trích xuất ${pdfText.length} ký tự từ file PDF "${fileName}".`);
+      }
+    }
+
+    // 2. Multimodal AI extraction if client is active
+    if (client) {
       try {
         const parts: any[] = [];
-        let mimeType = 'application/pdf';
-        if (fileBase64.startsWith('data:application/pdf')) {
-          mimeType = 'application/pdf';
-        } else if (fileBase64.startsWith('data:image/jpeg') || fileBase64.startsWith('data:image/jpg')) {
-          mimeType = 'image/jpeg';
-        } else if (fileBase64.startsWith('data:image/png')) {
-          mimeType = 'image/png';
-        } else if (fileBase64.startsWith('data:image/webp')) {
-          mimeType = 'image/webp';
+        let isImage = false;
+
+        if (fileBase64 && (fileBase64.startsWith('data:image/') || ['png', 'jpg', 'jpeg', 'webp'].some((ext) => fileName.toLowerCase().endsWith(ext)))) {
+          isImage = true;
+          let mimeType = 'image/jpeg';
+          if (fileBase64.startsWith('data:image/png') || fileName.toLowerCase().endsWith('.png')) mimeType = 'image/png';
+          else if (fileBase64.startsWith('data:image/webp') || fileName.toLowerCase().endsWith('.webp')) mimeType = 'image/webp';
+
+          const cleanData = fileBase64.replace(/^data:[^;]+;base64,/, '');
+          parts.push({
+            inlineData: {
+              mimeType,
+              data: cleanData,
+            },
+          });
         }
 
-        const cleanData = fileBase64.replace(/^data:[^;]+;base64,/, '');
-        parts.push({
-          inlineData: {
-            mimeType,
-            data: cleanData,
-          },
-        });
-
-        const segmentPrompt = `BẠN LÀ BỘ CHUYỂN ĐỔI TÀI LIỆU & BÓC TÁCH CẤU TRÚC BIG SIZE CAO CẤP CỦA HỆ THỐNG AI CLASSROOM (ĐẠI HỌC NGÂN HÀNG TP.HCM).
+        const segmentPrompt = `BẠN LÀ BỘ CHUYỂN ĐỔI TÀI LIỆU & BÓC TÁCH CẤU TRÚC BIG SIZE CAO CẤP CỦA HỆ THỐNG AI CLASSROOM (ĐẠI HỌC NGÂN HÀNG TP.HCM - HUB).
 TÀI LIỆU TẢI LÊN: "${fileName}".
-HÃY PHÂN LOẠI VÀ BÓC TÁCH TOÀN BỘ NỘI DUNG VĂN BẢN TRÊN THÀNH CÁC PHẦN ĐỘC LẬP:
+${extractedText ? `NỘI DUNG VĂN BẢN TRÍCH XUẤT ĐƯỢC:\n"""\n${extractedText.slice(0, 35000)}\n"""\n` : ''}
+
+HÃY PHÂN LOẠI VÀ BÓC TÁCH TOÀN BỘ NỘI DUNG TRÊN THÀNH CÁC PHẦN ĐỘC LẬP:
 1. XÁC ĐỊNH LOẠI TÀI LIỆU ("docType"):
-   - "bulk_exercises": Nếu là Đề thi, Tuyển tập bài tập, Đề kiểm tra có nhiều câu (Câu 1, Câu 2, Câu 3... hoặc Bài 1, Bài 2...).
+   - "bulk_exercises": Nếu là Đề thi, Tuyển tập bài tập, Đề kiểm tra có nhiều câu (Câu 1, Câu 2... hoặc Bài 1, Bài 2... hoặc 1., 2.).
    - "financial_report": Nếu là Báo cáo tài chính, Báo cáo thường niên, Kế hoạch kinh tế, Đề án kinh doanh ngân hàng, Bảng cân đối kế toán.
 
 2. NẾU LÀ "bulk_exercises":
-   - Bóc tách ĐẦY ĐỦ 100% TỪNG CÂU HỎI MỘT, KHÔNG ĐƯỢC BỎ SÓT BẤT KỲ CÂU NÀO!
-   - Với mỗi câu hỏi: trích xuất số thứ tự (itemNumber), tiêu đề, toàn văn đề bài (rawText), các phương án trắc nghiệm A B C D (options, nếu có), phân loại ('mcq' hoặc 'essay'), và chương kiến thức.
+   - Bóc tách ĐẦY ĐỦ 100% TỪNG CÂU HỎI MỘT, KHÔNG ĐƯỢC BỎ SÓT BẤT KỲ CÂU NÀO CÓ TRONG TÀI LIỆU!
+   - Với mỗi câu hỏi: trích xuất số thứ tự (itemNumber), tiêu đề, toàn văn đề bài (rawText) giữ nguyên các ký hiệu toán học ($...$), các phương án trắc nghiệm A B C D (options, nếu có), phân loại ('mcq' hoặc 'essay'), và chương kiến thức.
 
 3. NẾU LÀ "financial_report":
-   - Bóc tách theo từng phần mục lớn: Tổng quan, Bảng cân đối & Kết quả kinh doanh, Dòng tiền, Chỉ tiêu tài chính chính, Phân tích rủi ro & Xác suất.
+   - Bóc tách theo từng phần mục lớn: Tổng quan & Chỉ tiêu hoạt động, Bảng cân đối & Kết quả kinh doanh, Dòng tiền & Khả năng thanh toán, Mô hình định lượng xác suất & Phân tích rủi ro.
 
-TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
+TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON OBJECT HỢP LỆ VỚI CẤU TRÚC:
 {
   "docType": "bulk_exercises" hoặc "financial_report",
   "documentTitle": "Tiêu đề chuẩn của tài liệu",
@@ -4078,8 +4169,8 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
       "itemNumber": 1,
       "title": "Câu 1",
       "type": "mcq",
-      "rawText": "Một ngân hàng có...",
-      "options": ["A. 0.15", "B. 0.25", "C. 0.35", "D. 0.45"],
+      "rawText": "Nội dung câu 1...",
+      "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
       "chapter": "Biến ngẫu nhiên & Phân phối xác suất"
     }
   ],
@@ -4095,7 +4186,7 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
 
         parts.push({ text: segmentPrompt });
         const { response } = await generateGeminiFast(client, model, {
-          contents: parts,
+          contents: isImage ? parts : segmentPrompt,
           config: {
             responseMimeType: 'application/json',
           },
@@ -4106,6 +4197,7 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
           return res.json({
             success: true,
             isAiSegmented: true,
+            extractedText,
             ...parsed,
           });
         }
@@ -4114,7 +4206,7 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
       }
     }
 
-    // Heuristic deterministic fallback parser (Đảm bảo 100% không bao giờ lỗi dù không có mạng/hết quota)
+    // Heuristic deterministic fallback parser
     let determinedDocType = docMode === 'financial_report' ? 'financial_report' : 'bulk_exercises';
     if (docMode === 'auto') {
       const lower = extractedText.toLowerCase();
@@ -4154,6 +4246,7 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
       return res.json({
         success: true,
         isAiSegmented: false,
+        extractedText,
         docType: 'financial_report',
         documentTitle: fileName.replace(/\.[^/.]+$/, ''),
         totalItems: sections.length,
@@ -4163,14 +4256,15 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
       });
     }
 
-    // Regex extraction for bulk exercises: "Câu 1:", "Bài 1:", "1.", "Question 1"
-    const questionRegex = /(?:^|\n)(?:Câu|Bài|Question)\s*(\d+)[\s.:-]+/gi;
+    // Regex extraction for bulk exercises: "Câu 1:", "Bài 1:", "1.", "1)", "Question 1"
+    const questionRegex = /(?:^|\n)\s*(?:(?:Câu|Bài|Question|Part)\s*(\d+)[\s.:-]*|(\d+)\.\s+|(\d+)\)\s+)/gi;
     const splitIndices: { number: number; index: number }[] = [];
     let qMatch: RegExpExecArray | null;
 
     while ((qMatch = questionRegex.exec(extractedText)) !== null) {
+      const numStr = qMatch[1] || qMatch[2] || qMatch[3];
       splitIndices.push({
-        number: parseInt(qMatch[1], 10),
+        number: parseInt(numStr, 10),
         index: qMatch.index,
       });
     }
@@ -4198,24 +4292,39 @@ TRẢ VỀ DUY NHẤT ĐÚNG MỘT JSON HỢP LỆ VỚI CẤU TRÚC:
         });
       }
     } else {
-      // Create at least 3-5 structured demo exercises if raw text was short or generic
-      const demoCount = 5;
-      for (let i = 1; i <= demoCount; i++) {
-        items.push({
-          id: i,
-          itemNumber: i,
-          title: `Câu ${i}`,
-          type: i % 2 === 1 ? 'mcq' : 'essay',
-          rawText: `Khảo sát xác suất và biến cố trong bài tập ${i}: Cho biến ngẫu nhiên X tuân theo phân phối chuẩn N(mu, sigma^2). Tính kỳ vọng và độ lệch chuẩn.`,
-          options: i % 2 === 1 ? ['A. 0.1587', 'B. 0.8413', 'C. 0.5000', 'D. 0.0228'] : undefined,
-          chapter: 'Biến ngẫu nhiên & Phân phối xác suất',
+      // Split by paragraphs if no question numbering found
+      const paras = extractedText.split(/\n\s*\n/).filter((p: string) => p.trim().length > 30);
+      if (paras.length > 1) {
+        paras.forEach((p: string, idx: number) => {
+          items.push({
+            id: idx + 1,
+            itemNumber: idx + 1,
+            title: `Bài tập ${idx + 1}`,
+            type: 'essay',
+            rawText: p.trim(),
+            chapter: 'Xác Suất Thống Kê Ứng Dụng',
+          });
         });
+      } else {
+        const demoCount = 5;
+        for (let i = 1; i <= demoCount; i++) {
+          items.push({
+            id: i,
+            itemNumber: i,
+            title: `Câu ${i}`,
+            type: i % 2 === 1 ? 'mcq' : 'essay',
+            rawText: `Khảo sát xác suất và biến cố trong bài tập ${i}: Cho biến ngẫu nhiên X tuân theo phân phối chuẩn $N(\\mu, \\sigma^2)$. Tính kỳ vọng và độ lệch chuẩn.`,
+            options: i % 2 === 1 ? ['A. 0.1587', 'B. 0.8413', 'C. 0.5000', 'D. 0.0228'] : undefined,
+            chapter: 'Biến ngẫu nhiên & Phân phối xác suất',
+          });
+        }
       }
     }
 
     return res.json({
       success: true,
       isAiSegmented: false,
+      extractedText,
       docType: 'bulk_exercises',
       documentTitle: fileName.replace(/\.[^/.]+$/, ''),
       totalItems: items.length,
@@ -4251,7 +4360,7 @@ app.post('/api/big-doc/process-chunk', async (req, res) => {
   try {
     if (client) {
       if (docType === 'financial_report' && section) {
-        const prompt = `BẠN LÀ CHUYÊN GIA PHÂN TÍCH TÀI CHÍNH & KINH TẾ LƯỢNG ĐỊNH LƯỢNG ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB).
+        const prompt = `BẠN LÀ CHUYÊN GIA TRƯỞNG PHÂN TÍCH TÀI CHÍNH & KINH TẾ LƯỢNG ĐỊNH LƯỢNG ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB).
 TÀI LIỆU: "${documentTitle}".
 PHÂN MỤC ĐANG XỬ LÝ: "${section.title}" (Mục ${section.sectionNumber}).
 NỘI DUNG DỮ LIỆU:
@@ -4259,27 +4368,29 @@ NỘI DUNG DỮ LIỆU:
 ${section.rawText}
 """
 
-YÊU CẦU PHÂN TÍCH TOÀN DIỆN, CHÍNH XÁC:
+YÊU CẦU PHÂN TÍCH TOÀN DIỆN, CHÍNH XÁC NHƯ MỘT BẢN THẨM ĐỊNH KINH TẾ CHUYÊN SÂU:
 1. Trích xuất các chỉ tiêu định lượng: Doanh thu, chi phí, lợi nhuận, kỳ vọng E(X), phương sai Var(X), độ lệch chuẩn sigma(X).
-2. Lập mô hình xác suất thống kê: Ước lượng khoảng tin cậy 95%, xác suất thua lỗ hoặc rủi ro vỡ nợ P(Z < 0).
-3. Đưa ra 3 khuyến nghị chiến lược định lượng cho Ban Lãnh đạo.
+2. Lập mô hình xác suất thống kê: Ước lượng khoảng tin cậy 95%, xác suất rủi ro thua lỗ hoặc rủi ro vỡ nợ P(Z < 0), giá trị rủi ro VaR 95%.
+3. Hướng dẫn tính nhanh các chỉ tiêu trên máy tính Casio fx-580VN X.
+4. Đưa ra 3 khuyến nghị chiến lược định lượng cụ thể cho Ban Giám đốc.
+5. Toàn bộ công thức toán học bắt buộc bọc trong $...$ KaTeX.
 
-Trả về JSON chuẩn KaTeX:
+Trả về duy nhất đúng JSON Object hợp lệ:
 {
   "sectionId": "${section.id}",
   "sectionTitle": "${section.title}",
-  "executiveSummary": "Tóm tắt kết quả phân tích mục này",
+  "executiveSummary": "Tóm tắt kết quả phân tích chuyên sâu mục này",
   "statisticalMetrics": [
-    { "label": "Kỳ vọng Lợi nhuận E(X)", "value": "150.5 tỷ", "formula": "$E(X) = \\sum p_i x_i$" },
-    { "label": "Độ lệch chuẩn Rủi ro \\sigma(X)", "value": "18.2 tỷ", "formula": "$\\sigma(X) = \\sqrt{\\text{Var}(X)}$" },
+    { "label": "Kỳ vọng Lợi nhuận $E(X)$", "value": "150.5 tỷ đồng", "formula": "$E(X) = \\sum p_i x_i$" },
+    { "label": "Độ lệch chuẩn Rủi ro $\\sigma(X)$", "value": "18.2 tỷ đồng", "formula": "$\\sigma(X) = \\sqrt{\\text{Var}(X)}$" },
     { "label": "Xác suất rủi ro thua lỗ", "value": "2.15%", "formula": "$P(X < 0) = \\Phi(z)$" }
   ],
-  "detailedAnalysis": "Lập luận chi tiết theo từng bước toán học...",
+  "detailedAnalysis": "Lập luận chi tiết theo từng bước toán học và kinh tế...",
   "riskLevel": "Trung bình",
   "recommendations": [
-    "Tối ưu hóa chi phí vốn",
-    "Gia tăng hệ số an toàn vốn CAR",
-    "Trích lập dự phòng rủi ro tín dụng theo phân phối chuẩn"
+    "Tối ưu hóa chi phí vốn và kiểm soát biên lãi thuần NIM",
+    "Gia tăng hệ số an toàn vốn CAR và trích lập dự phòng",
+    "Áp dụng lý thuyết danh mục Markowitz để phân tán rủi ro"
   ]
 }`;
 
@@ -4294,32 +4405,46 @@ Trả về JSON chuẩn KaTeX:
         }
       } else if (items.length > 0) {
         // Bulk exercises chunk
-        const prompt = `BẠN LÀ CHUYÊN GIA GIẢI ĐỀ THI XÁC SUẤT THỐNG KÊ (XSTK) ĐẠI HỌC NGÂN HÀNG TP.HCM (HUB).
+        const prompt = `BẠN LÀ GIẢNG VIÊN TRƯỞNG BỘ MÔN XÁC SUẤT THỐNG KÊ (XSTK) VÀ TOÁN KINH TẾ (ĐẠI HỌC NGÂN HÀNG TP.HCM - HUB).
 BỘ ĐỀ: "${documentTitle}".
-HÃY GIẢI CHI TIẾT TOÀN DIỆN DANH SÁCH ${items.length} CÂU HỎI SAU:
+HÃY ĐÓNG VAI MỘT NGƯỜI THẦY TẬN TÂM, GIẢI TOÀN DIỆN, CHI TIẾT TỪNG BƯỚC CHO HỌC TRÒ ${items.length} CÂU HỎI SAU:
 ${JSON.stringify(items, null, 2)}
 
-NGUYÊN TẮC BẮT BUỘC:
-1. Giải trọn vẹn từng câu, công thức KaTeX kẹp trong $...$ hoặc $$...$$.
-2. Với câu trắc nghiệm: Ghi rõ đáp án đúng (A/B/C/D), lập luận loại trừ bẫy và mẹo bấm máy Casio fx-580VN X trong 20s.
-3. Với câu tự luận: Trình bày đủ 4 bước (B1: Đặt biến cố, B2: Xác định dạng phân phối, B3: Thế số tính toán, B4: Kết luận).
+TIÊU CHUẨN GIẢI TOÁN SƯ PHẠM ĐẲNG CẤP HUB:
+1. LỜI GIẢI CHI TIẾT TỪNG BƯỚC (stepByStep) - TỐI THIỂU 4 BƯỚC RÕ RÀNG:
+   - Bước 1: Nhận diện biến cố / đại lượng ngẫu nhiên / tham số bài toán ($X \\sim B(n, p)$, $X \\sim N(\\mu, \\sigma^2)$, v.v.).
+   - Bước 2: Thiết lập công thức toán KaTeX cốt lõi ($...$).
+   - Bước 3: Thay số liệu cụ thể của đề bài và thực hiện từng phép tính tường minh.
+   - Bước 4: Kết luận nghiệm bài toán kèm đơn vị đo hoặc ý nghĩa xác suất.
+2. CẦM TAY CHỈ VIỆC BẤM MÁY TÍNH CASIO FX-580VN X TRONG PHÒNG THI (casioGuide):
+   - Trình bày cụ thể từng phím bấm như cầm máy tính thật ngoài đời:
+     + Thống kê mẫu: Bật tần số SHIFT -> MENU -> 3: Statistics -> 1: On. Vào MENU 6 1, nhập cột x và FREQ, bấm AC -> OPTN 2: 1-Variable Calc -> Nhắc nhở đọc đúng dòng sx (độ lệch chuẩn hiệu chỉnh), tuyệt đối không lấy dòng \\sigma x.
+     + Phân phối chuẩn: MENU 7 2: Normal CD (nhập Lower, Upper, \\sigma, \\mu; cận +\\infty nhập 10^9, cận -\\infty nhập -10^9).
+     + Phân phối nhị thức / Poisson: MENU 7 Binomial / Poisson.
+     + Tích phân: Phím ∫dx dưới nút ALPHA, cận vô cùng thay bằng ±10^9.
+     + Hồi quy tuyến tính: MENU 6 2: y = a + bx.
+3. CẢNH BÁO BẪY PHÒNG THI CHẾT NGƯỜI (trapAlert):
+   - Đóng khung cảnh báo sai lầm kinh điển mà sinh viên hay mắc phải nhất ở câu hỏi này (nhầm phương sai và độ lệch chuẩn, nhầm 1 phía vs 2 phía, bẫy hỏi cỡ mẫu cần khảo sát THÊM...).
+4. MỌI CÔNG THỨC VÀ KÝ HIỆU TOÁN HỌC BẮT BUỘC BỌC TRONG CẶP DẤU $...$ KATEX (\\bar{x}, s^2, s, \\mu, \\sigma, Z_{qs}, t, p, f, n, \\varepsilon, \\Phi).
 
-Trả về JSON mảng kết quả:
+Trả về đúng JSON Object chứa mảng "solutions":
 {
   "solutions": [
     {
       "id": 1,
       "itemNumber": 1,
       "correctOption": "B",
-      "problemStatement": "Đề bài câu 1",
+      "problemStatement": "Đề bài câu hỏi...",
       "stepByStep": [
-        "Bước 1: Do các biến cố độc lập, áp dụng công thức nhân xác suất.",
-        "Bước 2: $P(A) = 0.8$, $P(B) = 0.7$, suy ra $P(AB) = 0.8 \\times 0.7 = 0.56$."
+        "Bước 1: Gọi X là biến ngẫu nhiên...",
+        "Bước 2: Áp dụng công thức KaTeX...",
+        "Bước 3: Thay số...",
+        "Bước 4: Kết luận..."
       ],
-      "keyFormula": "$P(AB) = P(A) \\cdot P(B)$",
-      "finalAnswer": "0.56 (Phương án B)",
-      "casioGuide": "Bấm trực tiếp: 0.8 x 0.7 = 0.56",
-      "trapAlert": "Tránh nhầm lẫn giữa biến cố xung khắc và độc lập"
+      "keyFormula": "$Công thức cốt lõi$",
+      "finalAnswer": "Đáp số cuối cùng",
+      "casioGuide": "Casio fx-580VN X: Phím 1 -> Phím 2...",
+      "trapAlert": "Cảnh báo bẫy phòng thi..."
     }
   ]
 }`;
@@ -4330,8 +4455,29 @@ Trả về JSON mảng kết quả:
         });
 
         const parsed = cleanAndParseJson<any>(response.text || '{}', null);
-        if (parsed && parsed.solutions) {
-          return res.json({ success: true, docType: 'bulk_exercises', solutions: parsed.solutions });
+        let solutions: any[] = [];
+        if (Array.isArray(parsed)) {
+          solutions = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+          solutions = parsed.solutions || parsed.items || parsed.exercises || parsed.data || Object.values(parsed).find(Array.isArray) || [];
+        }
+
+        if (Array.isArray(solutions) && solutions.length > 0) {
+          // Sanitize every solution
+          solutions.forEach((sol: any, idx: number) => {
+            if (!sol.id) sol.id = items[idx]?.id || idx + 1;
+            if (!sol.itemNumber) sol.itemNumber = items[idx]?.itemNumber || idx + 1;
+            if (!sol.casioGuide || sol.casioGuide.length < 10) {
+              sol.casioGuide = 'Casio fx-580VN X: Bấm MENU 6 (Statistics) -> 1-Variable để tính nhanh trung bình và phương sai hiệu chỉnh s.';
+            }
+            if (!sol.trapAlert) {
+              sol.trapAlert = 'Lưu ý kiểm tra kỹ giả thiết và đơn vị đo trước khi thế số vào công thức.';
+            }
+            if (!sol.keyFormula) {
+              sol.keyFormula = '$E(X) = \\sum x_i p_i, \\quad \\sigma = \\sqrt{\\text{Var}(X)}$';
+            }
+          });
+          return res.json({ success: true, docType: 'bulk_exercises', solutions });
         }
       }
     }
@@ -4364,22 +4510,38 @@ Trả về JSON mảng kết quả:
     });
   }
 
-  const fallbackSolutions = items.map((it: any) => ({
-    id: it.id,
-    itemNumber: it.itemNumber,
-    correctOption: it.type === 'mcq' ? (it.options?.[0]?.charAt(0) || 'A') : undefined,
-    problemStatement: it.rawText,
-    stepByStep: [
-      `Bước 1: Phân tích giả thiết của ${it.title}, xác định biến ngẫu nhiên và mô hình xác suất tương ứng.`,
-      `Bước 2: Áp dụng công thức kỳ vọng $E(X) = \\sum x_i p_i$ và phương sai $\\text{Var}(X) = \\sigma^2$.`,
-      `Bước 3: Thay số liệu đề bài, tính toán chuẩn xác và kiểm tra tính hợp lý.`,
-      `Bước 4: Kết luận nghiệm bài toán.`,
-    ],
-    keyFormula: '$E(X) = \\mu, \\quad \\sigma(X) = \\sqrt{\\text{Var}(X)}$',
-    finalAnswer: it.type === 'mcq' ? `Phương án ${it.options?.[0] || 'A'}` : 'Đáp số chuẩn theo giáo trình HUB',
-    casioGuide: 'Casio fx-580VN X: Vào MENU 6 (Statistics) -> 1-Variable để tính nhanh trung bình và phương sai.',
-    trapAlert: 'Lưu ý kiểm tra điều kiện độc lập của các biến cố trước khi nhân xác suất.',
-  }));
+  const fallbackSolutions = items.map((it: any) => {
+    const rawLower = (it.rawText || '').toLowerCase();
+    const isNormal = rawLower.includes('chuẩn') || rawLower.includes('n(') || rawLower.includes('sigma');
+    const isStat = rawLower.includes('mẫu') || rawLower.includes('trung bình') || rawLower.includes('tần số');
+    const isIntegral = rawLower.includes('tích phân') || rawLower.includes('hàm mật độ') || rawLower.includes('f(x)');
+
+    let casio = 'Casio fx-580VN X: Vào MENU 6 1 (1-Variable), nhập dữ liệu và đọc kết quả bằng OPTN 2.';
+    if (isNormal) {
+      casio = 'Casio fx-580VN X: Bấm MENU 7 -> 2: Normal CD. Nhập Lower, Upper, σ, μ. Nhớ cận +∞ nhập 10^9, cận -∞ nhập -10^9.';
+    } else if (isStat) {
+      casio = 'Casio fx-580VN X: Bật tần số (SHIFT MENU 3 1: On) -> MENU 6 1 nhập bảng x và FREQ -> Bấm AC -> OPTN 2 đọc dòng sx (độ lệch chuẩn hiệu chỉnh).';
+    } else if (isIntegral) {
+      casio = 'Casio fx-580VN X: Bấm phím ∫dx (dưới nút ALPHA), nhập hàm số và cận dưới, cận trên rồi bấm phím =.';
+    }
+
+    return {
+      id: it.id,
+      itemNumber: it.itemNumber,
+      correctOption: it.type === 'mcq' ? (it.options?.[0]?.charAt(0) || 'A') : undefined,
+      problemStatement: it.rawText,
+      stepByStep: [
+        `Bước 1 (Nhận diện bài toán): Phân tích giả thiết của ${it.title}, xác định đại lượng ngẫu nhiên cần tìm và mô hình phân phối xác suất.`,
+        `Bước 2 (Công thức cốt lõi): Thiết lập công thức toán KaTeX: $E(X) = \\sum x_i p_i$ và phương sai $\\text{Var}(X) = \\sigma^2$.`,
+        `Bước 3 (Thế số & Tính toán): Thay thế các thông số quan sát được từ đề bài vào công thức, thực hiện phép tính cẩn thận.`,
+        `Bước 4 (Kết luận): Nêu đáp số chuẩn xác kèm đơn vị đo và ý nghĩa thực tiễn.`,
+      ],
+      keyFormula: '$E(X) = \\mu, \\quad \\sigma(X) = \\sqrt{\\text{Var}(X)}, \\quad Z_{qs} = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}$',
+      finalAnswer: it.type === 'mcq' ? `Phương án ${it.options?.[0] || 'A'}` : 'Đáp số chuẩn theo giáo trình Đại học Ngân Hàng HUB',
+      casioGuide: casio,
+      trapAlert: 'Cảnh báo bẫy phòng thi: Không làm tròn số thập phân quá sớm ở các bước trung gian; luôn lấy độ lệch chuẩn hiệu chỉnh s (dòng sx) thay vì σx.',
+    };
+  });
 
   return res.json({
     success: true,

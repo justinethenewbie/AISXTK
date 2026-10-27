@@ -1,5 +1,48 @@
 [
   {
+    "id": "USR-358990",
+    "fullName": "Trần Minh Quân",
+    "email": "sinhvien.test@hub.edu.vn",
+    "role": "sinh_vien",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    "studentId": "SV953403",
+    "university": "Đại học Ngân Hàng HUB",
+    "classGroup": "2026-XSTK",
+    "gpa": 3.85,
+    "exp": 250,
+    "level": 2,
+    "streakDays": 1,
+    "studyHours": 1.7,
+    "exercisesSolved": 3,
+    "accuracyRate": 100,
+    "createdAt": "2026-10-27 18:05:58",
+    "lastActive": "Đang online",
+    "status": "active",
+    "recentActivity": [
+      {
+        "action": "Đăng nhập",
+        "detail": "Đăng nhập thành công (Hôm nay đã hoàn thành mục tiêu học tập 🔥)",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Chuỗi Streak 🔥",
+        "detail": "Duy trì chuỗi học tập đạt 1 ngày liên tục!",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Học tập & Luyện đề",
+        "detail": "Hoàn thành 3 bài toán trắc nghiệm văn cảnh bóc tách số liệu",
+        "timestamp": "Vừa xong"
+      },
+      {
+        "action": "Đăng ký tài khoản",
+        "detail": "Tạo tài khoản học tập mới và lưu vào users_database.json",
+        "timestamp": "Vừa xong"
+      }
+    ],
+    "lastStudyDate": "2026-10-28"
+  },
+  {
     "id": "USR-278929",
     "fullName": "Test Sinh Vien AI Classroom",
     "email": "test_student_1792504278760@student.edu.vn",

@@ -170,19 +170,37 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isBusyRef = useRef<boolean>(false);
+  const isMountedRef = useRef<boolean>(true);
 
-  // Read file as base64 or text
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Read file as base64 or text and auto-trigger segmentation
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadedFile(file);
-    setDocumentTitle(file.name.replace(/\.[^/.]+$/, ''));
+    const cleanTitle = file.name.replace(/\.[^/.]+$/, '');
+    setDocumentTitle(cleanTitle);
+
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|bmp)$/i.test(file.name);
 
     const reader = new FileReader();
-    if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+    if (isPdf || isImage) {
+      const fileTypeStr = isPdf ? 'pdf' : 'image';
+      setInputText(`[Đang nạp và trích xuất dữ liệu đa phương thức từ tệp ${fileTypeStr.toUpperCase()}: "${file.name}" (${(file.size / 1024 / 1024).toFixed(2)} MB)...]`);
       reader.onload = () => {
-        setFileBase64(reader.result as string);
+        const base64 = reader.result as string;
+        setFileBase64(base64);
+        // Tự động kích hoạt bóc tách cấu trúc ngay khi file được nạp xong
+        handleParseAndSegment(base64, file.name, fileTypeStr);
       };
       reader.readAsDataURL(file);
     } else {
@@ -190,31 +208,52 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
         const text = reader.result as string;
         setInputText(text);
         setFileBase64(null);
+        handleParseAndSegment(undefined, file.name, 'text', text);
       };
       reader.readAsText(file);
     }
   };
 
   // Step 1: Parse and Segment document into discrete items
-  const handleParseAndSegment = async () => {
+  const handleParseAndSegment = async (
+    directBase64?: string,
+    directFileName?: string,
+    directFileType?: string,
+    directRawText?: string
+  ) => {
     setIsSegmenting(true);
+    setActiveWorkerInfo('Đang trích xuất toàn bộ văn bản & ký tự toán học từ tệp...');
     try {
+      const effectiveBase64 = directBase64 !== undefined ? directBase64 : fileBase64;
+      const effectiveName = directFileName || uploadedFile?.name || documentTitle;
+      const effectiveType =
+        directFileType ||
+        (effectiveName.toLowerCase().endsWith('.pdf')
+          ? 'pdf'
+          : /\.(png|jpe?g|webp|bmp)$/i.test(effectiveName)
+          ? 'image'
+          : 'text');
+      const effectiveText = directRawText !== undefined ? directRawText : inputText;
+
       const res = await aiFetch('/api/big-doc/parse-and-segment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileBase64: fileBase64 || undefined,
-          rawText: inputText,
-          fileName: uploadedFile?.name || documentTitle,
-          fileType: uploadedFile?.name?.endsWith('.pdf') ? 'pdf' : 'text',
+          fileBase64: effectiveBase64 || undefined,
+          rawText: effectiveText,
+          fileName: effectiveName,
+          fileType: effectiveType,
           docMode: docType,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
+        if (data.extractedText) {
+          setInputText(data.extractedText);
+        }
         setDocType(data.docType || 'bulk_exercises');
-        setDocumentTitle(data.documentTitle || documentTitle);
+        setDocumentTitle(data.documentTitle || effectiveName);
         setSummaryNote(data.summary || '');
 
         if (data.docType === 'financial_report') {
@@ -234,9 +273,15 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
         }
 
         if (onAddExp) onAddExp(20, 'Bóc tách cấu trúc tài liệu Big Size');
+
+        // Tự động khởi động Hàng Đợi Giải Chi Tiết không để người dùng phải chờ đợi
+        setIsProcessingQueue(true);
+        setIsPaused(false);
+        setActiveWorkerInfo('Đã bóc tách thành công. Đang tự động giải từng câu chuẩn Sư phạm...');
       }
     } catch (err) {
       console.error('Error segmenting:', err);
+      setActiveWorkerInfo('Có lỗi xảy ra trong quá trình bóc tách tệp.');
     } finally {
       setIsSegmenting(false);
     }
@@ -245,20 +290,24 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
   // Step 2: Non-blocking Queue Processor
   // Processes in chunks of 2-3 items to guarantee high speed, 0% UI lag, and no API timeouts
   useEffect(() => {
-    let isCancelled = false;
+    let timer: any = null;
 
     const runQueue = async () => {
-      if (!isProcessingQueue || isPaused) return;
+      if (!isProcessingQueue || isPaused || isBusyRef.current) return;
 
       if (docType === 'bulk_exercises') {
         const pendingItems = items.filter((it) => it.status === 'pending');
         if (pendingItems.length === 0) {
-          setIsProcessingQueue(false);
-          setActiveWorkerInfo('Đã xử lý trọn vẹn 100% câu hỏi!');
-          if (onAddExp) onAddExp(100, 'Hoàn thành bóc tách & giải toàn diện bộ bài tập');
+          const processingItems = items.filter((it) => it.status === 'processing');
+          if (processingItems.length === 0 && items.length > 0) {
+            setIsProcessingQueue(false);
+            setActiveWorkerInfo('Đã xử lý trọn vẹn 100% câu hỏi!');
+            if (onAddExp) onAddExp(100, 'Hoàn thành bóc tách & giải toàn diện bộ bài tập');
+          }
           return;
         }
 
+        isBusyRef.current = true;
         // Take a chunk of 3 items
         const chunk = pendingItems.slice(0, 3);
         const chunkIds = chunk.map((c) => c.id);
@@ -280,10 +329,10 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
             }),
           });
 
-          if (isCancelled) return;
+          if (!isMountedRef.current) return;
           const data = await res.json();
 
-          if (data.success && data.solutions) {
+          if (data.success && data.solutions && Array.isArray(data.solutions)) {
             setItems((prev) =>
               prev.map((it) => {
                 const sol = data.solutions.find((s: any) => s.id === it.id || s.itemNumber === it.itemNumber);
@@ -330,20 +379,28 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
           }
         } catch (err) {
           console.error('Error processing chunk:', err);
-          setItems((prev) =>
-            prev.map((it) => (chunkIds.includes(it.id) ? { ...it, status: 'error' } : it))
-          );
+          if (isMountedRef.current) {
+            setItems((prev) =>
+              prev.map((it) => (chunkIds.includes(it.id) ? { ...it, status: 'error' } : it))
+            );
+          }
+        } finally {
+          isBusyRef.current = false;
         }
       } else {
         // Financial Report Section Queue
         const pendingSec = reportSections.find((s) => s.status === 'pending');
         if (!pendingSec) {
-          setIsProcessingQueue(false);
-          setActiveWorkerInfo('Đã hoàn tất phân tích toàn bộ các phân mục báo cáo!');
-          if (onAddExp) onAddExp(120, 'Hoàn thành phân tích toàn diện Báo Cáo Tài Chính');
+          const processingSec = reportSections.filter((s) => s.status === 'processing');
+          if (processingSec.length === 0 && reportSections.length > 0) {
+            setIsProcessingQueue(false);
+            setActiveWorkerInfo('Đã hoàn tất phân tích toàn bộ các phân mục báo cáo!');
+            if (onAddExp) onAddExp(120, 'Hoàn thành phân tích toàn diện Báo Cáo Tài Chính');
+          }
           return;
         }
 
+        isBusyRef.current = true;
         setReportSections((prev) =>
           prev.map((s) => (s.id === pendingSec.id ? { ...s, status: 'processing' } : s))
         );
@@ -360,7 +417,7 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
             }),
           });
 
-          if (isCancelled) return;
+          if (!isMountedRef.current) return;
           const data = await res.json();
 
           if (data.success && data.result) {
@@ -374,16 +431,19 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
           }
         } catch (err) {
           console.error('Error in report chunk:', err);
-          setReportSections((prev) =>
-            prev.map((s) => (s.id === pendingSec.id ? { ...s, status: 'error' } : s))
-          );
+          if (isMountedRef.current) {
+            setReportSections((prev) =>
+              prev.map((s) => (s.id === pendingSec.id ? { ...s, status: 'error' } : s))
+            );
+          }
+        } finally {
+          isBusyRef.current = false;
         }
       }
     };
 
-    const timer = setTimeout(runQueue, 600);
+    timer = setTimeout(runQueue, 400);
     return () => {
-      isCancelled = true;
       clearTimeout(timer);
     };
   }, [isProcessingQueue, isPaused, items, reportSections, docType, documentTitle]);
@@ -618,7 +678,7 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
 
           {/* Action Button: Bóc tách cấu trúc */}
           <button
-            onClick={handleParseAndSegment}
+            onClick={() => handleParseAndSegment()}
             disabled={isSegmenting || (!inputText.trim() && !fileBase64)}
             className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-2xl text-sm shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
