@@ -3195,6 +3195,160 @@ Format JSON:
   });
 });
 
+// ==========================================
+// PERSISTENT FORUM DATABASE (forum_database.json)
+// ==========================================
+const FORUM_DB_PATH = path.join(process.cwd(), 'forum_database.json');
+
+const INITIAL_FORUM_POSTS = [
+  {
+    id: 'post_1',
+    authorName: 'Trần Minh Hoàng',
+    authorClass: '2026-DHKT01 - ĐH Ngân Hàng HUB',
+    authorAvatar: '👨‍🎓',
+    timestamp: '15 phút trước',
+    title: 'Hỏi về cách phân biệt bài toán dùng Z-test hay Student T-test?',
+    content:
+      'Các bạn cho mình hỏi: Khi làm bài kiểm định trung bình mẫu, trong trường hợp mẫu $n < 30$ nhưng đề bài ĐÃ CHO BIẾT phương sai tổng thể $\\sigma^2$ thì mình dùng Z-test hay T-test vậy ạ?',
+    likes: 12,
+    commentsCount: 2,
+    comments: [
+      {
+        id: 'c1',
+        author: 'Linh Cú AI Classroom',
+        authorAvatar: '🦉',
+        text: 'Chào Hoàng! Nếu đã biết phương sai tổng thể $\\sigma^2$ thì theo lý thuyết Bài 5 dù $n < 30$ vẫn dùng phân phối Chuẩn tắc $Z$-test chuẩn nhé!',
+        time: '8 phút trước',
+      },
+      {
+        id: 'c2',
+        author: 'Lê Thu Thảo',
+        authorAvatar: '👩‍🎓',
+        text: 'Đúng rồi bạn ơi, chỉ khi CHƯA BIẾT phương sai tổng thể $\\sigma^2$ và $n < 30$ mới chuyển sang dùng phân phối Student $t$-test với bậc tự do $(n-1)$!',
+        time: '5 phút trước',
+      },
+    ],
+  },
+  {
+    id: 'post_2',
+    authorName: 'Nguyễn Bích Ngọc',
+    authorClass: '2026-NHDH02 - ĐH Kinh Tế UEH',
+    authorAvatar: '👩‍🎓',
+    timestamp: '1 giờ trước',
+    title: 'Chia sẻ Bộ Đề Thi Thử Cuối Kỳ Xác Suất Thống Kê 2026 kèm Đáp Án Chi Tiết',
+    content:
+      'Mình vừa tổng hợp bộ 10 đề thi thử XSTK có lời giải chi tiết theo chuẩn Barem của trường. Mọi người tải về luyện cùng mình nhé!',
+    attachmentType: 'pdf',
+    attachmentName: 'De_Thi_Thu_XSTK_2026_Full_Dap_An.pdf',
+    likes: 38,
+    commentsCount: 0,
+    comments: [],
+  },
+];
+
+function getForumDatabase(): any[] {
+  try {
+    if (fs.existsSync(FORUM_DB_PATH)) {
+      const content = fs.readFileSync(FORUM_DB_PATH, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading forum_database.json:', err);
+  }
+  saveForumDatabase(INITIAL_FORUM_POSTS);
+  return INITIAL_FORUM_POSTS;
+}
+
+function saveForumDatabase(posts: any[]): void {
+  try {
+    fs.writeFileSync(FORUM_DB_PATH, JSON.stringify(posts, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving forum_database.json:', err);
+  }
+}
+
+// FORUM API: Lấy toàn bộ bài đăng thời gian thực từ forum_database.json
+app.get('/api/forum/posts', (_req, res) => {
+  const posts = getForumDatabase();
+  return res.json({ success: true, posts });
+});
+
+// FORUM API: Đăng bài viết mới (kèm kiểm duyệt và lưu vào forum_database.json)
+app.post('/api/forum/posts', async (req, res) => {
+  const { title, content, authorName, authorClass, authorAvatar, attachmentType, attachmentUrl, attachmentName } = req.body;
+  if (!title || (!content && !attachmentUrl)) {
+    return res.status(400).json({ success: false, error: 'Tiêu đề và nội dung bài viết không được để trống!' });
+  }
+
+  const posts = getForumDatabase();
+  const newPost = {
+    id: `post_${Date.now()}`,
+    authorName: authorName || 'Sinh viên AI Classroom',
+    authorClass: authorClass || '2026-XSTK',
+    authorAvatar: authorAvatar || '👨‍🎓',
+    timestamp: 'Vừa xong',
+    title: title.trim(),
+    content: (content || '').trim(),
+    attachmentType,
+    attachmentUrl,
+    attachmentName,
+    likes: 0,
+    commentsCount: 0,
+    comments: [],
+    isModerated: true,
+  };
+
+  posts.unshift(newPost);
+  saveForumDatabase(posts);
+
+  return res.json({ success: true, post: newPost, posts });
+});
+
+// FORUM API: Thả tim bài viết
+app.post('/api/forum/posts/:id/like', (req, res) => {
+  const { id } = req.params;
+  const posts = getForumDatabase();
+  const post = posts.find((p) => p.id === id);
+  if (post) {
+    post.likes = (post.likes || 0) + 1;
+    saveForumDatabase(posts);
+    return res.json({ success: true, likes: post.likes });
+  }
+  return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+});
+
+// FORUM API: Thêm bình luận tương tác giữa các sinh viên
+app.post('/api/forum/posts/:id/comments', (req, res) => {
+  const { id } = req.params;
+  const { author, authorAvatar, text, attachmentUrl, attachmentName } = req.body;
+  if (!text && !attachmentUrl) {
+    return res.status(400).json({ success: false, error: 'Nội dung bình luận không được để trống!' });
+  }
+
+  const posts = getForumDatabase();
+  const post = posts.find((p) => p.id === id);
+  if (post) {
+    if (!post.comments) post.comments = [];
+    const newComment = {
+      id: `c_${Date.now()}`,
+      author: author || 'Sinh viên AI Classroom',
+      authorAvatar: authorAvatar || '👨‍🎓',
+      text: (text || '').trim(),
+      time: 'Vừa xong',
+      attachmentUrl,
+      attachmentName,
+    };
+    post.comments.push(newComment);
+    post.commentsCount = post.comments.length;
+    saveForumDatabase(posts);
+    return res.json({ success: true, comment: newComment, post, posts });
+  }
+  return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+});
+
 // Endpoint 5: Forum Auto-Moderation & Academic Chat
 app.post('/api/tutor/forum-moderation', async (req, res) => {
   const { postContent } = req.body;

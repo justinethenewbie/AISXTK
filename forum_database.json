@@ -1,0 +1,64 @@
+[
+  {
+    "id": "post_1793124910303",
+    "authorName": "Trần Minh Quân",
+    "authorClass": "2026-XSTK - ĐH Ngân Hàng HUB",
+    "authorAvatar": "👨‍🎓",
+    "timestamp": "Vừa xong",
+    "title": "Thảo luận bài toán ước lượng tỷ lệ phế phẩm ẩn số liệu n=500",
+    "content": "Có bạn nào giải bài KCS kiểm tra 475 sản phẩm đạt và 25 sản phẩm lỗi chưa ạ? Sai số epsilon các bạn tính ra bao nhiêu thế?",
+    "likes": 0,
+    "commentsCount": 1,
+    "comments": [
+      {
+        "id": "c_1793124924245",
+        "author": "TS. Trần Minh Đức",
+        "authorAvatar": "👨‍🏫",
+        "text": "Chào Quân, bài này cỡ mẫu  = 475 + 25 = 500$, tỷ lệ phế phẩm mẫu  = 25/500 = 0.05$. Độ tin cậy 95% có {0.025} = 1.96$ nên sai số $\\varepsilon \\approx 0.0191$ nhé em!",
+        "time": "Vừa xong"
+      }
+    ],
+    "isModerated": true
+  },
+  {
+    "id": "post_1",
+    "authorName": "Trần Minh Hoàng",
+    "authorClass": "2026-DHKT01 - ĐH Ngân Hàng HUB",
+    "authorAvatar": "👨‍🎓",
+    "timestamp": "15 phút trước",
+    "title": "Hỏi về cách phân biệt bài toán dùng Z-test hay Student T-test?",
+    "content": "Các bạn cho mình hỏi: Khi làm bài kiểm định trung bình mẫu, trong trường hợp mẫu $n < 30$ nhưng đề bài ĐÃ CHO BIẾT phương sai tổng thể $\\sigma^2$ thì mình dùng Z-test hay T-test vậy ạ?",
+    "likes": 12,
+    "commentsCount": 2,
+    "comments": [
+      {
+        "id": "c1",
+        "author": "Linh Cú AI Classroom",
+        "authorAvatar": "🦉",
+        "text": "Chào Hoàng! Nếu đã biết phương sai tổng thể $\\sigma^2$ thì theo lý thuyết Bài 5 dù $n < 30$ vẫn dùng phân phối Chuẩn tắc $Z$-test chuẩn nhé!",
+        "time": "8 phút trước"
+      },
+      {
+        "id": "c2",
+        "author": "Lê Thu Thảo",
+        "authorAvatar": "👩‍🎓",
+        "text": "Đúng rồi bạn ơi, chỉ khi CHƯA BIẾT phương sai tổng thể $\\sigma^2$ và $n < 30$ mới chuyển sang dùng phân phối Student $t$-test với bậc tự do $(n-1)$!",
+        "time": "5 phút trước"
+      }
+    ]
+  },
+  {
+    "id": "post_2",
+    "authorName": "Nguyễn Bích Ngọc",
+    "authorClass": "2026-NHDH02 - ĐH Kinh Tế UEH",
+    "authorAvatar": "👩‍🎓",
+    "timestamp": "1 giờ trước",
+    "title": "Chia sẻ Bộ Đề Thi Thử Cuối Kỳ Xác Suất Thống Kê 2026 kèm Đáp Án Chi Tiết",
+    "content": "Mình vừa tổng hợp bộ 10 đề thi thử XSTK có lời giải chi tiết theo chuẩn Barem của trường. Mọi người tải về luyện cùng mình nhé!",
+    "attachmentType": "pdf",
+    "attachmentName": "De_Thi_Thu_XSTK_2026_Full_Dap_An.pdf",
+    "likes": 38,
+    "commentsCount": 0,
+    "comments": []
+  }
+]

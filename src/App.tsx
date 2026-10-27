@@ -395,7 +395,7 @@ export default function App() {
       case 'mindmap':
         return <MindmapViewer />;
       case 'forum':
-        return <ForumSection onAddExp={handleAddExp} />;
+        return <ForumSection onAddExp={handleAddExp} currentUser={currentUser} />;
       case 'profile':
         return (
           <AiProfileMascot

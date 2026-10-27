@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { ForumPost } from '../types/xstk';
+import React, { useState, useRef, useEffect } from 'react';
+import { ForumPost, AppUser } from '../types/xstk';
 import {
   MessageSquare,
   ThumbsUp,
@@ -19,6 +19,7 @@ import {
   Check,
   Download,
   Sigma,
+  RotateCw,
 } from 'lucide-react';
 import { MathText, MathFormula } from './MathFormula';
 import { normalizeSpokenMath } from '../utils/mathSpeechParser';
@@ -26,6 +27,7 @@ import confetti from 'canvas-confetti';
 
 interface ForumSectionProps {
   onAddExp: (amount: number, details?: string) => void;
+  currentUser?: AppUser | null;
 }
 
 const QUICK_MATH_SYMBOLS = [
@@ -92,12 +94,35 @@ const INITIAL_POSTS: ForumPost[] = [
   },
 ];
 
-export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
+export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp, currentUser }) => {
   const [posts, setPosts] = useState<ForumPost[]>(INITIAL_POSTS);
+  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [isModerating, setIsModerating] = useState(false);
   const [modWarning, setModWarning] = useState<string | null>(null);
+
+  // Auto-sync posts from server
+  const fetchPosts = async () => {
+    try {
+      setIsFetchingPosts(true);
+      const res = await fetch('/api/forum/posts');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+        setPosts(data.posts);
+      }
+    } catch (err) {
+      console.warn('Error fetching forum posts:', err);
+    } finally {
+      setIsFetchingPosts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+    const timer = setInterval(fetchPosts, 12000);
+    return () => clearInterval(timer);
+  }, []);
 
   // New Post Attachment & Speech state
   const [postAttachment, setPostAttachment] = useState<{
@@ -234,29 +259,59 @@ export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
         colors: ['#06b6d4', '#10b981', '#f59e0b'],
       });
 
-      const newPost: ForumPost = {
-        id: `post_${Date.now()}`,
-        authorName: 'Bạn (Sinh viên AI Classroom)',
-        authorClass: '2026-DHKT01',
-        authorAvatar: '🦉',
-        timestamp: 'Vừa xong',
-        title: newTitle.trim(),
-        content: newContent.trim(),
-        attachmentType: postAttachment?.type,
-        attachmentUrl: postAttachment?.dataUrl,
-        attachmentName: postAttachment?.name,
-        likes: 0,
-        commentsCount: 0,
-        comments: [],
-        isModerated: true,
-      };
+      const authorName = currentUser?.fullName?.trim() || 'Sinh viên AI Classroom';
+      const authorClass = currentUser?.university
+        ? `${currentUser.classGroup || '2026-XSTK'} - ${currentUser.university}`
+        : '2026-DHKT01 - ĐH Ngân Hàng HUB';
+      const authorAvatar = currentUser?.avatarUrl || '👨‍🎓';
 
-      setPosts([newPost, ...posts]);
+      const postRes = await fetch('/api/forum/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          authorName,
+          authorClass,
+          authorAvatar,
+          attachmentType: postAttachment?.type,
+          attachmentUrl: postAttachment?.dataUrl,
+          attachmentName: postAttachment?.name,
+        }),
+      });
+
+      const postData = await postRes.json();
+      if (postData.success) {
+        if (Array.isArray(postData.posts)) {
+          setPosts(postData.posts);
+        } else if (postData.post) {
+          setPosts([postData.post, ...posts]);
+        }
+      } else {
+        const newPost: ForumPost = {
+          id: `post_${Date.now()}`,
+          authorName,
+          authorClass,
+          authorAvatar,
+          timestamp: 'Vừa xong',
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          attachmentType: postAttachment?.type,
+          attachmentUrl: postAttachment?.dataUrl,
+          attachmentName: postAttachment?.name,
+          likes: 0,
+          commentsCount: 0,
+          comments: [],
+          isModerated: true,
+        };
+        setPosts([newPost, ...posts]);
+      }
+
       setNewTitle('');
       setNewContent('');
       setPostAttachment(null);
       setShowPostMathToolbar(false);
-      onAddExp(25, `Đăng bài thảo luận mới trên Diễn đàn: "${newPost.title.slice(0, 30)}..."`);
+      onAddExp(25, `Đăng bài thảo luận mới trên Diễn đàn: "${newTitle.slice(0, 30)}..."`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -264,15 +319,27 @@ export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
     }
   };
 
-  const handleLikePost = (postId: string) => {
+  const handleLikePost = async (postId: string) => {
     setPosts((prev) =>
       prev.map((p) => (p.id === postId ? { ...p, likes: p.likes + 1 } : p))
     );
+    try {
+      await fetch(`/api/forum/posts/${postId}/like`, { method: 'POST' });
+    } catch (err) {
+      console.warn('Like sync error:', err);
+    }
   };
 
-  const handleAddComment = (postId: string) => {
+  const handleAddComment = async (postId: string) => {
     if (!commentText.trim() && !commentAttachment) return;
 
+    const author = currentUser?.fullName?.trim() || 'Sinh viên AI Classroom';
+    const authorAvatar = currentUser?.avatarUrl || '👨‍🎓';
+    const text = commentText.trim();
+    const attachmentUrl = commentAttachment?.dataUrl;
+    const attachmentName = commentAttachment?.name;
+
+    // Optimistic UI update
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
@@ -283,12 +350,12 @@ export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
               ...p.comments,
               {
                 id: `c_${Date.now()}`,
-                author: 'Bạn (Sinh viên AI Classroom)',
-                authorAvatar: '👨‍🎓',
-                text: commentText.trim(),
+                author,
+                authorAvatar,
+                text,
                 time: 'Vừa xong',
-                attachmentUrl: commentAttachment?.dataUrl,
-                attachmentName: commentAttachment?.name,
+                attachmentUrl,
+                attachmentName,
               },
             ],
           };
@@ -301,15 +368,53 @@ export const ForumSection: React.FC<ForumSectionProps> = ({ onAddExp }) => {
     setCommentAttachment(null);
     setShowCommentMathToolbar(false);
     onAddExp(15, 'Đóng góp câu trả lời học thuật trên Diễn đàn');
+
+    try {
+      const res = await fetch(`/api/forum/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          author,
+          authorAvatar,
+          text,
+          attachmentUrl,
+          attachmentName,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.posts) {
+        setPosts(data.posts);
+      }
+    } catch (err) {
+      console.warn('Comment sync error:', err);
+    }
   };
 
   return (
     <div className="space-y-6 text-slate-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-500/40 p-6 rounded-3xl space-y-2 shadow-[0_0_25px_rgba(6,182,212,0.15)]">
-        <div className="flex items-center gap-2 text-cyan-400 font-extrabold text-sm">
-          <MessageSquare className="w-5 h-5 text-cyan-400" />
-          <span>DIỄN ĐÀN ĐIỆN TỬ HỌC XÁC SUẤT THỐNG KÊ (XSTK FORUM)</span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-cyan-400 font-extrabold text-sm">
+            <MessageSquare className="w-5 h-5 text-cyan-400" />
+            <span>DIỄN ĐÀN ĐIỆN TỬ HỌC XÁC SUẤT THỐNG KÊ (XSTK FORUM)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Cộng đồng trực tuyến</span>
+            </span>
+            <button
+              type="button"
+              onClick={fetchPosts}
+              disabled={isFetchingPosts}
+              className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all flex items-center gap-1 text-xs font-semibold cursor-pointer"
+              title="Làm mới bài viết từ máy chủ"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isFetchingPosts ? 'animate-spin text-cyan-400' : ''}`} />
+              <span className="hidden sm:inline">Làm mới</span>
+            </button>
+          </div>
         </div>
         <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]">
           Kênh Trao Đổi Tri Thức XSTK Đa Phương Thức Có Giám Sát AI
