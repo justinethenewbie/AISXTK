@@ -109,34 +109,53 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<ActiveToolType>('image_grading');
 
   const [currentChapterId, setCurrentChapterId] = useState(1);
-  const [mistakes, setMistakes] = useState<MistakeRecord[]>([
-    {
-      id: 'mistake_demo_1',
-      chapterId: 1,
-      chapterTitle: 'Bài 1: Xác suất cơ bản & Bayes',
-      sourceType: 'mcq',
-      questionSummary: 'Cho $P(A) = 0.4, P(B) = 0.5$. Biết $A, B$ xung khắc. Tính $P(A + B)$.',
-      studentAnswer: '$P(A+B) = P(A) + P(B) - P(AB) = 0.4 + 0.5 - 0.2 = 0.7$',
-      correctConcept: '$A, B$ xung khắc thì $A \\cap B = \\emptyset \\implies P(AB) = 0 \\implies P(A+B) = 0.4 + 0.5 = 0.9$',
-      rootCauseError: 'Nhầm lẫn giữa biến cố xung khắc (P(AB) = 0) và biến cố độc lập (P(AB) = P(A)P(B))',
-      remediationAdvice: 'Khi đề cho "xung khắc", lập tức gạch bỏ số hạng P(AB) = 0 trong công thức cộng xác suất!',
-      timestamp: '14:20',
-      resolved: false,
-    },
-    {
-      id: 'mistake_demo_2',
-      chapterId: 3,
-      chapterTitle: 'Bài 3: Phân phối Chuẩn & Casio 580',
-      sourceType: 'essay',
-      questionSummary: 'Biến ngẫu nhiên $X \\sim N(50, 4)$. Tính xác suất $P(X \\ge 54)$.',
-      studentAnswer: 'Nhập máy tính $\\sigma = 4, \\mu = 50$',
-      correctConcept: 'Đề bài cho $N(50, 4)$ nghĩa là phương sai $\\sigma^2 = 4 \\implies$ Độ lệch chuẩn $\\sigma = 2$. Do đó $P(X \\ge 54) = 1 - \\Phi(\\frac{54-50}{2}) = 1 - \\Phi(2) = 0.0228$',
-      rootCauseError: 'Nhầm lẫn giữa phương sai sigma^2 và độ lệch chuẩn sigma khi nhập tham số vào Casio Menu 7 Normal CD',
-      remediationAdvice: 'Ký hiệu chuẩn $N(\\mu, \\sigma^2)$ luôn có số thứ 2 là bình phương phương sai; hãy luôn căn bậc hai trước khi nhập máy!',
-      timestamp: '15:10',
-      resolved: false,
-    },
-  ]);
+  const [mistakes, setMistakes] = useState<MistakeRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('edt_mistakes_records');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      {
+        id: 'mistake_demo_1',
+        chapterId: 1,
+        chapterTitle: 'Bài 1: Xác suất cơ bản & Bayes',
+        sourceType: 'mcq',
+        questionSummary: 'Cho $P(A) = 0.4, P(B) = 0.5$. Biết $A, B$ xung khắc. Tính $P(A + B)$.',
+        studentAnswer: '$P(A+B) = P(A) + P(B) - P(AB) = 0.4 + 0.5 - 0.2 = 0.7$',
+        correctConcept: '$A, B$ xung khắc thì $A \\cap B = \\emptyset \\implies P(AB) = 0 \\implies P(A+B) = 0.4 + 0.5 = 0.9$',
+        rootCauseError: 'Nhầm lẫn giữa biến cố xung khắc (P(AB) = 0) và biến cố độc lập (P(AB) = P(A)P(B))',
+        remediationAdvice: 'Khi đề cho "xung khắc", lập tức gạch bỏ số hạng P(AB) = 0 trong công thức cộng xác suất!',
+        timestamp: '14:20',
+        resolved: false,
+      },
+      {
+        id: 'mistake_demo_2',
+        chapterId: 3,
+        chapterTitle: 'Bài 3: Phân phối Chuẩn & Casio 580',
+        sourceType: 'essay',
+        questionSummary: 'Biến ngẫu nhiên $X \\sim N(50, 4)$. Tính xác suất $P(X \\ge 54)$.',
+        studentAnswer: 'Nhập máy tính $\\sigma = 4, \\mu = 50$',
+        correctConcept: 'Đề bài cho $N(50, 4)$ nghĩa là phương sai $\\sigma^2 = 4 \\implies$ Độ lệch chuẩn $\\sigma = 2$. Do đó $P(X \\ge 54) = 1 - \\Phi(\\frac{54-50}{2}) = 1 - \\Phi(2) = 0.0228$',
+        rootCauseError: 'Nhầm lẫn giữa phương sai sigma^2 và độ lệch chuẩn sigma khi nhập tham số vào Casio Menu 7 Normal CD',
+        remediationAdvice: 'Ký hiệu chuẩn $N(\\mu, \\sigma^2)$ luôn có số thứ 2 là bình phương phương sai; hãy luôn căn bậc hai trước khi nhập máy!',
+        timestamp: '15:10',
+        resolved: false,
+      },
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('edt_mistakes_records', JSON.stringify(mistakes));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [mistakes]);
 
   // Auth & Developer Database State
   const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
