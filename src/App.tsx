@@ -376,9 +376,11 @@ export default function App() {
         return <CasioCalculator />;
       case 'image_grading':
       case 'math_processor':
-      case 'viva_exam':
-      case 'voice_chat':
         return <ImagePdfGrading onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
+      case 'viva_exam':
+        return <TheoreticalViva onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
+      case 'voice_chat':
+        return <VoiceInteraction onAddExp={handleAddExp} />;
       case 'mcq_generator':
         return <McqPractice onAddExp={handleAddExp} onRecordMistake={handleRecordMistake} />;
       case 'essay_generator':
@@ -455,10 +457,13 @@ export default function App() {
     {
       groupName: 'Học Tập & Ôn Luyện',
       items: [
-        { id: 'learning', name: '📖 Lý Thuyết 5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
-        { id: 'image_grading', name: '⚡ Gia Sư AI 1-1', icon: <Sparkles className="w-4 h-4 text-cyan-300" />, isNeon: true },
+        { id: 'learning', name: '📖 Lý Thuyết 4-5 Bước', icon: <BookOpen className="w-4 h-4 text-cyan-400" /> },
+        { id: 'image_grading', name: '⚡ Gia Sư AI 1-1 (iPad/PDF)', icon: <Sparkles className="w-4 h-4 text-cyan-300" />, isNeon: true },
+        { id: 'viva_exam', name: '🎙️ Thi Vấn Đáp AI', icon: <HelpCircle className="w-4 h-4 text-amber-400" /> },
+        { id: 'voice_chat', name: '🗣️ Tương Tác Giọng Nói', icon: <Mic className="w-4 h-4 text-cyan-400" /> },
         { id: 'mcq_generator', name: '✅ Đề Thi Trắc Nghiệm', icon: <CheckSquare className="w-4 h-4 text-teal-400" /> },
         { id: 'essay_generator', name: '✍️ Đề Thi Tự Luận', icon: <FileText className="w-4 h-4 text-blue-400" /> },
+        { id: 'big_doc_processor', name: '🚀 Giải Đề Big Size 100MB', icon: <Layers className="w-4 h-4 text-cyan-300" /> },
         { id: 'mindmap', name: '🗺️ Bản Đồ Tư Duy', icon: <Map className="w-4 h-4 text-cyan-400" /> },
       ],
     },
