@@ -27,9 +27,12 @@ import {
   FileCheck,
   BookOpen,
   X,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { MathFormula, MathText } from './MathFormula';
 import { aiFetch } from '../utils/apiHelper';
+import { speakVietnameseMath, stopSpeaking } from '../utils/mathSpeechParser';
 
 interface BigSizeDocumentProcessorProps {
   onAddExp?: (amount: number, details?: string) => void;
@@ -149,6 +152,7 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
   const [activeWorkerInfo, setActiveWorkerInfo] = useState<string>('Hệ thống sẵn sàng');
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [speakingSolutionId, setSpeakingSolutionId] = useState<string | null>(null);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -1016,17 +1020,48 @@ export const BigSizeDocumentProcessor: React.FC<BigSizeDocumentProcessorProps> =
 
                     {/* Action Row for Solution */}
                     <div className="flex items-center justify-between pt-4 border-t border-slate-800 flex-wrap gap-2">
-                      <button
-                        onClick={() => {
-                          const textToCopy = `${activeItem.title}\n${activeItem.rawText}\n\nLời giải:\n${activeItem.solution?.stepByStep.join('\n')}\nKết luận: ${activeItem.solution?.finalAnswer}`;
-                          navigator.clipboard.writeText(textToCopy);
-                          alert('Đã sao chép toàn bộ lời giải vào clipboard!');
-                        }}
-                        className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Sao chép lời giải</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const textToCopy = `${activeItem.title}\n${activeItem.rawText}\n\nLời giải:\n${activeItem.solution?.stepByStep.join('\n')}\nKết luận: ${activeItem.solution?.finalAnswer}`;
+                            navigator.clipboard.writeText(textToCopy);
+                            alert('Đã sao chép toàn bộ lời giải vào clipboard!');
+                          }}
+                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Sao chép lời giải</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (speakingSolutionId === String(activeItem.id)) {
+                              stopSpeaking();
+                              setSpeakingSolutionId(null);
+                            } else {
+                              const speech = `${activeItem.title}. Lời giải: ${activeItem.solution?.stepByStep.join('. ')}. Kết luận: ${activeItem.solution?.finalAnswer || ''}. ${activeItem.solution?.casioGuide ? 'Hướng dẫn Casio: ' + activeItem.solution.casioGuide : ''}`;
+                              setSpeakingSolutionId(String(activeItem.id));
+                              speakVietnameseMath(speech, {
+                                onStart: () => setSpeakingSolutionId(String(activeItem.id)),
+                                onEnd: () => setSpeakingSolutionId(null),
+                                onError: () => setSpeakingSolutionId(null),
+                              });
+                            }
+                          }}
+                          className={`px-3.5 py-2 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                            speakingSolutionId === String(activeItem.id)
+                              ? 'bg-rose-500 text-white animate-pulse'
+                              : 'bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40'
+                          }`}
+                        >
+                          {speakingSolutionId === String(activeItem.id) ? (
+                            <VolumeX className="w-3.5 h-3.5" />
+                          ) : (
+                            <Volume2 className="w-3.5 h-3.5" />
+                          )}
+                          <span>{speakingSolutionId === String(activeItem.id) ? 'Dừng đọc' : 'Nghe Lời Giải'}</span>
+                        </button>
+                      </div>
 
                       {onSendToAiTutor && (
                         <button

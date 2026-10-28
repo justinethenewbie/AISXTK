@@ -39,10 +39,17 @@ import {
   Eye,
   Info,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { renderKatexSafe, cleanLatexString } from './MathFormula';
-import { convertVoiceToMathAI, SpokenMathAnalysis } from '../utils/mathSpeechParser';
+import {
+  convertVoiceToMathAI,
+  SpokenMathAnalysis,
+  speakVietnameseMath,
+  stopSpeaking,
+} from '../utils/mathSpeechParser';
 
 // Declare custom math-field web component for MathLive if available
 declare global {
@@ -171,6 +178,22 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
       time: '07:00',
     },
   ]);
+  const [speakingChatIdx, setSpeakingChatIdx] = useState<number | null>(null);
+
+  const handleToggleChatSpeech = (idx: number, speechText: string) => {
+    if (speakingChatIdx === idx) {
+      stopSpeaking();
+      setSpeakingChatIdx(null);
+      return;
+    }
+
+    setSpeakingChatIdx(idx);
+    speakVietnameseMath(speechText, {
+      onStart: () => setSpeakingChatIdx(idx),
+      onEnd: () => setSpeakingChatIdx(null),
+      onError: () => setSpeakingChatIdx(null),
+    });
+  };
 
   // Main text area references
   const editableTextRef1 = useRef<HTMLDivElement | null>(null);
@@ -1248,7 +1271,22 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
                   <span className="font-bold">{msg.sender === 'ai' ? '🤖 AI Tutor' : '👤 Lời giải của bạn'}</span>
-                  <span>{msg.time}</span>
+                  <div className="flex items-center gap-2">
+                    {msg.sender === 'ai' && (
+                      <button
+                        onClick={() => handleToggleChatSpeech(idx, msg.text + (msg.math ? ' ' + msg.math : ''))}
+                        className={`px-2 py-0.5 rounded-md border text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                          speakingChatIdx === idx
+                            ? 'bg-rose-500 text-white border-rose-400 animate-pulse'
+                            : 'bg-cyan-950/80 hover:bg-cyan-900 border-cyan-400/40 text-cyan-300'
+                        }`}
+                      >
+                        {speakingChatIdx === idx ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                        <span>{speakingChatIdx === idx ? 'Dừng đọc' : 'Nghe AI Đọc'}</span>
+                      </button>
+                    )}
+                    <span>{msg.time}</span>
+                  </div>
                 </div>
                 <p>{msg.text}</p>
                 {msg.math && (

@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Volume2, Sparkles, Send, Square, Play, BookOpen, CheckCircle } from 'lucide-react';
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Send,
+  Square,
+  Play,
+  BookOpen,
+  CheckCircle,
+} from 'lucide-react';
 import { aiFetch } from '../utils/apiHelper';
 import { MathFormula, MathText } from './MathFormula';
-import { normalizeSpokenMath, convertVoiceToMathAI } from '../utils/mathSpeechParser';
+import {
+  normalizeSpokenMath,
+  convertVoiceToMathAI,
+  speakVietnameseMath,
+  stopSpeaking,
+} from '../utils/mathSpeechParser';
 
 interface VoiceInteractionProps {
   onAddExp: (amount: number) => void;
@@ -13,6 +29,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({ onAddExp }) 
   const [transcript, setTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [voiceResponse, setVoiceResponse] = useState<any>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const startVoiceRecording = () => {
     setIsRecording(true);
@@ -62,10 +79,13 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({ onAddExp }) 
         setVoiceResponse(data.data);
         onAddExp(20);
 
-        if ('speechSynthesis' in window && data.data?.spokenResponse) {
-          const utterance = new SpeechSynthesisUtterance(data.data.spokenResponse);
-          utterance.lang = 'vi-VN';
-          window.speechSynthesis.speak(utterance);
+        if (data.data?.spokenResponse) {
+          setIsSpeaking(true);
+          speakVietnameseMath(data.data.spokenResponse, {
+            onStart: () => setIsSpeaking(true),
+            onEnd: () => setIsSpeaking(false),
+            onError: () => setIsSpeaking(false),
+          });
         }
       }
     } catch (err) {
@@ -162,9 +182,34 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({ onAddExp }) 
           {/* Left: AI Audio Speech Response */}
           <div className="bg-slate-900 border-2 border-cyan-500/30 p-5 rounded-3xl space-y-3 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col justify-between">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-cyan-300 font-black text-xs">
-                <Volume2 className="w-4 h-4 text-cyan-400" />
-                <span>Phản Hồi Lời Nói Từ Cú AI Classroom</span>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2 text-cyan-300 font-black text-xs">
+                  <Volume2 className="w-4 h-4 text-cyan-400" />
+                  <span>Phản Hồi Lời Nói Từ Cú AI Classroom</span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (isSpeaking) {
+                      stopSpeaking();
+                      setIsSpeaking(false);
+                    } else if (voiceResponse?.spokenResponse) {
+                      setIsSpeaking(true);
+                      speakVietnameseMath(voiceResponse.spokenResponse, {
+                        onStart: () => setIsSpeaking(true),
+                        onEnd: () => setIsSpeaking(false),
+                        onError: () => setIsSpeaking(false),
+                      });
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                    isSpeaking
+                      ? 'bg-rose-500 text-white animate-pulse'
+                      : 'bg-slate-800 text-cyan-300 hover:bg-slate-700 border border-cyan-500/30'
+                  }`}
+                >
+                  {isSpeaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                  <span>{isSpeaking ? 'Dừng đọc' : 'Nghe lại'}</span>
+                </button>
               </div>
               <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-semibold">
                 "{voiceResponse.spokenResponse}"

@@ -38,7 +38,14 @@ import { InteractiveCanvas } from './InteractiveCanvas';
 import { MathText, MathFormula } from './MathFormula';
 import { BigSizeDocumentProcessor } from './BigSizeDocumentProcessor';
 import { aiFetch } from '../utils/apiHelper';
-import { normalizeSpokenMath, convertVoiceToMathAI, hasMathematicalTerms, SpokenMathAnalysis } from '../utils/mathSpeechParser';
+import {
+  normalizeSpokenMath,
+  convertVoiceToMathAI,
+  hasMathematicalTerms,
+  SpokenMathAnalysis,
+  speakVietnameseMath,
+  stopSpeaking,
+} from '../utils/mathSpeechParser';
 
 interface ImagePdfGradingProps {
   onAddExp: (amount: number, details?: string, count?: number, gpaScore?: number) => void;
@@ -135,6 +142,7 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
   const [spokenMathPreview, setSpokenMathPreview] = useState<SpokenMathAnalysis | null>(null);
   const [isConvertingVoiceMath, setIsConvertingVoiceMath] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(false);
 
   // Submitting / Loading
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -257,42 +265,47 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
     recognition.start();
   };
 
-  // Text-To-Speech (Listen to AI voice)
+  // Text-To-Speech (Listen to AI voice with warm pedagogical math phonetics)
   const handleToggleSpeech = (msgId: string, speechText: string) => {
-    if (!('speechSynthesis' in window)) {
-      alert('Trình duyệt chưa hỗ trợ Text-to-Speech.');
-      return;
-    }
-
     if (speakingMessageId === msgId) {
-      window.speechSynthesis.cancel();
+      stopSpeaking();
       setSpeakingMessageId(null);
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const cleanSpeech = speechText
-      .replace(/\$\$[\s\S]*?\$\$/g, ' công thức toán ')
-      .replace(/\$([^\$]+)\$/g, '$1')
-      .replace(/\\bar\{x\}/g, 'x ngang')
-      .replace(/s\^2/g, 'phương sai s bình phương')
-      .replace(/\\mu/g, 'muy')
-      .replace(/\\sigma/g, 'độ lệch chuẩn sigma')
-      .replace(/\\alpha/g, 'alpha')
-      .replace(/\\ge/g, 'lớn hơn hoặc bằng')
-      .replace(/\\le/g, 'nhỏ hơn hoặc bằng')
-      .replace(/\\approx/g, 'xấp xỉ')
-      .replace(/#/g, '')
-      .replace(/\*/g, '');
-
-    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
-    utterance.lang = 'vi-VN';
-    utterance.rate = 1.0;
-    utterance.onend = () => setSpeakingMessageId(null);
-    utterance.onerror = () => setSpeakingMessageId(null);
-
-    window.speechSynthesis.speak(utterance);
     setSpeakingMessageId(msgId);
+    speakVietnameseMath(speechText, {
+      onStart: () => setSpeakingMessageId(msgId),
+      onEnd: () => setSpeakingMessageId(null),
+      onError: () => setSpeakingMessageId(null),
+    });
+  };
+
+  const getFullMessageSpeechText = (msg: ChatMessage) => {
+    let full = msg.text;
+    if (msg.solutionData) {
+      if (msg.solutionData.finalConclusion) {
+        full += `\nKết luận: ${msg.solutionData.finalConclusion}`;
+      }
+      if (msg.solutionData.steps && msg.solutionData.steps.length > 0) {
+        full += `\nCác bước giải: ` + msg.solutionData.steps.map((s: any) => s.explanation).join('. ');
+      }
+      if (msg.solutionData.casioSteps) {
+        full += `\nMẹo máy tính Casio: ${msg.solutionData.casioSteps}`;
+      }
+    } else if (msg.socraticData) {
+      if (msg.socraticData.casioTip) {
+        full += `\nMẹo bấm máy tính: ${msg.socraticData.casioTip}`;
+      }
+      if (msg.socraticData.comprehensionCheck) {
+        full += `\nCâu hỏi kiểm tra: ${msg.socraticData.comprehensionCheck}`;
+      }
+    } else if (msg.gradingResult) {
+      if (msg.gradingResult.detailedCritique) {
+        full += `\nNhận xét chi tiết: ${msg.gradingResult.detailedCritique}`;
+      }
+    }
+    return full;
   };
 
   // Insert Quick Math Symbol
@@ -365,6 +378,9 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
           };
           setMessages((prev) => [...prev, aiMsg]);
           onAddExp(50, 'Giải toàn diện bài toán cùng Gemini XSTK');
+          if (isAutoSpeakEnabled) {
+            handleToggleSpeech(aiMessageId, getFullMessageSpeechText(aiMsg));
+          }
         }
       } else if (studyMode === 'socratic') {
         // Socratic 1-1 Tutor Companion (Guide step-by-step, no immediate spoilers)
@@ -400,6 +416,9 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
           };
           setMessages((prev) => [...prev, aiMsg]);
           onAddExp(30, 'Học 1-1 cùng Bác Gấu Socratic');
+          if (isAutoSpeakEnabled) {
+            handleToggleSpeech(aiMessageId, getFullMessageSpeechText(aiMsg));
+          }
         }
       } else if (studyMode === 'grade') {
         // Grade Student Submission
@@ -426,6 +445,9 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
             gradingResult: data.data,
           };
           setMessages((prev) => [...prev, aiMsg]);
+          if (isAutoSpeakEnabled) {
+            handleToggleSpeech(aiMessageId, getFullMessageSpeechText(aiMsg));
+          }
 
           const score = typeof data.data?.totalScore === 'number' ? data.data.totalScore : 8;
           const gpaVal = (score / 10) * 4.0;
@@ -602,21 +624,41 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
           </button>
         </div>
 
-        {messages.length > 0 && (
+        <div className="flex items-center gap-2">
+          {/* Auto Speak Toggle Button */}
           <button
-            onClick={() => {
-              if (window.confirm('Xóa lịch sử hội thoại hiện tại để làm bài mới?')) {
-                setMessages([]);
-                window.speechSynthesis.cancel();
-                setSpeakingMessageId(null);
-              }
-            }}
-            className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 hover:bg-slate-800/80 transition-all cursor-pointer"
+            onClick={() => setIsAutoSpeakEnabled(!isAutoSpeakEnabled)}
+            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+              isAutoSpeakEnabled
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-300 hover:border-slate-700'
+            }`}
+            title="Tự động đọc to lời giải bằng giọng nói trầm ấm khi AI trả lời"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Làm bài mới</span>
+            {isAutoSpeakEnabled ? (
+              <Volume2 className="w-4 h-4 text-cyan-400 animate-pulse" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-slate-500" />
+            )}
+            <span>{isAutoSpeakEnabled ? 'Tự động đọc: BẬT' : 'Tự động đọc: TẮT'}</span>
           </button>
-        )}
+
+          {messages.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm('Xóa lịch sử hội thoại hiện tại để làm bài mới?')) {
+                  setMessages([]);
+                  stopSpeaking();
+                  setSpeakingMessageId(null);
+                }
+              }}
+              className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 hover:bg-slate-800/80 transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Làm bài mới</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 2.5. Embedded Big Size Document & Exercise Queue Engine */}
@@ -756,7 +798,7 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
 
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleToggleSpeech(msg.id, msg.text)}
+                          onClick={() => handleToggleSpeech(msg.id, getFullMessageSpeechText(msg))}
                           className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
                             speakingMessageId === msg.id
                               ? 'bg-rose-500 text-white animate-pulse'

@@ -379,3 +379,186 @@ export async function convertVoiceToMathAI(
     isAiGenerated: false,
   };
 }
+
+/**
+ * Chuyển đổi mã LaTeX, công thức toán và văn bản Markdown sang phát âm tiếng Việt chuẩn mực sư phạm
+ * Giọng đọc nói chậm rãi, rõ ràng từng biến số, ký hiệu Hy Lạp, phân số, căn thức và dấu bất đẳng thức.
+ */
+export function latexToSpokenVietnamese(rawText: string): string {
+  if (!rawText) return '';
+
+  let text = rawText;
+
+  // 1. Dọn dẹp cấu trúc Markdown
+  text = text.replace(/```[\s\S]*?```/g, ''); // Bỏ code blocks
+  text = text.replace(/^#{1,6}\s+/gm, ''); // Bỏ tiêu đề markdown #
+  text = text.replace(/\*\*(.*?)\*\*/g, '$1'); // Bỏ in đậm
+  text = text.replace(/\*(.*?)\*/g, '$1'); // Bỏ in nghiêng
+  text = text.replace(/`([^`]+)`/g, '$1'); // Bỏ backtick
+  text = text.replace(/^[-*•]\s+/gm, ', '); // Dấu gạch đầu dòng -> ngắt nghỉ câu
+
+  // 2. Chuyển đổi các công thức khối $$...$$ và nội dòng $...$
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_m, eq) => ` ${convertFormulaToPhonetics(eq)} `);
+  text = text.replace(/\$([^\$]+)\$/g, (_m, eq) => ` ${convertFormulaToPhonetics(eq)} `);
+
+  // 3. Nếu vẫn còn sót các ký hiệu LaTeX ngoài dấu $
+  text = convertFormulaToPhonetics(text);
+
+  // 4. Chuẩn hóa khoảng trắng và dấu ngắt câu để giọng đọc tự nhiên
+  text = text.replace(/\$/g, '');
+  text = text.replace(/\\/g, ' ');
+  text = text.replace(/[{}]/g, ' ');
+  text = text.replace(/\s+/g, ' ');
+  text = text.replace(/,\s*,/g, ',');
+  text = text.replace(/\.\s*\./g, '.');
+
+  return text.trim();
+}
+
+/**
+ * Phiên âm một biểu thức toán học LaTeX sang phát âm tiếng Việt
+ */
+function convertFormulaToPhonetics(formula: string): string {
+  if (!formula) return '';
+  let f = formula;
+
+  // 1. Dọn dẹp dấu bao bọc \\left và \\right trước để tránh xung đột với \\le
+  f = f.replace(/\\left\\{/g, '{').replace(/\\right\\}/g, '}');
+  f = f.replace(/\\left[\(\[\.]?/g, '').replace(/\\right[\)\]\.]?/g, '');
+  f = f.replace(/\\quad|\\;|\\,|\\!/g, ' ');
+
+  // 2. Các phép suy diễn & quan hệ
+  f = f.replace(/\\Rightarrow|\\implies/gi, ', suy ra, ');
+  f = f.replace(/\\Leftrightarrow|\\iff/gi, ', tương đương, ');
+  f = f.replace(/\\approx/gi, ' xấp xỉ bằng ');
+  f = f.replace(/\\sim/gi, ' tuân theo phân phối ');
+  f = f.replace(/\\in/gi, ' thuộc ');
+
+  // 3. Phân số và căn thức lồng nhau: Xử lý từ tầng trong ra tầng ngoài (innermost to outermost)
+  for (let iter = 0; iter < 5; iter++) {
+    const prev = f;
+    f = f.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (_m, a, b) => 'phân số ' + a + ' trên ' + b);
+    f = f.replace(/\\sqrt\{([^{}]+)\}/g, (_m, a) => 'căn bậc hai của ' + a);
+    f = f.replace(/\\sqrt\[([^{}]+)\]\{([^{}]+)\}/g, (_m, a, b) => 'căn bậc ' + a + ' của ' + b);
+    if (f === prev) break;
+  }
+
+  // 4. Giá trị tới hạn thống kê
+  f = f.replace(/(?:-|trừ\s*)z_\{?\\alpha\/2\}?/gi, ' trừ dét an pha trên hai ');
+  f = f.replace(/z_\{?\\alpha\/2\}?/gi, ' dét an pha trên hai ');
+  f = f.replace(/z_\{?\\alpha\}?/gi, ' dét an pha ');
+  f = f.replace(/(?:-|trừ\s*)t_\{?\\alpha\/2\}?(?:\^\{?\([nN0-9- ]+\)\}?)?/gi, ' trừ tê an pha trên hai ');
+  f = f.replace(/t_\{?\\alpha\/2\}?(?:\^\{?\([nN0-9- ]+\)\}?)?/gi, ' tê an pha trên hai ');
+  f = f.replace(/t_\{?\\alpha\}?/gi, ' tê an pha ');
+  f = f.replace(/\\chi\^2_\{?\\alpha\}?/gi, ' khi bình phương an pha ');
+  f = f.replace(/\\chi\^2/gi, ' khi bình phương ');
+
+  // 5. Cấu trúc xác suất & khoảng tin cậy hai phía
+  f = f.replace(/P\s*\{\s*([^}]+?)\s*\}\s*=\s*1\s*-\s*\\alpha/gi, 'Xác suất để $1 bằng một trừ an pha');
+  f = f.replace(/P\s*\{\s*([^}]+?)\s*\}/gi, 'Xác suất để $1');
+
+  // 6. Toán tử so sánh & phép toán
+  f = f.replace(/\\le/gi, ' nhỏ hơn hoặc bằng ');
+  f = f.replace(/\\ge/gi, ' lớn hơn hoặc bằng ');
+  f = f.replace(/\\ne/gi, ' khác ');
+  f = f.replace(/\\pm/gi, ' cộng trừ ');
+  f = f.replace(/\\cdot|\\times/gi, ' nhân ');
+
+  // 7. Ký hiệu xác suất & biến cố
+  f = f.replace(/P\(([A-Z])\s*\\cap\s*([A-Z])\)/gi, 'P của $1 giao $2');
+  f = f.replace(/P\(([A-Z])\s*\\cup\s*([A-Z])\)/gi, 'P của $1 hợp $2');
+  f = f.replace(/P\(([A-Z])\s*[\/|]\s*([A-Z])\)/gi, 'xác suất của $1 với điều kiện $2');
+  f = f.replace(/P\(([A-Z])\)/gi, 'xác suất của biến cố $1');
+  f = f.replace(/P\(([a-zA-Z0-9+\-=<>\s]+)\)/gi, 'xác suất của $1');
+
+  // 8. Đại lượng thống kê & tham số
+  f = f.replace(/\\bar\{?[xX]\}?/gi, 'X gạch ngang');
+  f = f.replace(/\\hat\{?[pP]\}?/gi, 'p mũ');
+  f = f.replace(/\\hat\{?[sS]\}?\^2/gi, 'phương sai mũ s bình phương');
+  f = f.replace(/s\^2/gi, 's bình phương');
+  f = f.replace(/\\sigma\^2/gi, 'xích ma bình phương');
+  f = f.replace(/\\sigma/gi, 'độ lệch chuẩn xích ma');
+  f = f.replace(/\\mu_0/gi, 'muy không');
+  f = f.replace(/\\mu/gi, 'kỳ vọng muy');
+  f = f.replace(/1\s*-\s*\\alpha/gi, ' một trừ an pha ');
+  f = f.replace(/\\alpha/gi, ' an pha ');
+  f = f.replace(/\\beta/gi, ' bê ta ');
+  f = f.replace(/\\lambda/gi, ' lam đa ');
+  f = f.replace(/\\Omega/gi, ' không gian mẫu ô mê ga ');
+  f = f.replace(/\\emptyset/gi, ' tập rỗng ');
+  f = f.replace(/\\sum/gi, ' tổng xích ma ');
+  f = f.replace(/\\prod/gi, ' tích pi ');
+  f = f.replace(/\\int/gi, ' tích phân ');
+  f = f.replace(/\\infty/gi, ' vô cực ');
+
+  // 9. Dấu bằng và dọn dẹp
+  f = f.replace(/=/g, ' bằng ');
+  f = f.replace(/[{}]/g, ' ');
+  f = f.replace(/\\/g, ' ');
+  f = f.replace(/\s+/g, ' ').trim();
+
+  return f;
+}
+
+/**
+ * Đọc thành tiếng văn bản toán học với phong cách giọng trầm ấm, chậm rãi, chuẩn xác từng ký hiệu
+ */
+export function speakVietnameseMath(
+  text: string,
+  callbacks?: {
+    onStart?: () => void;
+    onEnd?: () => void;
+    onError?: (err: any) => void;
+  }
+): SpeechSynthesisUtterance | null {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    console.warn('SpeechSynthesis không được hỗ trợ trong môi trường này.');
+    return null;
+  }
+
+  // Dừng mọi giọng đọc đang chạy dở
+  window.speechSynthesis.cancel();
+
+  const spokenText = latexToSpokenVietnamese(text);
+  if (!spokenText.trim()) return null;
+
+  const utterance = new SpeechSynthesisUtterance(spokenText);
+  utterance.lang = 'vi-VN';
+  // Tốc độ 0.88 để phát âm chậm rãi, rõ ràng từng ký hiệu toán học
+  utterance.rate = 0.88;
+  // Độ cao 0.95 để giọng nói trầm ấm, truyền cảm
+  utterance.pitch = 0.95;
+
+  // Tự động tìm giọng đọc tiếng Việt tự nhiên nhất
+  const voices = window.speechSynthesis.getVoices();
+  const viVoice =
+    voices.find(
+      (v) =>
+        v.lang.startsWith('vi') &&
+        (v.name.includes('Natural') ||
+          v.name.includes('HoaiMy') ||
+          v.name.includes('NamMinh') ||
+          v.name.includes('Google') ||
+          v.name.includes('Vietnam'))
+    ) || voices.find((v) => v.lang.startsWith('vi'));
+
+  if (viVoice) {
+    utterance.voice = viVoice;
+  }
+
+  if (callbacks?.onStart) utterance.onstart = callbacks.onStart;
+  if (callbacks?.onEnd) utterance.onend = callbacks.onEnd;
+  if (callbacks?.onError) utterance.onerror = callbacks.onError;
+
+  window.speechSynthesis.speak(utterance);
+  return utterance;
+}
+
+/**
+ * Dừng phát âm thanh
+ */
+export function stopSpeaking(): void {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+}

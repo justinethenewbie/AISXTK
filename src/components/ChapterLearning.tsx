@@ -3,7 +3,13 @@ import { Chapter } from '../types/xstk';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { MathFormula, MathText } from './MathFormula';
 import { aiFetch } from '../utils/apiHelper';
-import { normalizeSpokenMath, convertVoiceToMathAI, hasMathematicalTerms } from '../utils/mathSpeechParser';
+import {
+  normalizeSpokenMath,
+  convertVoiceToMathAI,
+  hasMathematicalTerms,
+  speakVietnameseMath,
+  stopSpeaking,
+} from '../utils/mathSpeechParser';
 import confetti from 'canvas-confetti';
 import {
   Check,
@@ -25,6 +31,8 @@ import {
   Paperclip,
   X,
   File as FileIcon,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface ChapterLearningProps {
@@ -66,6 +74,7 @@ export const ChapterLearning: React.FC<ChapterLearningProps> = ({
   const [studentMsgInput, setStudentMsgInput] = useState('');
   const [isAskingTeacher, setIsAskingTeacher] = useState(false);
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+  const [speakingDialogueIdx, setSpeakingDialogueIdx] = useState<number | null>(null);
 
   // Attached File State for Multimodal Chat
   const [attachedFile, setAttachedFile] = useState<{
@@ -275,6 +284,21 @@ export const ChapterLearning: React.FC<ChapterLearningProps> = ({
         setStudentMsgInput((prev) => (prev ? prev + ' ' : '') + 'Em chưa hiểu rõ công thức tính xác suất có điều kiện');
       }, 1500);
     }
+  };
+
+  const handleToggleTeacherSpeech = (idx: number, speechText: string) => {
+    if (speakingDialogueIdx === idx) {
+      stopSpeaking();
+      setSpeakingDialogueIdx(null);
+      return;
+    }
+
+    setSpeakingDialogueIdx(idx);
+    speakVietnameseMath(speechText, {
+      onStart: () => setSpeakingDialogueIdx(idx),
+      onEnd: () => setSpeakingDialogueIdx(null),
+      onError: () => setSpeakingDialogueIdx(null),
+    });
   };
 
   const handleEvaluateCanvasSubmission = async (canvasDataUrl: string, typedText: string) => {
@@ -695,8 +719,28 @@ export const ChapterLearning: React.FC<ChapterLearningProps> = ({
                         ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-bold ml-8 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                         : 'bg-slate-900 border-2 border-cyan-500/50 text-white mr-8 shadow-[0_0_15px_rgba(0,0,0,0.5)]'
                     }`}>
-                      <div className="font-black text-[11px] opacity-90 flex items-center gap-1.5 border-b border-white/20 pb-1">
-                        {item.role === 'student' ? '💬 Bạn (Sinh viên):' : '👨‍🏫 Thầy Cú AI Giảng Giải:'}
+                      <div className="font-black text-[11px] opacity-90 flex items-center justify-between gap-1.5 border-b border-white/20 pb-1">
+                        <span>{item.role === 'student' ? '💬 Bạn (Sinh viên):' : '👨‍🏫 Thầy Cú AI Giảng Giải:'}</span>
+                        {item.role === 'teacher' && (
+                          <button
+                            onClick={() =>
+                              handleToggleTeacherSpeech(
+                                i,
+                                item.text +
+                                  (item.extraExample ? ' ' + item.extraExample.content : '') +
+                                  (item.comprehensionCheck ? ' ' + item.comprehensionCheck : '')
+                              )
+                            }
+                            className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                              speakingDialogueIdx === i
+                                ? 'bg-rose-500 text-white border-rose-400 animate-pulse'
+                                : 'bg-cyan-950/80 hover:bg-cyan-900 border-cyan-400/40 text-cyan-300'
+                            }`}
+                          >
+                            {speakingDialogueIdx === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                            <span>{speakingDialogueIdx === i ? 'Dừng đọc' : 'Nghe Thầy Giảng'}</span>
+                          </button>
+                        )}
                       </div>
                       <div className={`leading-relaxed text-xs sm:text-sm font-medium ${
                         item.role === 'student' ? 'text-slate-950 font-bold' : 'text-slate-100'
