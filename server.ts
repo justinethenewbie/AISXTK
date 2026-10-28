@@ -1904,130 +1904,187 @@ Bẫy thường gặp: Lấy nhầm $n = ${goodItems}$ hoặc nhầm $f$ với t
 
 /**
  * Smart Fallback Mindmap Builder for Probability & Statistics topics
+ * Khởi tạo dữ liệu phân cấp đa tầng (Root -> Nhánh Cấp 1 -> Tiểu mục Cấp 2 -> Hộp Định Nghĩa & Công Thức Cấp 3)
  */
 function buildFallbackMindmap(topic: string) {
   const lower = topic.toLowerCase();
   
-  if (lower.includes('bayes') || lower.includes('toàn phần') || lower.includes('xác suất đầy đủ')) {
+  if (
+    lower.includes('bài 1') ||
+    lower.includes('bai 1') ||
+    lower.includes('cơ bản') ||
+    lower.includes('co ban') ||
+    lower.includes('phép thử') ||
+    lower.includes('phep thu') ||
+    lower.includes('biến cố') ||
+    lower.includes('bien co') ||
+    lower.includes('bayes') ||
+    lower.includes('toàn phần') ||
+    lower.includes('toan phan') ||
+    lower.includes('xác suất') ||
+    lower.includes('xac suat') ||
+    lower.includes('chương 1') ||
+    lower.includes('chuong 1')
+  ) {
     return {
-      id: 'root-bayes',
-      title: topic || 'Công Thức Bayes & Xác Suất Toàn Phần',
-      summary: 'Quy tắc suy diễn xác suất hậu nghiệm dựa trên các bằng chứng quan sát và hệ đầy đủ các giả thiết.',
-      category: 'Xác Suất Thống Kê & Ra Quyết Định',
-      casioShortcut: 'Nhập biểu thức phân số trực tiếp: [Tử số] / ([Tổng các mẫu số tích])',
+      id: 'bai-1-xac-suat',
+      title: 'BÀI 1: XÁC SUẤT VÀ CÔNG THỨC TÍNH XÁC SUẤT',
+      summary: 'Hệ thống hóa toàn diện các khái niệm cơ bản về phép thử, biến cố, định nghĩa xác suất cổ điển & thống kê, cùng các công thức tính xác suất cốt lõi (Cộng, Nhân điều kiện, Bernoulli, Xác suất toàn phần & Bayes).',
+      category: 'Giáo Trình Xác Suất Thống Kê HUB - Bài 1',
+      casioShortcut: 'Bấm Shift ÷ (nCr) tính tổ hợp C(n, k); Shift × (nPr) tính chỉnh hợp A(n, k); MENU 7 -> 4 tính Bernoulli PD.',
       goldenRules: [
-        'Hệ biến cố $A_1, A_2, ..., A_n$ phải lập thành một hệ đầy đủ (rời nhau đôi một và có tổng xác suất bằng 1).',
-        'Công thức Bayes dùng để cập nhật niềm tin: từ tiên nghiệm $P(A_i)$ sang hậu nghiệm $P(A_i|B)$ sau khi có biến cố $B$.',
-        'Kiểm tra mẫu số trong công thức Bayes luôn là xác suất toàn phần $P(B) = \\sum P(A_i)P(B|A_i)$.'
+        'Xác suất của mọi biến cố luôn nằm trong đoạn [0, 1]: $0 \\le P(A) \\le 1$.',
+        'Biến cố chắc chắn có $P(\\Omega) = 1$, biến cố không thể có $P(\\emptyset) = 0$.',
+        'Nếu A và B xung khắc (không cùng xảy ra) thì $P(A + B) = P(A) + P(B)$.',
+        'Nhóm biến cố $\\{H_1, H_2, ..., H_n\\}$ là đầy đủ khi chúng xung khắc từng đôi và tổng xác suất bằng 1.'
       ],
       branches: [
         {
           id: 'b1',
-          title: '1. Hệ Biến Cố Đầy Đủ',
-          badge: 'Nền tảng',
-          color: '#06b6d4',
+          title: '1. Khái niệm cơ bản về xác suất',
+          badge: 'Khái niệm & Định nghĩa',
+          color: '#2563eb',
           children: [
             {
               id: 'b1-1',
-              title: 'Định nghĩa hệ đầy đủ',
-              detail: 'Tập hợp các biến cố $A_1, A_2, ..., A_n$ xung khắc từng đôi và $\\bigcup A_i = \\Omega$.',
-              formula: '\\sum_{i=1}^{n} P(A_i) = 1',
-              examTip: 'Đọc kỹ đề xem các giả thiết đã bao quát hết 100% các tình huống chưa.'
+              title: '1.1. Xác suất là gì?',
+              detail: 'Xác suất là tỷ lệ dự đoán về một hiện tượng nào đó mà chưa biết trước kết quả xảy ra như thế nào (đo lường mức độ chắc chắn xảy ra của một biến cố ngẫu nhiên bằng một số thực từ 0 đến 1).'
             },
             {
               id: 'b1-2',
-              title: 'Ý nghĩa thực tế',
-              detail: 'Mỗi biến cố là một nguyên nhân khả dĩ dẫn tới hiện tượng $B$ được quan sát.',
-              formula: 'A_i \\cap A_j = \\emptyset \\; (\\forall i \\neq j)',
-              examTip: 'Thường chia theo lô hàng (xưởng 1, xưởng 2) hoặc tình trạng (bệnh, không bệnh).'
+              title: '1.2. Các khái niệm liên quan đến xác suất',
+              subItems: [
+                {
+                  label: '• Phép thử',
+                  content: '+ là một hành động mà kết quả của nó không thể biết chắc trước là kết quả nào sẽ xảy ra.'
+                },
+                {
+                  label: '• Biến cố',
+                  content: 'là một sự kiện có thể xảy ra hoặc không xảy ra trong kết quả của một phép thử.',
+                  subList: [
+                    '+ Biến cố chắc chắn (\\Omega): là biến cố nhất định phải xảy ra trong mỗi lần thực hiện phép thử ($P(\\Omega) = 1$).',
+                    '+ Biến cố không thể (\\emptyset): là biến cố nhất định không xảy ra trong bất kỳ lần thực hiện phép thử nào ($P(\\emptyset) = 0$).',
+                    '+ Biến cố ngẫu nhiên: là biến cố có thể xảy ra hoặc không xảy ra tùy thuộc vào kết quả của phép thử ($0 \\le P \\le 1$).'
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'b1-3',
+              title: '1.3. Định nghĩa và công thức xác suất',
+              subItems: [
+                {
+                  label: '• Định nghĩa xác suất cổ điển:',
+                  content: 'Áp dụng cho phép thử có không gian mẫu hữu hạn gồm $n$ biến cố đồng khả năng, trong đó có $m$ kết quả thuận lợi cho biến cố A:',
+                  formula: 'P(A) = \\frac{m}{n} = \\frac{|A|}{|\\Omega|}'
+                },
+                {
+                  label: '• Định nghĩa xác suất theo thống kê:',
+                  content: 'Khi số lần lặp lại phép thử $n$ rất lớn ($n \\to \\infty$), tần suất xuất hiện $f_n(A) = \\frac{k}{n}$ sẽ dao động ổn định quanh một hằng số xác định:',
+                  formula: 'P(A) \\approx f_n(A) = \\frac{k}{n}'
+                }
+              ]
             }
           ]
         },
         {
           id: 'b2',
-          title: '2. Công Thức Xác Suất Toàn Phần',
-          badge: 'Công thức cốt lõi',
-          color: '#10b981',
+          title: '2. Các công thức tính xác suất cơ bản',
+          badge: 'Công thức trọng tâm',
+          color: '#ea580c',
           children: [
             {
               id: 'b2-1',
-              title: 'Công thức toán học',
-              detail: 'Tính xác suất của biến cố kết quả $B$ thông qua tổng bình quân gia quyền của các nhánh nguyên nhân.',
-              formula: 'P(B) = \\sum_{i=1}^{n} P(A_i) \\cdot P(B|A_i)',
-              examTip: 'Luôn vẽ sơ đồ cây phân nhánh để không bỏ sót nhánh nào.'
+              title: '2.1. Công thức cộng xác suất',
+              formula: 'P(A + B) = P(A) + P(B) - P(AB)',
+              detail: 'Áp dụng tính xác suất có ít nhất một trong hai biến cố A hoặc B xảy ra.',
+              examTip: 'Đặc biệt: Nếu A và B xung khắc (không cùng xảy ra, AB = ∅) thì P(AB) = 0 => P(A + B) = P(A) + P(B).'
             },
             {
               id: 'b2-2',
-              title: 'Dấu hiệu nhận biết đề thi',
-              detail: 'Đề bài hỏi xác suất chung của một sản phẩm bất kỳ hoặc một người bất kỳ thỏa mãn tính chất $B$.',
-              formula: 'P(B) = P(A_1)P(B|A_1) + P(A_2)P(B|A_2)',
-              examTip: 'Nếu đề có 2 xưởng thì tổng gồm 2 tích, nếu có 3 xưởng thì tổng gồm 3 tích.'
+              title: '2.2. Công thức xác suất có điều kiện',
+              formula: 'P(A \\cdot B) = \\frac{k}{n}, \\quad P(A/B) = \\frac{k}{m}, \\quad P(B) = \\frac{m}{n} \\implies P(A/B) = \\frac{P(AB)}{P(B)}',
+              detail: 'Xác suất biến cố A xảy ra trong điều kiện biến cố B đã xảy ra (với $P(B) > 0$).',
+              examTip: 'Công thức nhân tổng quát: P(AB) = P(B).P(A/B) = P(A).P(B/A). Nếu A, B độc lập thì P(A/B) = P(A) => P(AB) = P(A).P(B).'
+            },
+            {
+              id: 'b2-3',
+              title: '2.3. Công thức Bernoulli',
+              formula: 'P_n(x) = C_n^x p^x q^{n-x}',
+              detail: 'Dùng cho dãy $n$ phép thử độc lập đồng dạng, mỗi phép thử chỉ có 2 kết quả (thành công với xác suất $p$, thất bại với xác suất $q = 1 - p$).',
+              examTip: 'Bấm Casio fx-580VN X: MENU 7 -> 4: Binomial PD để tính nhanh kết quả trong 3 giây.'
+            },
+            {
+              id: 'b2-4',
+              title: '2.4. Công thức xác suất đầy đủ và công thức Bayes',
+              detail: 'Cho nhóm biến cố đầy đủ $\\{H_1, H_2, \\dots, H_n\\}$ (xung khắc từng đôi và $\\sum P(H_i) = 1$). Khi đó:',
+              formula: 'P(H_i / A) = \\frac{P(H_i \\cdot A)}{P(A)} = \\frac{P(H_i) \\cdot P(A / H_i)}{P(A)} \\quad (i = 1, 2, \\dots, n)',
+              subItems: [
+                {
+                  label: 'Công thức xác suất toàn phần (Mẫu số):',
+                  formula: 'P(A) = P(H_1)P(A/H_1) + P(H_2)P(A/H_2) + \\dots + P(H_n)P(A/H_n)'
+                }
+              ],
+              examTip: 'Tử số của công thức Bayes luôn là một trong các số hạng nằm ở mẫu số! Bấm máy tính nên lưu mẫu số vào STO M trước.'
             }
           ]
         },
         {
           id: 'b3',
-          title: '3. Định Lý & Công Thức Bayes',
-          badge: 'Trọng tâm',
-          color: '#38bdf8',
+          title: '3. Ghi chú ký hiệu',
+          badge: 'Bảng ký hiệu',
+          color: '#16a34a',
           children: [
             {
               id: 'b3-1',
-              title: 'Công thức tính xác suất hậu nghiệm',
-              detail: 'Tính xác suất biến cố $A_k$ đã xảy ra khi biết trước biến cố $B$ chắc chắn đã xảy ra.',
-              formula: 'P(A_k|B) = \\frac{P(A_k) \\cdot P(B|A_k)}{\\sum_{i=1}^{n} P(A_i)P(B|A_i)}',
-              examTip: 'Tử số chính là một số hạng trong tổng ở mẫu số!'
-            },
-            {
-              id: 'b3-2',
-              title: 'Cập nhật xác suất tiên nghiệm',
-              detail: '$P(A_k)$ là xác suất ban đầu (tiên nghiệm), $P(A_k|B)$ là xác suất sau quan sát (hậu nghiệm).',
-              formula: 'P(A_k|B) \\propto P(A_k) \\cdot P(B|A_k)',
-              examTip: 'Xác suất hậu nghiệm luôn nằm trong khoảng $[0; 1]$.'
+              title: 'Ký hiệu & Ý nghĩa toán học',
+              subItems: [
+                {
+                  label: '$\\Omega$',
+                  content: 'Biến cố chắc chắn (Không gian mẫu chứa toàn bộ các kết quả có thể có)'
+                },
+                {
+                  label: '$\\emptyset$',
+                  content: 'Biến cố không thể (Tập hợp rỗng, không bao giờ xảy ra, $P(\\emptyset) = 0$)'
+                },
+                {
+                  label: '$P(B)$',
+                  content: 'Xác suất của biến cố B ($0 \\le P(B) \\le 1$)'
+                },
+                {
+                  label: '$A + B$ (hoặc $A \\cup B$)',
+                  content: 'Biến cố tổng: Xảy ra khi có ít nhất một trong hai biến cố A hoặc B xảy ra'
+                },
+                {
+                  label: '$AB$ (hoặc $A \\cap B$)',
+                  content: 'Biến cố tích: Xảy ra khi và chỉ khi cả hai biến cố A và B đồng thời xảy ra'
+                },
+                {
+                  label: '$\\bar{A}$',
+                  content: 'Biến cố đối lập của A: Xảy ra khi A không xảy ra ($P(\\bar{A}) = 1 - P(A)$)'
+                }
+              ]
             }
           ]
         },
         {
           id: 'b4',
-          title: '4. Mẹo Casio fx-580VN X & Phòng Thi',
-          badge: 'Mẹo Casio',
-          color: '#f59e0b',
+          title: '4. Mẹo Casio fx-580VN X & Phòng thi',
+          badge: 'Kỹ năng thực chiến',
+          color: '#9333ea',
           children: [
             {
               id: 'b4-1',
-              title: 'Gán biến A, B, C lưu giá trị',
-              detail: 'Tính mẫu số $P(B)$ trước rồi bấm STO -> M để lưu vào bộ nhớ, sau đó lấy từng tử số chia M.',
-              formula: '\\text{Mẫu số } \\rightarrow \\mathbf{STO} \\; M',
-              examTip: 'Tránh bấm lại toàn bộ biểu thức dài trên máy tính để tiết kiệm 70% thời gian.'
+              title: 'Phím bấm Casio fx-580VN X trọng tâm',
+              detail: '• Tính tổ hợp $C_n^k$: Bấm n SHIFT ÷ k (nCr)\n• Tính chỉnh hợp $A_n^k$: Bấm n SHIFT × k (nPr)\n• Bấm xác suất Bernoulli: MENU 7 -> 4 (Binomial PD), chọn 2 (Variable) -> nhập x, n, p -> bấm =.',
+              formula: 'C_n^k = \\frac{n!}{k!(n-k)!}, \\quad A_n^k = \\frac{n!}{(n-k)!}',
+              examTip: 'Chọn mẫu không phân biệt thứ tự (lấy cùng lúc k sản phẩm) luôn dùng C(n, k).'
             },
             {
               id: 'b4-2',
-              title: 'Bẫy thường gặp',
-              detail: 'Nhầm lẫn giữa xác suất có điều kiện $P(B|A)$ (đã biết giả thiết) và xác suất giao $P(AB)$.',
-              formula: 'P(AB) = P(A) \\cdot P(B|A)',
-              examTip: 'Từ khóa "biết rằng...", "trong điều kiện..." chính là $P(\\cdot|\\cdot)$.'
-            }
-          ]
-        },
-        {
-          id: 'b5',
-          title: '5. Ứng Dụng Thực Tế & AI',
-          badge: 'Ứng dụng',
-          color: '#a855f7',
-          children: [
-            {
-              id: 'b5-1',
-              title: 'Y tế & Xét nghiệm sàng lọc',
-              detail: 'Tính độ chính xác của xét nghiệm dương tính giả (False Positive) trong chẩn đoán dịch bệnh.',
-              formula: 'P(\\text{Bệnh}|+) < 100\\%',
-              examTip: 'Dù xét nghiệm chính xác 99%, nếu tỷ lệ bệnh rất hiếm thì $P(\\text{Bệnh}|+)$ vẫn có thể thấp.'
-            },
-            {
-              id: 'b5-2',
-              title: 'Bộ lọc Spam Email Naive Bayes',
-              detail: 'Thuật toán Naive Bayes Classifier được sử dụng trong bảo mật và lọc thư rác của Gmail/Outlook.',
-              formula: 'P(Spam|W_1, W_2...) \\propto P(Spam) \\prod P(W_i|Spam)',
-              examTip: 'Giả định độc lập có điều kiện giữa các đặc trưng (Naive Assumption).'
+              title: 'Phân biệt bẫy đề thi hay gặp',
+              detail: 'Phân biệt "Biến cố xung khắc" ($AB = \\emptyset \\implies P(AB) = 0$) với "Biến cố độc lập" ($P(AB) = P(A)P(B)$). Hai khái niệm này hoàn toàn khác nhau.',
+              examTip: 'Từ khóa "lấy KHÔNG HOÀN LẠI" là xác suất có điều kiện; "lấy CÓ HOÀN LẠI" là chuỗi phép thử độc lập Bernoulli!'
             }
           ]
         }
@@ -2171,49 +2228,96 @@ app.post('/api/tutor/generate-mindmap', async (req, res) => {
   if (client) {
     try {
       const prompt = `BẠN LÀ CHUYÊN GIA SƯ PHẠM VÀ THIẾT KẾ BẢN ĐỒ TƯ DUY TOÁN HỌC & XÁC SUẤT THỐNG KÊ (XSTK) ĐẠI HỌC.
-YÊU CẦU: Tạo một SƠ ĐỒ TƯ DUY HỆ THỐNG HÓA KIẾN THỨC phân nhánh toàn diện cho chủ đề: "${topic}".
-Thời gian phản hồi siêu tốc (< 3 giây), cấu trúc JSON súc tích, mọi công thức toán học PHẢI kẹp trong KaTeX ($...$).
+YÊU CẦU: Tạo một SƠ ĐỒ TƯ DUY HỆ THỐNG HÓA KIẾN THỨC phân nhánh toàn diện, sâu sắc, không giới hạn độ dài cho chủ đề: "${topic}".
+ĐẶC BIỆT CHÚ TRỌNG:
+1. ĐỊNH NGHĨA VÀ KHÁI NIỆM BẢN CHẤT: Diễn giải cặn kẽ, rõ ràng, chi tiết, không viết tắt, có phân loại cụ thể (ví dụ: Phép thử là gì, Biến cố chắc chắn/không thể/ngẫu nhiên, Định nghĩa xác suất cổ điển và thống kê).
+2. HỆ THỐNG CÔNG THỨC: Kèm điều kiện áp dụng, các trường hợp đặc biệt (ví dụ biến cố xung khắc thì P(AB) = 0), công thức Bayes, Bernoulli. Mọi công thức PHẢI kẹp trong KaTeX ($...$).
+3. BẢNG GHI CHÚ KÝ HIỆU: Giải thích tường minh ý nghĩa từng ký hiệu toán học (\\Omega, \\emptyset, P(A), P(A/B), v.v.).
 
-QUY TẮC CẤU TRÚC BẢN ĐỒ TƯ DUY:
-1. Root Node:
-   - title: Tên chủ đề chính súc tích
-   - summary: Tóm lược ý nghĩa và tầm quan trọng trong 1 câu ngắn gọn.
-2. Branches (Nhánh chính cấp 1): Tạo từ 4 đến 5 nhánh cốt lõi gồm:
-   - Nhánh 1: "1. Khái Niệm & Định Nghĩa Cốt Lõi" (badge: "Lý thuyết", color: "#06b6d4")
-   - Nhánh 2: "2. Công Thức Trọng Tâm & KaTeX" (badge: "Công thức", color: "#10b981")
-   - Nhánh 3: "3. Phương Pháp Giải & Dấu Hiệu" (badge: "Phương pháp", color: "#38bdf8")
-   - Nhánh 4: "4. Mẹo Casio fx-580VN X & Phòng Thi" (badge: "Mẹo thi", color: "#f59e0b")
-   - Nhánh 5: "5. Ứng Dụng Thực Tế (Ngân Hàng, Kinh Tế)" (badge: "Ứng dụng", color: "#a855f7")
-3. Children (Nhánh con cấp 2): Mỗi nhánh chính có từ 2 đến 3 nhánh con chi tiết:
-   - title: Tên tiểu mục ngắn gọn (< 8 từ)
-   - detail: Diễn giải trực diện, có công thức KaTeX ($...$)
-   - formula: Công thức KaTeX đặc trưng
-   - examTip: Mẹo tránh bẫy hoặc nhận dạng đề thi
-4. Casio Tips & Quy tắc vàng:
-   - casioShortcut: Hướng dẫn bấm phím cụ thể trên Casio fx-580VN X
-   - goldenRules: 2-3 quy tắc vàng cần nhớ.
-
-Format JSON BẮT BUỘC:
+CẤU TRÚC JSON PHÂN NHÁNH ĐA TẦNG:
 {
   "id": "root",
   "title": "${topic}",
   "summary": "Tóm lược súc tích 1-2 câu",
   "category": "Xác Suất Thống Kê & Toán Ứng Dụng",
-  "casioShortcut": "MENU 7 -> 1...",
-  "goldenRules": ["Quy tắc vàng 1", "Quy tắc vàng 2"],
+  "casioShortcut": "Hướng dẫn bấm phím cụ thể trên Casio fx-580VN X",
+  "goldenRules": ["Quy tắc vàng 1", "Quy tắc vàng 2", "Quy tắc vàng 3"],
   "branches": [
     {
       "id": "b1",
-      "title": "1. Khái Niệm & Định Nghĩa Cốt Lõi",
-      "badge": "Lý thuyết",
-      "color": "#06b6d4",
+      "title": "1. Khái niệm cơ bản & Định nghĩa cốt lõi",
+      "badge": "Lý thuyết & Khái niệm",
+      "color": "#2563eb",
       "children": [
         {
           "id": "b1-1",
-          "title": "Định nghĩa toán học",
-          "detail": "Diễn giải chi tiết...",
-          "formula": "P(A|B) = \\\\frac{P(AB)}{P(B)}",
-          "examTip": "Điều kiện P(B) > 0"
+          "title": "1.1. Khái niệm chính là gì?",
+          "detail": "Định nghĩa toàn diện và bản chất thực tiễn..."
+        },
+        {
+          "id": "b1-2",
+          "title": "1.2. Các khái niệm liên quan",
+          "subItems": [
+            {
+              "label": "• Phép thử (Trial)",
+              "content": "Là một hành động, quan sát mà kết quả không thể biết chắc trước..."
+            },
+            {
+              "label": "• Biến cố (Event)",
+              "content": "Sự kiện có thể xảy ra hoặc không xảy ra...",
+              "subList": [
+                "+ Biến cố chắc chắn (\\\\Omega): Luôn xảy ra ($P(\\\\Omega) = 1$)",
+                "+ Biến cố không thể (\\\\emptyset): Không bao giờ xảy ra ($P(\\\\emptyset) = 0$)",
+                "+ Biến cố ngẫu nhiên: Có thể xảy ra ($0 \\\\le P \\\\le 1$)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b2",
+      "title": "2. Các công thức tính toán cốt lõi",
+      "badge": "Công thức trọng tâm",
+      "color": "#ea580c",
+      "children": [
+        {
+          "id": "b2-1",
+          "title": "2.1. Công thức cộng xác suất",
+          "formula": "P(A + B) = P(A) + P(B) - P(AB)",
+          "detail": "Áp dụng khi tính xác suất xảy ra ít nhất một trong hai biến cố. Nếu A, B xung khắc thì P(AB) = 0.",
+          "examTip": "Lưu ý kiểm tra điều kiện xung khắc trước khi bỏ số hạng P(AB)."
+        }
+      ]
+    },
+    {
+      "id": "b3",
+      "title": "3. Ghi chú ký hiệu toán học",
+      "badge": "Bảng ký hiệu",
+      "color": "#16a34a",
+      "children": [
+        {
+          "id": "b3-1",
+          "title": "Ký hiệu & Ý nghĩa",
+          "subItems": [
+            { "label": "\\\\Omega", "content": "Biến cố chắc chắn / Không gian mẫu" },
+            { "label": "\\\\emptyset", "content": "Biến cố không thể" },
+            { "label": "P(B)", "content": "Xác suất của biến cố B" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b4",
+      "title": "4. Mẹo Casio fx-580VN X & Bẫy phòng thi",
+      "badge": "Kỹ năng thực chiến",
+      "color": "#9333ea",
+      "children": [
+        {
+          "id": "b4-1",
+          "title": "Thao tác phím bấm nhanh",
+          "detail": "MENU 7 -> chọn phân phối tương ứng. Shift ÷ tính nCr.",
+          "examTip": "Không làm tròn số thập phân quá sớm."
         }
       ]
     }
@@ -2226,7 +2330,7 @@ Format JSON BẮT BUỘC:
           systemInstruction: SYSTEM_INSTRUCTION,
           responseMimeType: 'application/json',
           temperature: 0.2,
-          maxOutputTokens: 1400,
+          maxOutputTokens: 4000,
         },
       });
 

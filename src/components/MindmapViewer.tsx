@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Map,
   Sparkles,
@@ -28,11 +28,22 @@ import {
   ExternalLink,
   ShieldCheck,
   Compass,
+  GitBranch,
+  LayoutGrid,
 } from 'lucide-react';
 import { MathFormula, MathText } from './MathFormula';
 import { CHAPTERS_DATA } from '../data/curriculumData';
+import { CHAPTER_1_MINDMAP, ALL_PRESET_CHAPTER_MINDMAPS } from '../data/mindmapCatalog';
 import { aiFetch } from '../utils/apiHelper';
 import { uploadToGoogleDrive, getAccessToken } from '../services/googleDriveService';
+
+export interface MindmapSubItem {
+  id?: string;
+  label: string;
+  content?: string;
+  formula?: string;
+  subList?: string[];
+}
 
 export interface MindmapNode {
   id: string;
@@ -40,6 +51,7 @@ export interface MindmapNode {
   detail?: string;
   formula?: string;
   examTip?: string;
+  subItems?: MindmapSubItem[];
 }
 
 export interface MindmapBranch {
@@ -62,12 +74,12 @@ export interface MindmapData {
 
 // Quick presets for fast one-click creation
 const QUICK_PRESETS = [
-  { label: '🎲 Công Thức Bayes & Toàn Phần', topic: 'Công thức Bayes & Xác suất toàn phần' },
-  { label: '📊 Biến Ngẫu Nhiên & Nhị Thức', topic: 'Biến ngẫu nhiên rời rạc & Phân phối Nhị thức, Poisson' },
-  { label: '📈 Phân Phối Chuẩn & CLT', topic: 'Phân phối Chuẩn Gauss & Định lý giới hạn trung tâm' },
-  { label: '🔍 Khoảng Tin Cậy & Kiểm Định', topic: 'Ước lượng khoảng tin cậy & Kiểm định giả thuyết thống kê' },
-  { label: '📐 Hồi Quy & Hệ Số Pearson', topic: 'Hồi quy tuyến tính & Hệ số tương quan Pearson' },
-  { label: '∫ Tích Phân & Hàm Mật Độ', topic: 'Tích phân suy rộng & Hàm mật độ xác suất biến liên tục' },
+  { label: '🎲 Bài 1: Xác Suất & Công Thức Cơ Bản', topic: 'Bài 1: Xác Suất và Công Thức Tính Xác Suất', chapterId: 1 },
+  { label: '📊 Bài 2: Biến Rời Rạc & Nhị Thức, Poisson', topic: 'Bài 2: Biến Ngẫu Nhiên Rời Rạc & Các Quy Luật Phân Phối', chapterId: 2 },
+  { label: '📈 Bài 3: Phân Phối Chuẩn Gauss & Laplace', topic: 'Bài 3: Biến Liên Tục & Phân Phối Chuẩn Gauss', chapterId: 3 },
+  { label: '🔍 Bài 5: Ước Lượng Khoảng Tin Cậy', topic: 'Bài 5: Ước Lượng Khoảng Tin Cậy Thống Kê', chapterId: 5 },
+  { label: '⚖️ Bài 6: Kiểm Định Giả Thuyết Thống Kê', topic: 'Kiểm định giả thuyết thống kê Z-test & t-test' },
+  { label: '📐 Bài 7: Hồi Quy Tuyến Tính & Pearson', topic: 'Hồi quy tuyến tính & Hệ số tương quan Pearson' },
 ];
 
 // Color theme presets
@@ -79,16 +91,19 @@ const COLOR_THEMES = [
 ];
 
 export const MindmapViewer: React.FC = () => {
-  // Input state
-  const [topicInput, setTopicInput] = useState('Công thức Bayes & Xác suất toàn phần');
+  // View mode: 'tree' (Sơ đồ nhánh cây kiểu Thầy dạy) vs 'cards' (Khối thẻ lưới chi tiết)
+  const [viewMode, setViewMode] = useState<'tree' | 'cards'>('tree');
+
+  // Input state - Mặc định mở ngay Bài 1 chuẩn theo thiết kế của Thầy
+  const [topicInput, setTopicInput] = useState('Bài 1: Xác Suất và Công Thức Tính Xác Suất');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
+  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(1);
 
   // Active theme
   const [activeTheme, setActiveTheme] = useState(COLOR_THEMES[0]);
 
-  // Mindmap data state
-  const [mindmap, setMindmap] = useState<MindmapData | null>(null);
+  // Mindmap data state - Khởi tạo ngay lập tức với sơ đồ đa tầng Bài 1
+  const [mindmap, setMindmap] = useState<MindmapData | null>(CHAPTER_1_MINDMAP);
 
   // Interactive UI state
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -109,11 +124,6 @@ export const MindmapViewer: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mindmapCanvasRef = useRef<HTMLDivElement | null>(null);
 
-  // Generate or load initial mindmap on mount
-  useEffect(() => {
-    generateMindmap('Công thức Bayes & Xác suất toàn phần');
-  }, []);
-
   const showToast = (msg: string) => {
     setNoticeMessage(msg);
     setTimeout(() => setNoticeMessage(null), 3500);
@@ -126,6 +136,33 @@ export const MindmapViewer: React.FC = () => {
     const cleanTopic = targetTopic.trim();
     if (!cleanTopic) return;
 
+    // Kiểm tra nếu là các bài có sẵn trong kho chuẩn hóa
+    const lower = cleanTopic.toLowerCase();
+    if (lower.includes('bài 1') || lower.includes('chương 1') || (lower.includes('xác suất') && lower.includes('công thức'))) {
+      setMindmap(CHAPTER_1_MINDMAP);
+      setCollapsedBranches({});
+      showToast('Đã mở sơ đồ tư duy Bài 1 chuẩn hóa giáo trình!');
+      return;
+    }
+    if (lower.includes('bài 2') || lower.includes('chương 2') || lower.includes('rời rạc') || lower.includes('nhị thức')) {
+      setMindmap(ALL_PRESET_CHAPTER_MINDMAPS[2]);
+      setCollapsedBranches({});
+      showToast('Đã mở sơ đồ tư duy Bài 2 chuẩn hóa giáo trình!');
+      return;
+    }
+    if (lower.includes('bài 3') || lower.includes('chương 3') || lower.includes('chuẩn') || lower.includes('gauss')) {
+      setMindmap(ALL_PRESET_CHAPTER_MINDMAPS[3]);
+      setCollapsedBranches({});
+      showToast('Đã mở sơ đồ tư duy Bài 3 chuẩn hóa giáo trình!');
+      return;
+    }
+    if (lower.includes('bài 5') || lower.includes('chương 5') || lower.includes('ước lượng')) {
+      setMindmap(ALL_PRESET_CHAPTER_MINDMAPS[5]);
+      setCollapsedBranches({});
+      showToast('Đã mở sơ đồ tư duy Bài 5 chuẩn hóa giáo trình!');
+      return;
+    }
+
     setIsGenerating(true);
     setDriveResultLink(null);
 
@@ -134,22 +171,21 @@ export const MindmapViewer: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({
           topic: cleanTopic,
-          depth: 'standard',
+          depth: 'deep',
         }),
       });
 
       const resJson = await response.json();
       if (resJson && resJson.data && resJson.data.branches) {
         setMindmap(resJson.data);
-        // Reset collapsed state so all branches are visible
         setCollapsedBranches({});
-        showToast(resJson.isAiGenerated ? '✨ Đã kiến tạo Sơ Đồ Tư Duy AI siêu tốc!' : 'Đã tải cấu trúc sơ đồ tư duy tiêu chuẩn!');
+        showToast(resJson.isAiGenerated ? '✨ Đã kiến tạo Sơ Đồ Tư Duy AI đa tầng sâu sắc!' : 'Đã tải cấu trúc sơ đồ tư duy tiêu chuẩn!');
       } else {
         throw new Error('Dữ liệu sơ đồ không hợp lệ');
       }
     } catch (err: any) {
       console.warn('Lỗi khi tạo sơ đồ tư duy:', err);
-      // Fallback: Create from chapters data or default template
+      // Fallback: Create from chapters data
       const fallback = createFallbackFromChapter(cleanTopic);
       setMindmap(fallback);
       showToast('Đã mở sơ đồ tư duy mẫu dự phòng!');
@@ -172,6 +208,14 @@ export const MindmapViewer: React.FC = () => {
    */
   const handleSelectChapter = (chapterId: number) => {
     setSelectedChapterId(chapterId);
+    if (ALL_PRESET_CHAPTER_MINDMAPS[chapterId]) {
+      const preset = ALL_PRESET_CHAPTER_MINDMAPS[chapterId];
+      setMindmap(preset);
+      setTopicInput(preset.title);
+      setCollapsedBranches({});
+      showToast(`Đã mở sơ đồ tư duy phân nhánh: ${preset.title}!`);
+      return;
+    }
     const chap = CHAPTERS_DATA.find((c) => c.id === chapterId);
     if (chap) {
       setTopicInput(`Chương ${chap.id}: ${chap.title}`);
@@ -198,110 +242,27 @@ export const MindmapViewer: React.FC = () => {
         {
           id: 'b1',
           title: '1. Khái Niệm & Định Nghĩa Cốt Lõi',
-          badge: 'Lý thuyết',
-          color: '#06b6d4',
+          badge: 'Khái niệm',
+          color: '#2563eb',
           children: [
             {
               id: 'b1-1',
-              title: 'Mô hình hóa biến cố / Biến ngẫu nhiên',
-              detail: 'Xác định rõ không gian mẫu $\\Omega$, các biến cố nguyên nhân $A_i$ và biến cố kết quả $B$.',
-              formula: 'P(\\Omega) = 1, \\quad 0 \\le P(A) \\le 1',
-              examTip: 'Luôn gọi tên biến ngẫu nhiên và đơn vị đo lường ở dòng đầu tiên của bài làm.'
-            },
-            {
-              id: 'b1-2',
-              title: 'Hệ biến cố đầy đủ',
-              detail: 'Tập hợp các biến cố xung khắc từng đôi và có hợp bằng toàn bộ không gian mẫu.',
-              formula: '\\sum_{i=1}^{n} P(A_i) = 1',
-              examTip: 'Đọc kỹ đề bài để chắc chắn các trường hợp đã vét cạn 100% khả năng.'
+              title: '1.1. Bản chất hiện tượng ngẫu nhiên',
+              detail: `Khái niệm và mô hình toán học chuẩn xác cho hiện tượng trong ${topic}.`,
             }
           ]
         },
         {
           id: 'b2',
-          title: '2. Công Thức Trọng Tâm & KaTeX',
+          title: '2. Các công thức tính toán',
           badge: 'Công thức',
-          color: '#10b981',
+          color: '#ea580c',
           children: [
             {
               id: 'b2-1',
-              title: 'Công thức Xác Suất Toàn Phần',
-              detail: 'Tính xác suất kết quả thông qua trung bình gia quyền của các nguyên nhân.',
-              formula: 'P(B) = \\sum_{i=1}^{n} P(A_i) \\cdot P(B|A_i)',
-              examTip: 'Vẽ sơ đồ cây 2 tầng để tránh nhầm lẫn giữa các nhánh.'
-            },
-            {
-              id: 'b2-2',
-              title: 'Công thức Bayes (Xác suất hậu nghiệm)',
-              detail: 'Cập nhật xác suất của giả thiết $A_k$ khi đã biết trước kết quả $B$ đã xảy ra.',
-              formula: 'P(A_k|B) = \\frac{P(A_k)P(B|A_k)}{P(B)}',
-              examTip: 'Tử số của công thức Bayes luôn là một trong các số hạng ở mẫu số!'
-            }
-          ]
-        },
-        {
-          id: 'b3',
-          title: '3. Phương Pháp Giải & Dấu Hiệu',
-          badge: 'Phương pháp',
-          color: '#38bdf8',
-          children: [
-            {
-              id: 'b3-1',
-              title: 'Quy trình 4 bước chuẩn George Pólya',
-              detail: '1. Tóm tắt giả thiết -> 2. Chọn mô hình định lý -> 3. Thế số & tính toán -> 4. Kết luận ý nghĩa.',
-              formula: 'P(A|B) = \\frac{P(AB)}{P(B)}',
-              examTip: 'Trình bày theo từng bước rõ ràng để ăn trọn điểm các ý phụ.'
-            },
-            {
-              id: 'b3-2',
-              title: 'Dấu hiệu nhận biết bài toán điều kiện',
-              detail: 'Xuất hiện cụm từ: "biết rằng...", "trong số những người...", "với điều kiện là...".',
-              formula: 'P(B) > 0',
-              examTip: 'Tránh nhầm lẫn giữa xác suất có điều kiện $P(A|B)$ và xác suất giao $P(AB)$.'
-            }
-          ]
-        },
-        {
-          id: 'b4',
-          title: '4. Mẹo Casio fx-580VN X & Phòng Thi',
-          badge: 'Mẹo Casio',
-          color: '#f59e0b',
-          children: [
-            {
-              id: 'b4-1',
-              title: 'Lưu mẫu số vào biến nhớ M',
-              detail: 'Tính mẫu số $P(B)$ trước rồi bấm STO -> M, sau đó lấy từng tử số chia M để ra kết quả nhanh.',
-              formula: '\\text{Mẫu số} \\rightarrow \\mathbf{STO} \\; M',
-              examTip: 'Giảm 70% nguy cơ bấm sai ngoặc đơn khi biểu thức phân số quá dài.'
-            },
-            {
-              id: 'b4-2',
-              title: 'Kiểm tra tính hợp lý của đáp số',
-              detail: 'Xác suất tính ra bắt buộc phải nằm trong đoạn $[0; 1]$.',
-              formula: '0 \\le P \\le 1',
-              examTip: 'Nếu máy tính hiện kết quả lớn hơn 1 hoặc có số âm, bạn đã nhầm lẫn thứ tự biến cố!'
-            }
-          ]
-        },
-        {
-          id: 'b5',
-          title: '5. Ứng Dụng Ngân Hàng & Thực Tế',
-          badge: 'Ứng dụng',
-          color: '#a855f7',
-          children: [
-            {
-              id: 'b5-1',
-              title: 'Thẩm định rủi ro tín dụng ngân hàng',
-              detail: 'Đánh giá xác suất khách hàng vỡ nợ khi có lịch sử chậm trả nợ CIC.',
-              formula: 'P(\\text{Vỡ nợ}|\\text{CIC Xấu})',
-              examTip: 'Mô hình chấm điểm tín dụng (Credit Scoring) của mọi ngân hàng thương mại.'
-            },
-            {
-              id: 'b5-2',
-              title: 'Kiểm tra sàng lọc y tế (Dương tính giả)',
-              detail: 'Đo lường xác suất thực sự mắc bệnh khi kết quả test nhanh dương tính.',
-              formula: 'P(\\text{Bệnh}|+) \\ll 100\\%',
-              examTip: 'Khi tỷ lệ bệnh trong cộng đồng rất thấp, độ đặc hiệu cao là yếu tố quyết định.'
+              title: '2.1. Công thức trọng tâm',
+              formula: 'P(A) = \\frac{m}{n}',
+              detail: 'Điều kiện áp dụng công thức trong đề thi.'
             }
           ]
         }
@@ -310,7 +271,7 @@ export const MindmapViewer: React.FC = () => {
   };
 
   /**
-   * Toggle collapse for branch
+   * Toggle branch collapse
    */
   const toggleCollapse = (branchId: string) => {
     setCollapsedBranches((prev) => ({
@@ -320,81 +281,78 @@ export const MindmapViewer: React.FC = () => {
   };
 
   /**
-   * Expand all / Collapse all
+   * Expand all or collapse all branches
    */
   const handleToggleAll = (expand: boolean) => {
     if (!mindmap) return;
     const newState: Record<string, boolean> = {};
-    mindmap.branches.forEach((b) => {
-      newState[b.id] = !expand;
-    });
+    if (!expand) {
+      mindmap.branches.forEach((b) => {
+        newState[b.id] = true;
+      });
+    }
     setCollapsedBranches(newState);
   };
 
   /**
-   * Add custom note / user personalized node
+   * Add Custom Note to selected branch
    */
   const handleAddCustomNote = () => {
     if (!newNoteText.trim()) return;
     const newNote = {
-      id: `custom-${Date.now()}`,
+      id: `note-${Date.now()}`,
       branchId: selectedBranchForNote,
       text: newNoteText.trim(),
     };
     setCustomNotes((prev) => [...prev, newNote]);
     setNewNoteText('');
-    showToast('Đã gắn thêm nút ghi chú cá nhân vào sơ đồ!');
+    showToast('Đã thêm ghi chú cá nhân hóa vào nhánh sơ đồ!');
   };
 
   /**
-   * Remove custom note
+   * Remove Custom Note
    */
-  const handleRemoveNote = (id: string) => {
-    setCustomNotes((prev) => prev.filter((n) => n.id !== id));
+  const handleRemoveNote = (noteId: string) => {
+    setCustomNotes((prev) => prev.filter((n) => n.id !== noteId));
   };
 
   /**
-   * Copy Markdown Outline
+   * Export to Markdown string
    */
   const handleCopyMarkdown = () => {
     if (!mindmap) return;
-    let md = `# SƠ ĐỒ TƯ DUY: ${mindmap.title}\n\n`;
+    let md = `# SƠ ĐỒ TƯ DUY XSTK: ${mindmap.title}\n`;
     md += `> ${mindmap.summary}\n\n`;
-    md += `**Chuyên mục:** ${mindmap.category}\n\n`;
-
-    if (mindmap.casioShortcut) {
-      md += `### 🧮 Phím tắt Casio fx-580VN X:\n${mindmap.casioShortcut}\n\n`;
-    }
-
+    md += `### Hướng dẫn Casio fx-580VN X:\n${mindmap.casioShortcut || ''}\n\n`;
+    
     if (mindmap.goldenRules && mindmap.goldenRules.length > 0) {
-      md += `### 🌟 Quy tắc vàng cần nhớ:\n`;
-      mindmap.goldenRules.forEach((rule, idx) => {
-        md += `${idx + 1}. ${rule}\n`;
-      });
+      md += `### Quy tắc vàng:\n`;
+      mindmap.goldenRules.forEach((r) => (md += `- ${r}\n`));
       md += `\n`;
     }
 
     mindmap.branches.forEach((b) => {
       md += `## ${b.title} [${b.badge}]\n`;
       b.children.forEach((c) => {
-        md += `- **${c.title}**\n`;
-        if (c.detail) md += `  - Diễn giải: ${c.detail}\n`;
-        if (c.formula) md += `  - Công thức: $${c.formula}$\n`;
-        if (c.examTip) md += `  - Mẹo thi: ${c.examTip}\n`;
+        md += `### ${c.title}\n`;
+        if (c.detail) md += `${c.detail}\n\n`;
+        if (c.formula) md += `$$${c.formula}$$\n\n`;
+        if (c.subItems && c.subItems.length > 0) {
+          c.subItems.forEach((sub) => {
+            md += `* **${sub.label}**: ${sub.content || ''}\n`;
+            if (sub.formula) md += `  $$${sub.formula}$$\n`;
+            if (sub.subList && sub.subList.length > 0) {
+              sub.subList.forEach((li) => (md += `  - ${li}\n`));
+            }
+          });
+          md += `\n`;
+        }
+        if (c.examTip) md += `> **Mẹo thi**: ${c.examTip}\n\n`;
       });
-      // Include user notes
-      const branchNotes = customNotes.filter((n) => n.branchId === b.id);
-      if (branchNotes.length > 0) {
-        md += `  - *Ghi chú cá nhân:*\n`;
-        branchNotes.forEach((n) => {
-          md += `    - 📌 ${n.text}\n`;
-        });
-      }
-      md += `\n`;
     });
 
     navigator.clipboard.writeText(md);
-    showToast('📋 Đã sao chép dàn bài Sơ đồ tư duy dạng Markdown!');
+    showToast('📋 Đã sao chép toàn bộ nội dung Sơ đồ tư duy dạng Markdown!');
   };
 
   /**
@@ -426,6 +384,11 @@ export const MindmapViewer: React.FC = () => {
           md += `### ${c.title}\n`;
           if (c.detail) md += `${c.detail}\n`;
           if (c.formula) md += `Công thức KaTeX: $${c.formula}$\n`;
+          if (c.subItems && c.subItems.length > 0) {
+            c.subItems.forEach((sub) => {
+              md += `- ${sub.label}: ${sub.content || ''}\n`;
+            });
+          }
           if (c.examTip) md += `Mẹo thi: ${c.examTip}\n`;
           md += `\n`;
         });
@@ -459,7 +422,8 @@ export const MindmapViewer: React.FC = () => {
           c.title.toLowerCase().includes(q) ||
           (c.detail && c.detail.toLowerCase().includes(q)) ||
           (c.formula && c.formula.toLowerCase().includes(q)) ||
-          (c.examTip && c.examTip.toLowerCase().includes(q))
+          (c.examTip && c.examTip.toLowerCase().includes(q)) ||
+          (c.subItems && c.subItems.some((s) => s.label.toLowerCase().includes(q) || (s.content && s.content.toLowerCase().includes(q))))
       );
       return {
         ...b,
@@ -494,31 +458,40 @@ export const MindmapViewer: React.FC = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-cyan-400 font-extrabold text-xs sm:text-sm tracking-wider uppercase">
               <Map className="w-4 h-4 text-cyan-400 animate-pulse" />
-              <span>CÔNG CỤ KIẾN TẠO SƠ ĐỒ TƯ DUY TOÁN HỌC & XSTK SIÊU TỐC</span>
+              <span>HỆ THỐNG SƠ ĐỒ TƯ DUY TOÁN HỌC & XSTK PHÂN CẤP ĐA TẦNG</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-              Bản Đồ Tư Duy Phân Nhánh Thông Minh (AI Mindmap Engine)
+              Bản Đồ Tư Duy Khái Niệm, Bản Chất & Công Thức Chuẩn Sư Phạm
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium">
-              Nhập bất kỳ chủ đề toán học nào để tạo sơ đồ tư duy phân nhánh trực quan, chuẩn KaTeX kèm mẹo Casio fx-580VN X trong 2-3 giây.
+            <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-3xl">
+              Hệ thống hóa sâu sắc định nghĩa, phép thử, biến cố, công thức KaTeX và ký hiệu toán học theo đúng cấu trúc cây phân nhánh trực quan của Giảng viên.
             </p>
           </div>
 
-          {/* Preset Chapter Picker */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-bold text-slate-400">Giáo trình 7 Chương:</span>
-            <select
-              value={selectedChapterId || ''}
-              onChange={(e) => e.target.value && handleSelectChapter(Number(e.target.value))}
-              className="p-2.5 rounded-xl border border-cyan-500/40 bg-slate-900 text-cyan-200 text-xs font-bold outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+          {/* View Mode Switcher Pill */}
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border-2 border-cyan-500/40 shrink-0 shadow-lg">
+            <button
+              onClick={() => setViewMode('tree')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                viewMode === 'tree'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <option value="">Chọn chương chuẩn...</option>
-              {CHAPTERS_DATA.map((c) => (
-                <option key={c.id} value={c.id}>
-                  Chương {c.id}: {c.shortTitle}
-                </option>
-              ))}
-            </select>
+              <GitBranch className="w-4 h-4" />
+              <span>Sơ Đồ Cây Vươn Ngang (Kiểu Thầy Dạy)</span>
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                viewMode === 'cards'
+                  ? 'bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.5)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span>Khối Thẻ Chi Tiết</span>
+            </button>
           </div>
         </div>
 
@@ -531,14 +504,14 @@ export const MindmapViewer: React.FC = () => {
                 value={topicInput}
                 onChange={(e) => setTopicInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleTriggerGenerate()}
-                placeholder="Nhập chủ đề chính của bạn ở đây... (ví dụ: Công thức Bayes, Phân phối Chuẩn, Khoảng tin cậy...)"
+                placeholder="Nhập bất kỳ chủ đề xác suất nào... (ví dụ: Bài 1: Xác suất cơ bản, Phân phối Chuẩn, Ước lượng khoảng...)"
                 disabled={isGenerating}
                 className="w-full py-3.5 pl-4 pr-12 rounded-2xl border-2 border-cyan-500/50 bg-slate-950/90 text-white placeholder-slate-400 text-sm font-semibold outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 shadow-inner transition-all"
               />
               {topicInput && (
                 <button
                   onClick={() => setTopicInput('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
                 >
                   ✕
                 </button>
@@ -553,31 +526,39 @@ export const MindmapViewer: React.FC = () => {
               {isGenerating ? (
                 <>
                   <Sparkles className="w-4 h-4 animate-spin text-slate-950" />
-                  <span>Đang Kiến Tạo Sơ Đồ...</span>
+                  <span>Đang Kiến Tạo Sơ Đồ Phân Nhánh...</span>
                 </>
               ) : (
                 <>
                   <Zap className="w-4 h-4 fill-slate-950 text-slate-950" />
-                  <span>TẠO BẢN ĐỒ TƯ DUY</span>
+                  <span>TẠO SƠ ĐỒ TƯ DUY</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Quick Preset Buttons */}
+          {/* Quick Preset Buttons for 7 Chapters */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <span className="text-[11px] font-extrabold text-cyan-400 flex items-center gap-1 shrink-0">
-              <Lightbulb className="w-3.5 h-3.5" /> Gợi ý chủ đề nhanh:
+              <Lightbulb className="w-3.5 h-3.5" /> Bộ giáo trình 7 Bài chuẩn HUB:
             </span>
             {QUICK_PRESETS.map((preset, idx) => (
               <button
                 key={idx}
                 onClick={() => {
                   setTopicInput(preset.topic);
-                  generateMindmap(preset.topic);
+                  if (preset.chapterId) {
+                    handleSelectChapter(preset.chapterId);
+                  } else {
+                    generateMindmap(preset.topic);
+                  }
                 }}
                 disabled={isGenerating}
-                className="text-[11px] font-bold py-1 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-950 border border-cyan-500/30 hover:border-cyan-400 text-slate-200 hover:text-cyan-200 transition-all cursor-pointer"
+                className={`text-[11px] font-bold py-1.5 px-3 rounded-xl border transition-all cursor-pointer ${
+                  topicInput.includes(preset.label.split(':')[0])
+                    ? 'bg-blue-600 text-white border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.4)]'
+                    : 'bg-slate-900/90 hover:bg-cyan-950 border-cyan-500/30 hover:border-cyan-400 text-slate-200 hover:text-cyan-200'
+                }`}
               >
                 {preset.label}
               </button>
@@ -595,7 +576,7 @@ export const MindmapViewer: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Lọc từ khóa trong các nhánh sơ đồ..."
+            placeholder="Lọc từ khóa (phép thử, biến cố, Bayes, Bernoulli...)..."
             className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-cyan-500/30 rounded-xl text-xs text-white placeholder-slate-400 outline-none focus:border-cyan-400 font-medium"
           />
         </div>
@@ -603,24 +584,24 @@ export const MindmapViewer: React.FC = () => {
         {/* Canvas Zoom & View Controls */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
-            onClick={() => setZoomLevel((prev) => Math.max(70, prev - 15))}
+            onClick={() => setZoomLevel((prev) => Math.max(60, prev - 15))}
             title="Thu nhỏ (-15%)"
-            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all"
+            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all cursor-pointer"
           >
             <ZoomOut className="w-3.5 h-3.5 text-cyan-400" />
           </button>
           <span className="text-xs font-mono font-bold text-cyan-300 px-2">{zoomLevel}%</span>
           <button
-            onClick={() => setZoomLevel((prev) => Math.min(150, prev + 15))}
+            onClick={() => setZoomLevel((prev) => Math.min(160, prev + 15))}
             title="Phóng to (+15%)"
-            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all"
+            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all cursor-pointer"
           >
             <ZoomIn className="w-3.5 h-3.5 text-cyan-400" />
           </button>
           <button
             onClick={() => setZoomLevel(100)}
             title="Đặt lại góc nhìn 100%"
-            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all"
+            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
           </button>
@@ -630,13 +611,13 @@ export const MindmapViewer: React.FC = () => {
           {/* Expand/Collapse All */}
           <button
             onClick={() => handleToggleAll(true)}
-            className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all"
+            className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Mở Tất Cả
           </button>
           <button
             onClick={() => handleToggleAll(false)}
-            className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all"
+            className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Thu Gọn
           </button>
@@ -647,7 +628,7 @@ export const MindmapViewer: React.FC = () => {
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             title={isFullscreen ? 'Thu nhỏ giao diện' : 'Toàn màn hình'}
-            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all"
+            className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs flex items-center gap-1 transition-all cursor-pointer"
           >
             {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-cyan-400" /> : <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />}
           </button>
@@ -655,29 +636,26 @@ export const MindmapViewer: React.FC = () => {
 
         {/* Export & Sync Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Copy Markdown */}
           <button
             onClick={handleCopyMarkdown}
-            className="py-1.5 px-3 bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 text-cyan-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+            className="py-1.5 px-3 bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 text-cyan-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Copy className="w-3.5 h-3.5 text-cyan-400" />
             <span>Chép Markdown</span>
           </button>
 
-          {/* Print A4 / Export PDF */}
           <button
             onClick={handlePrintPDF}
-            className="py-1.5 px-3 bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+            className="py-1.5 px-3 bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5 text-cyan-400" />
             <span>In PDF A4</span>
           </button>
 
-          {/* Save to Google Drive */}
           <button
             onClick={handleSaveToDrive}
             disabled={isSavingToDrive}
-            className="py-1.5 px-3 bg-blue-950 hover:bg-blue-900 border border-blue-500/50 text-blue-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+            className="py-1.5 px-3 bg-blue-950 hover:bg-blue-900 border border-blue-500/50 text-blue-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(59,130,246,0.3)] cursor-pointer"
           >
             <Cloud className={`w-3.5 h-3.5 text-blue-400 ${isSavingToDrive ? 'animate-bounce' : ''}`} />
             <span>{isSavingToDrive ? 'Đang lưu Drive...' : 'Lưu Google Drive'}</span>
@@ -701,152 +679,244 @@ export const MindmapViewer: React.FC = () => {
       <div
         ref={mindmapCanvasRef}
         style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-        className="transition-transform duration-200 space-y-8"
+        className="transition-transform duration-200"
       >
         {mindmap ? (
           <div className="space-y-8">
-            {/* CENTRAL ROOT NODE */}
-            <div className="flex justify-center">
-              <div className="max-w-2xl w-full bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 border-2 border-cyan-400 p-6 rounded-3xl shadow-[0_0_35px_rgba(6,182,212,0.3)] text-center space-y-3 relative group">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-xs font-black tracking-wide">
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>{mindmap.category}</span>
-                </div>
-                <h1 className="text-xl sm:text-3xl font-black text-white tracking-wide drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]">
-                  {mindmap.title}
-                </h1>
-                <p className="text-xs sm:text-sm text-cyan-100 font-medium leading-relaxed max-w-xl mx-auto">
-                  {mindmap.summary}
-                </p>
+            {/* VIEW MODE 1: HORIZONTAL TREE MINDMAP (CHUẨN ĐỒ HỌA CỦA THẦY GIÁO) */}
+            {viewMode === 'tree' ? (
+              <div className="overflow-x-auto p-4 sm:p-8 bg-slate-950/80 rounded-3xl border-2 border-slate-800 shadow-2xl min-w-full">
+                <div className="flex items-start gap-10 sm:gap-14 min-w-max pb-8 pt-4">
+                  {/* CỘT 0: ROOT NODE TRUNG TÂM BÊN TRÁI (Khối chữ nhật đứng bo tròn viền xanh dương nổi bật) */}
+                  <div className="w-60 sm:w-68 p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 border-4 border-blue-500 shadow-[0_0_35px_rgba(37,99,235,0.4)] flex flex-col items-center justify-center text-center space-y-3 shrink-0 self-center sticky left-0 z-20">
+                    <div className="px-3.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/50 text-blue-300 text-[11px] font-black uppercase tracking-wider">
+                      {mindmap.category || 'XÁC SUẤT THỐNG KÊ'}
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-black text-white leading-tight uppercase font-sans tracking-wide">
+                      {mindmap.title}
+                    </h1>
+                    {mindmap.summary && (
+                      <p className="text-xs text-slate-300 leading-relaxed font-medium line-clamp-4">
+                        {mindmap.summary}
+                      </p>
+                    )}
+                  </div>
 
-                {/* Vertical Connector Line from Root to Branches */}
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-transparent" />
-              </div>
-            </div>
-
-            {/* BRANCHES GRID (Dynamic Responsive Columns) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-              {filteredBranches.map((branch, branchIdx) => {
-                const isCollapsed = collapsedBranches[branch.id];
-                const branchCustomNotes = customNotes.filter((n) => n.branchId === branch.id);
-
-                return (
-                  <div
-                    key={branch.id}
-                    className="bg-slate-950/90 border-2 border-slate-800 hover:border-cyan-500/50 rounded-3xl p-5 space-y-4 shadow-xl transition-all relative flex flex-col justify-between"
-                  >
-                    {/* Branch Header */}
-                    <div>
-                      <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="w-3 h-3 rounded-full shrink-0 shadow-sm"
-                            style={{ backgroundColor: branch.color || '#06b6d4' }}
-                          />
-                          <h3 className="font-black text-white text-sm sm:text-base tracking-tight">
-                            {branch.title}
-                          </h3>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="px-2 py-0.5 rounded-lg text-[10px] font-black border"
+                  {/* CỘT 1, 2, 3: CÁC NHÁNH LỚN VƯƠN SANG PHẢI VỚI ĐƯỜNG NỐI CONG MỀM MẠI */}
+                  <div className="flex flex-col gap-10 flex-1">
+                    {filteredBranches.map((branch) => {
+                      const isCollapsed = collapsedBranches[branch.id];
+                      return (
+                        <div key={branch.id} className="flex items-start gap-6 sm:gap-8 relative">
+                          {/* KHỐI NHÁNH CẤP 1 (Level 1 Branch Box) */}
+                          <div
+                            className="px-5 py-3.5 rounded-2xl border-2 font-black text-sm shrink-0 shadow-lg text-white flex items-center gap-2 self-start mt-2 transition-transform hover:scale-105"
                             style={{
-                              borderColor: `${branch.color}60`,
-                              backgroundColor: `${branch.color}15`,
-                              color: branch.color,
+                              borderColor: branch.color || '#2563eb',
+                              backgroundColor: `${branch.color}18`,
+                              boxShadow: `0 0 25px ${branch.color}35`,
                             }}
                           >
-                            {branch.badge}
-                          </span>
+                            <span
+                              className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
+                              style={{ backgroundColor: branch.color || '#2563eb' }}
+                            />
+                            <span>{branch.title}</span>
+                            <button
+                              onClick={() => toggleCollapse(branch.id)}
+                              className="ml-1 p-1 hover:bg-black/30 rounded-lg text-slate-300"
+                              title={isCollapsed ? 'Mở rộng' : 'Thu gọn'}
+                            >
+                              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                          </div>
 
-                          <button
-                            onClick={() => toggleCollapse(branch.id)}
-                            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-all"
-                            title={isCollapsed ? 'Mở rộng nhánh' : 'Thu gọn nhánh'}
-                          >
-                            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          </button>
+                          {/* CỘT TIỂU MỤC CẤP 2 & HỘP ĐỊNH NGHĨA CẤP 3 */}
+                          {!isCollapsed && (
+                            <div
+                              className="flex flex-col gap-5 flex-1 pl-5 border-l-3 relative transition-all"
+                              style={{ borderColor: `${branch.color}70` }}
+                            >
+                              {branch.children.map((child) => (
+                                <div
+                                  key={child.id}
+                                  className="flex flex-col xl:flex-row items-start gap-4 p-4.5 rounded-2xl bg-slate-900/90 border transition-all hover:bg-slate-900/100 shadow-xl group max-w-3xl"
+                                  style={{ borderColor: `${branch.color}40` }}
+                                >
+                                  {/* CẤP 2: NHÃN TIỂU MỤC (ví dụ: 1.1. Xác suất là gì?, 1.2. Các khái niệm liên quan...) */}
+                                  <div
+                                    className="shrink-0 px-4 py-2 rounded-xl border-2 font-black text-xs sm:text-sm text-white shadow-md self-start"
+                                    style={{
+                                      borderColor: `${branch.color}80`,
+                                      backgroundColor: `${branch.color}20`,
+                                    }}
+                                  >
+                                    {child.title}
+                                  </div>
+
+                                  {/* CẤP 3: HỘP ĐỊNH NGHĨA KHÁI NIỆM & CÔNG THỨC CHI TIẾT */}
+                                  <div className="flex-1 space-y-3 text-xs text-slate-200">
+                                    {child.detail && (
+                                      <p className="leading-relaxed font-sans text-sm text-slate-100">
+                                        <MathText text={child.detail} />
+                                      </p>
+                                    )}
+
+                                    {child.formula && (
+                                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-center font-mono text-cyan-300 overflow-x-auto shadow-inner text-sm">
+                                        <MathFormula math={child.formula} block />
+                                      </div>
+                                    )}
+
+                                    {/* Sub-items phân nhánh (Phép thử, Biến cố chắc chắn, không thể, ngẫu nhiên, cổ điển, thống kê) */}
+                                    {child.subItems && child.subItems.length > 0 && (
+                                      <div className="space-y-3 pt-1">
+                                        {child.subItems.map((sub, sIdx) => (
+                                          <div
+                                            key={sIdx}
+                                            className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2 shadow-sm"
+                                          >
+                                            <div className="font-black text-cyan-300 flex items-center gap-2 text-xs sm:text-sm">
+                                              <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
+                                              <MathText text={sub.label} inline />
+                                            </div>
+                                            {sub.content && (
+                                              <p className="text-slate-300 leading-relaxed font-sans text-xs sm:text-sm pl-4">
+                                                <MathText text={sub.content} />
+                                              </p>
+                                            )}
+                                            {sub.formula && (
+                                              <div className="pt-1 text-center font-mono text-emerald-300">
+                                                <MathFormula math={sub.formula} block />
+                                              </div>
+                                            )}
+                                            {sub.subList && sub.subList.length > 0 && (
+                                              <div className="space-y-1.5 pl-4 border-l-2 border-emerald-500/50 mt-2">
+                                                {sub.subList.map((li, lIdx) => (
+                                                  <div key={lIdx} className="text-xs sm:text-sm text-slate-200 font-medium">
+                                                    <MathText text={li} inline />
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {child.examTip && (
+                                      <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs font-medium flex items-start gap-2">
+                                        <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                                        <span><MathText text={child.examTip} inline /></span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* VIEW MODE 2: KHỐI THẺ BẢNG LƯỚI CHUYÊN SÂU (CARDS GRID VIEW) */
+              <div className="space-y-8">
+                {/* Central Header Card */}
+                <div className="flex justify-center">
+                  <div className="max-w-2xl w-full bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 border-2 border-cyan-400 p-6 rounded-3xl shadow-[0_0_35px_rgba(6,182,212,0.3)] text-center space-y-3 relative group">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-xs font-black tracking-wide">
+                      <Compass className="w-3.5 h-3.5" />
+                      <span>{mindmap.category}</span>
+                    </div>
+                    <h1 className="text-xl sm:text-3xl font-black text-white tracking-wide drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]">
+                      {mindmap.title}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-cyan-100 font-medium leading-relaxed max-w-xl mx-auto">
+                      {mindmap.summary}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                  {filteredBranches.map((branch) => {
+                    const isCollapsed = collapsedBranches[branch.id];
+                    return (
+                      <div
+                        key={branch.id}
+                        className="bg-slate-950/90 border-2 border-slate-800 hover:border-cyan-500/50 rounded-3xl p-5 space-y-4 shadow-xl transition-all relative flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                                style={{ backgroundColor: branch.color || '#06b6d4' }}
+                              />
+                              <h3 className="font-black text-white text-sm sm:text-base tracking-tight">
+                                {branch.title}
+                              </h3>
+                            </div>
+                            <span
+                              className="px-2 py-0.5 rounded-lg text-[10px] font-black border"
+                              style={{
+                                borderColor: `${branch.color}60`,
+                                backgroundColor: `${branch.color}15`,
+                                color: branch.color,
+                              }}
+                            >
+                              {branch.badge}
+                            </span>
+                          </div>
+
+                          {!isCollapsed && (
+                            <div className="space-y-3.5 pt-3">
+                              {branch.children.map((child) => (
+                                <div
+                                  key={child.id}
+                                  className="bg-slate-900/90 border border-slate-800/90 hover:border-cyan-500/30 p-3.5 rounded-2xl space-y-2 transition-all group"
+                                >
+                                  <h4 className="font-extrabold text-xs sm:text-sm text-cyan-200">
+                                    {child.title}
+                                  </h4>
+                                  {child.detail && (
+                                    <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                                      <MathText text={child.detail} inline />
+                                    </p>
+                                  )}
+                                  {child.formula && (
+                                    <div className="pt-1">
+                                      <MathFormula math={child.formula} block />
+                                    </div>
+                                  )}
+                                  {child.subItems && child.subItems.length > 0 && (
+                                    <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                                      {child.subItems.map((sub, sIdx) => (
+                                        <div key={sIdx} className="text-xs space-y-1">
+                                          <div className="font-bold text-cyan-300"><MathText text={sub.label} inline /></div>
+                                          {sub.content && <div className="text-slate-300 pl-2"><MathText text={sub.content} inline /></div>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-800/50 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                          <span>{branch.children.length} nội dung chi tiết</span>
                         </div>
                       </div>
-
-                      {/* Children / Sub-nodes */}
-                      {!isCollapsed && (
-                        <div className="space-y-3.5 pt-3">
-                          {branch.children.map((child) => (
-                            <div
-                              key={child.id}
-                              className="bg-slate-900/90 border border-slate-800/90 hover:border-cyan-500/30 p-3.5 rounded-2xl space-y-2 transition-all group"
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <h4 className="font-extrabold text-xs sm:text-sm text-cyan-200">
-                                  {child.title}
-                                </h4>
-                              </div>
-
-                              {child.detail && (
-                                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                                  <MathText text={child.detail} inline />
-                                </p>
-                              )}
-
-                              {child.formula && (
-                                <div className="pt-1">
-                                  <MathFormula math={child.formula} block />
-                                </div>
-                              )}
-
-                              {child.examTip && (
-                                <div className="flex items-start gap-1.5 pt-1 text-[11px] font-medium text-amber-300 bg-amber-950/30 border border-amber-500/20 p-2 rounded-xl">
-                                  <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                                  <span>{child.examTip}</span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-
-                          {/* Render Custom Notes for this branch */}
-                          {branchCustomNotes.map((note) => (
-                            <div
-                              key={note.id}
-                              className="bg-cyan-950/40 border border-cyan-500/40 p-2.5 rounded-xl flex items-start justify-between gap-2 text-xs text-cyan-100"
-                            >
-                              <div className="flex items-start gap-1.5">
-                                <span className="text-cyan-400 font-bold shrink-0">📌</span>
-                                <span className="font-medium">{note.text}</span>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveNote(note.id)}
-                                className="text-slate-400 hover:text-red-400 p-0.5"
-                                title="Xóa ghi chú"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Branch Footer */}
-                    <div className="pt-3 border-t border-slate-800/50 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                      <span>{branch.children.length} nội dung chi tiết</span>
-                      <button
-                        onClick={() => {
-                          setSelectedBranchForNote(branch.id);
-                          const el = document.getElementById('custom-note-input');
-                          if (el) el.focus();
-                        }}
-                        className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1"
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span>Thêm ghi chú</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* CASIO SHORTCUT & GOLDEN RULES HIGHLIGHT SECTION */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
