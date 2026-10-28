@@ -3328,6 +3328,147 @@ Kế hoạch kinh tế đặt mục tiêu tăng trưởng khả quan với xác 
   });
 });
 
+/**
+ * Intelligent Rule-based Parser for Spoken Math in Statistics (Server-side Fallback)
+ */
+function parseSpokenMathFallbackServer(spokenText: string) {
+  const lower = (spokenText || '').toLowerCase().trim();
+
+  // Two-sided confidence interval for proportion p (Exact teacher speech example)
+  if (
+    (lower.includes('f trừ p') || lower.includes('f - p') || lower.includes('p nhân q') || lower.includes('pq/n') || lower.includes('tỷ lệ')) &&
+    (lower.includes('z') || lower.includes('alpha') || lower.includes('an pha') || lower.includes('đoạn từ') || lower.includes('nằm trong'))
+  ) {
+    return {
+      latexFormula: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{F - p}{\\sqrt{\\frac{pq}{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha`,
+      deductionFormula: `P\\left\\{ F - z_{\\alpha/2}\\cdot\\sqrt{\\frac{pq}{n}} \\le p \\le F + z_{\\alpha/2}\\cdot\\sqrt{\\frac{pq}{n}} \\right\\} = 1 - \\alpha`,
+      fullLatexDisplay: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{F - p}{\\sqrt{\\frac{pq}{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P\\left\\{ F - z_{\\alpha/2}\\cdot\\sqrt{\\frac{pq}{n}} \\le p \\le F + z_{\\alpha/2}\\cdot\\sqrt{\\frac{pq}{n}} \\right\\} = 1 - \\alpha`,
+      meaning: `Khoảng ước lượng tin cậy đối xứng cho tỷ lệ tổng thể p với độ tin cậy $1 - \\alpha$ (áp dụng cho cỡ mẫu lớn $n \\ge 30$).`,
+      variables: [
+        { symbol: 'p', desc: 'Tỷ lệ cá thể mang đặc tính A trong tổng thể (tham số cần ước lượng)' },
+        { symbol: 'F', desc: 'Tỷ lệ mẫu quan sát được ($F = m / n$)' },
+        { symbol: 'q', desc: 'Tỷ lệ đối lập ($q = 1 - p$ hoặc xấp xỉ $1 - F$)' },
+        { symbol: 'n', desc: 'Kích thước mẫu khảo sát' },
+        { symbol: 'z_{\\alpha/2}', desc: 'Giá trị tới hạn mức $\\alpha/2$ tra từ phân phối chuẩn Laplace' },
+        { symbol: '1 - \\alpha', desc: 'Độ tin cậy của ước lượng (thường là 90%, 95%, 99%)' }
+      ],
+      casioTip: 'Để tìm z_{alpha/2}: Bấm MENU 7 -> 3 (Inverse Normal) -> nhập Area = 1 - alpha/2, sigma = 1, mu = 0.'
+    };
+  }
+
+  // Two-sided confidence interval for mean mu with known sigma
+  if (
+    (lower.includes('x ngang trừ') || lower.includes('muy') || lower.includes('sigma trên căn')) &&
+    (lower.includes('z') || lower.includes('alpha') || lower.includes('khoảng') || lower.includes('đoạn'))
+  ) {
+    return {
+      latexFormula: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{\\bar{X} - \\mu}{\\frac{\\sigma}{\\sqrt{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha`,
+      deductionFormula: `P\\left\\{ \\bar{X} - z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      fullLatexDisplay: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{\\bar{X} - \\mu}{\\frac{\\sigma}{\\sqrt{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P\\left\\{ \\bar{X} - z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      meaning: `Khoảng ước lượng tin cậy đối xứng cho kỳ vọng $\\mu$ khi đã biết phương sai $\\sigma^2$.`,
+      variables: [
+        { symbol: '\\mu', desc: 'Kỳ vọng toán của tổng thể cần ước lượng' },
+        { symbol: '\\bar{X}', desc: 'Trung bình mẫu quan sát' },
+        { symbol: '\\sigma', desc: 'Độ lệch chuẩn của tổng thể (đã biết)' },
+        { symbol: 'n', desc: 'Kích thước mẫu quan sát' },
+        { symbol: 'z_{\\alpha/2}', desc: 'Giá trị tới hạn mức $\\alpha/2$' }
+      ],
+      casioTip: 'Tính sai số biên epsilon = z * sigma / sqrt(n) rồi lưu vào biến nhớ M.'
+    };
+  }
+
+  // Student t confidence interval for mean mu
+  if (
+    (lower.includes('student') || lower.includes('t alpha') || lower.includes('tê an pha')) &&
+    (lower.includes('s trên căn') || lower.includes('x ngang'))
+  ) {
+    return {
+      latexFormula: `P\\left\\{ -t_{\\alpha/2}^{(n-1)} \\le \\frac{\\bar{X} - \\mu}{\\frac{s}{\\sqrt{n}}} \\le t_{\\alpha/2}^{(n-1)} \\right\\} = 1 - \\alpha`,
+      deductionFormula: `P\\left\\{ \\bar{X} - t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      fullLatexDisplay: `P\\left\\{ -t_{\\alpha/2}^{(n-1)} \\le \\frac{\\bar{X} - \\mu}{\\frac{s}{\\sqrt{n}}} \\le t_{\\alpha/2}^{(n-1)} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P\\left\\{ \\bar{X} - t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      meaning: `Khoảng ước lượng tin cậy cho kỳ vọng $\\mu$ khi chưa biết phương sai tổng thể (mẫu nhỏ $n < 30$).`,
+      variables: [
+        { symbol: 's', desc: 'Độ lệch chuẩn mẫu hiệu chỉnh' },
+        { symbol: 'n - 1', desc: 'Bậc tự do của phân phối Student' }
+      ],
+      casioTip: 'Bấm MENU 6 -> 1 để lấy x_bar và s_x; tra bảng phân phối Student t(n-1; alpha/2).'
+    };
+  }
+
+  return {
+    latexFormula: spokenText,
+    deductionFormula: '',
+    fullLatexDisplay: spokenText,
+    meaning: 'Biểu thức toán học nhận diện từ giọng nói người dùng.',
+    variables: [],
+    casioTip: 'Sử dụng phím MENU -> 7 hoặc MENU -> 6 trên Casio fx-580VN X để tính toán.'
+  };
+}
+
+// Endpoint 3.9: Advanced Speech-to-Math AI Engine (Chuyển giọng nói đọc công thức sang KaTeX/LaTeX & suy diễn toán học)
+app.post('/api/tutor/speech-to-math', async (req, res) => {
+  const { spokenText, context } = req.body;
+  if (!spokenText || !spokenText.trim()) {
+    return res.status(400).json({ success: false, message: 'spokenText is required' });
+  }
+
+  const client = getGeminiClient();
+  const model = getTargetModel(req);
+
+  if (client) {
+    try {
+      const prompt = `BẠN LÀ MỘT CHUYÊN GIA SƯ PHẠM TOÁN HỌC VÀ NHẬN DIỆN NGỮ NGHĨA GIỌNG NÓI TOÁN HỌC (SPEECH-TO-MATH).
+NGƯỜI DÙNG VỪA ĐỌC MỘT CÂU/CÔNG THỨC TOÁN BẰNG LỜI NÓI TIẾNG VIỆT:
+"${spokenText}"
+
+Bối cảnh: ${context || 'Xác suất Thống kê Đại học & Kinh tế (XSTK)'}.
+
+NHIỆM VỤ:
+1. Phân tích ngữ nghĩa toán học từ lời nói tiếng Việt (nhận diện các biến F, p, q, n, \\mu, \\sigma, \\bar{x}, s, ký tự Hy Lạp \\alpha, \\beta, \\chi^2, căn thức, phân số, bất đẳng thức kép, khoảng tin cậy).
+2. Chuyển đổi chính xác sang công thức KaTeX/LaTeX chuẩn mực.
+3. Nếu là công thức có thể suy diễn/biến đổi đại số tương đương (ví dụ từ bất đẳng thức kép của đại lượng thống kê suy ra khoảng ước lượng cho tham số, hoặc từ P(A+B) sang khai triển), hãy đưa ra cả công thức gốc và bước suy diễn tương đương với dấu \\Rightarrow như sách giáo trình.
+4. Trả về định dạng JSON thuần:
+{
+  "latexFormula": "Công thức KaTeX hoàn chỉnh (ví dụ: P\\\\left\\\\{ -z_{\\\\alpha/2} \\\\le \\\\frac{F - p}{\\\\sqrt{\\\\frac{pq}{n}}} \\\\le z_{\\\\alpha/2} \\\\right\\\\} = 1 - \\\\alpha)",
+  "deductionFormula": "Công thức suy diễn/tương đương tiếp theo nếu có (ví dụ: P\\\\left\\\\{ F - z_{\\\\alpha/2}\\\\sqrt{\\\\frac{pq}{n}} \\\\le p \\\\le F + z_{\\\\alpha/2}\\\\sqrt{\\\\frac{pq}{n}} \\\\right\\\\} = 1 - \\\\alpha), hoặc rỗng",
+  "fullLatexDisplay": "Hiển thị cả biểu thức gốc và biểu thức suy diễn nối nhau bởi \\\\Rightarrow",
+  "meaning": "Ý nghĩa kinh tế/thống kê của công thức (ví dụ: Khoảng tin cậy đối xứng cho tỷ lệ tổng thể p với độ tin cậy 1 - alpha)",
+  "variables": [
+    {"symbol": "p", "desc": "Tỷ lệ tổng thể cần ước lượng"},
+    {"symbol": "F", "desc": "Tỷ lệ mẫu quan sát được (f = m/n)"},
+    {"symbol": "z_{\\\\alpha/2}", "desc": "Giá trị tới hạn mức alpha/2 tra từ bảng phân phối chuẩn Laplace"},
+    {"symbol": "n", "desc": "Kích thước mẫu quan sát"}
+  ],
+  "casioTip": "Mẹo bấm máy tính Casio fx-580VN X để tính các thành phần trong công thức (nếu có)"
+}`;
+
+      const response = await client.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const parsed: any = cleanAndParseJson(response.text || '{}', null);
+      if (parsed && (parsed.latexFormula || parsed.fullLatexDisplay)) {
+        return res.json({ success: true, data: parsed, isAiGenerated: true });
+      }
+    } catch (error: any) {
+      console.warn('Speech-to-Math Gemini API error:', error?.message);
+    }
+  }
+
+  // Fallback Rule-based parser if AI is offline
+  const fallbackResult = parseSpokenMathFallbackServer(spokenText);
+  return res.json({
+    success: true,
+    isFallback: true,
+    data: fallbackResult,
+  });
+});
+
 // Endpoint 4: Voice Chat & General AI Q&A
 app.post('/api/tutor/voice-chat', async (req, res) => {
   const { userSpeechText, contextChapter } = req.body;
@@ -3339,12 +3480,13 @@ app.post('/api/tutor/voice-chat', async (req, res) => {
     try {
       const prompt = `Sinh viên vừa hỏi bằng giọng nói/văn bản: "${userSpeechText}".
 Bối cảnh bài học: ${contextChapter || 'Xác Suất Thống Kê Tổng Hợp'}.
-Hãy giải đáp bằng phong cách Cú Thông Thái thân thiện, truyền cảm, có cấu trúc rõ ràng. Nếu câu hỏi liên quan đến bài toán khó trình bày qua lời nói, hãy cung cấp thêm sơ đồ bước tính toán để hiển thị lên bảng iPad!
+Hãy giải đáp bằng phong cách Cú Thông Thái thân thiện, truyền cảm, có cấu trúc rõ ràng.
+NẾU CÂU HỎI HOẶC LỜI NÓI CÓ CHỨA CÔNG THỨC TOÁN HỌC (như khoảng tin cậy, đại lượng thống kê, công thức Bayes, phân phối chuẩn, v.v.), hãy trình bày công thức toán học KaTeX chuẩn mực có định dạng $$...$$ trên Bảng iPad (ipadMathBoard) kèm bước suy diễn tương đương \\Rightarrow và phân tích ý nghĩa!
 
 Format JSON:
 {
   "spokenResponse": "Lời thoại trả lời tự nhiên ngắn gọn để đọc lại cho sinh viên",
-  "ipadMathBoard": "Trình bày các công thức toán học/sơ đồ bước giải chuẩn trên bảng iPad",
+  "ipadMathBoard": "Trình bày các công thức toán học/sơ đồ bước giải chuẩn trên bảng iPad, sử dụng KaTeX $$...$$",
   "recommendedAction": "Gợi ý tính năng thực hành tiếp theo"
 }`;
 
@@ -3370,12 +3512,20 @@ Format JSON:
     }
   }
 
+  // Check if spoken text contains formula to provide smart iPad Math Board
+  const mathParsed = parseSpokenMathFallbackServer(userSpeechText || '');
+  const hasSpecificMath = !!(mathParsed.deductionFormula || (mathParsed.latexFormula && mathParsed.latexFormula.includes('P\\left')));
+
   return res.json({
     success: true,
     isFallback: true,
     data: {
-      spokenResponse: `Chào bạn! Mình là Cú Thông Thái AI Classroom. Về câu hỏi "${userSpeechText || 'XSTK'}", bạn hãy nhớ luôn xác định rõ biến cố và không gian mẫu trước khi tính toán nhé. Mình luôn sẵn sàng giải đáp và vẽ sơ đồ lên bảng iPad cho bạn!`,
-      ipadMathBoard: `SƠ ĐỒ TỔNG QUÁT BÀI TOÁN XÁC SUẤT:\n1. Gọi biến cố A: Biến cố cần tính xác suất.\n2. Xác định các trường hợp thuận lợi: m = |A|.\n3. Xác định không gian mẫu: n = |Ω|.\n4. Áp dụng công thức: P(A) = m / n.`,
+      spokenResponse: hasSpecificMath
+        ? `Mình đã nhận diện công thức bạn vừa đọc: "${userSpeechText}". Đây là ${mathParsed.meaning}. Mình đã xuất công thức gốc và bước suy diễn lên Bảng iPad cho bạn!`
+        : `Chào bạn! Mình là Cú Thông Thái AI Classroom. Về câu hỏi "${userSpeechText || 'XSTK'}", bạn hãy nhớ luôn xác định rõ biến cố và không gian mẫu trước khi tính toán nhé. Mình luôn sẵn sàng giải đáp và vẽ sơ đồ lên bảng iPad cho bạn!`,
+      ipadMathBoard: hasSpecificMath
+        ? `### 📐 CÔNG THỨC NHẬN DIỆN TỪ GIỌNG NÓI:\n\n$$\n${mathParsed.fullLatexDisplay}\n$$\n\n**Ý nghĩa thống kê:** ${mathParsed.meaning}\n\n**Mẹo máy tính Casio:** ${mathParsed.casioTip || 'Sử dụng MENU 7'} `
+        : `SƠ ĐỒ TỔNG QUÁT BÀI TOÁN XÁC SUẤT:\n1. Gọi biến cố A: Biến cố cần tính xác suất.\n2. Xác định các trường hợp thuận lợi: $m = |A|$.\n3. Xác định không gian mẫu: $n = |\\Omega|$.\n4. Áp dụng công thức: $P(A) = \\frac{m}{n}$.`,
       recommendedAction: 'Mở trang Luyện tập trắc nghiệm hoặc Máy tính Casio',
     },
   });

@@ -38,7 +38,7 @@ import { InteractiveCanvas } from './InteractiveCanvas';
 import { MathText, MathFormula } from './MathFormula';
 import { BigSizeDocumentProcessor } from './BigSizeDocumentProcessor';
 import { aiFetch } from '../utils/apiHelper';
-import { normalizeSpokenMath } from '../utils/mathSpeechParser';
+import { normalizeSpokenMath, convertVoiceToMathAI, hasMathematicalTerms, SpokenMathAnalysis } from '../utils/mathSpeechParser';
 
 interface ImagePdfGradingProps {
   onAddExp: (amount: number, details?: string, count?: number, gpaScore?: number) => void;
@@ -132,6 +132,8 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
 
   // Voice Interaction state
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [spokenMathPreview, setSpokenMathPreview] = useState<SpokenMathAnalysis | null>(null);
+  const [isConvertingVoiceMath, setIsConvertingVoiceMath] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
 
   // Submitting / Loading
@@ -221,11 +223,32 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
 
     setIsRecordingVoice(true);
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = async (event: any) => {
       const rawText = event.results[0][0].transcript;
       const normalized = normalizeSpokenMath(rawText);
       setInputText((prev) => (prev ? `${prev} ${normalized}` : normalized));
       setIsRecordingVoice(false);
+
+      if (hasMathematicalTerms(rawText)) {
+        setIsConvertingVoiceMath(true);
+        try {
+          const aiRes = await convertVoiceToMathAI(rawText);
+          if (aiRes?.data) {
+            setSpokenMathPreview(aiRes.data);
+            const targetFormula = aiRes.data.fullLatexDisplay || aiRes.data.latexFormula;
+            if (targetFormula) {
+              setInputText((prev) => {
+                const trimmed = prev.replace(normalized, '').trim();
+                return trimmed ? `${trimmed}\n\n$$${targetFormula}$$` : `$$${targetFormula}$$`;
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('Speech to math conversion error:', e);
+        } finally {
+          setIsConvertingVoiceMath(false);
+        }
+      }
     };
 
     recognition.onerror = () => setIsRecordingVoice(false);
@@ -1297,6 +1320,34 @@ export const ImagePdfGrading: React.FC<ImagePdfGradingProps> = ({
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Floating Spoken Math KaTeX Card */}
+        {spokenMathPreview && (
+          <div className="mb-2 p-3 bg-gradient-to-r from-slate-950 via-cyan-950/50 to-slate-950 border border-cyan-500/50 rounded-2xl flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(6,182,212,0.2)] animate-fade-in">
+            <div className="space-y-1 overflow-x-auto flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-cyan-300 font-bold text-xs">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span>AI SPEECH-TO-MATH: ĐÃ NHẬN DIỆN CÔNG THỨC TỪ GIỌNG NÓI</span>
+                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30 font-mono">
+                  KaTeX_RENDERED
+                </span>
+              </div>
+              <div className="text-white py-1">
+                <MathFormula math={spokenMathPreview.fullLatexDisplay || spokenMathPreview.latexFormula} block />
+              </div>
+              <p className="text-[11px] text-slate-300 font-medium">
+                💡 {spokenMathPreview.meaning}
+              </p>
+            </div>
+            <button
+              onClick={() => setSpokenMathPreview(null)}
+              className="px-2 py-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 text-xs transition-all shrink-0 cursor-pointer"
+              title="Đóng xem trước"
+            >
+              ✕
+            </button>
           </div>
         )}
 

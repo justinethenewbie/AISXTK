@@ -42,6 +42,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { renderKatexSafe, cleanLatexString } from './MathFormula';
+import { convertVoiceToMathAI, SpokenMathAnalysis } from '../utils/mathSpeechParser';
 
 // Declare custom math-field web component for MathLive if available
 declare global {
@@ -154,6 +155,8 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [speechHelperMessage, setSpeechHelperMessage] = useState('Sẵn sàng nghe...');
+  const [voiceMathAnalysis, setVoiceMathAnalysis] = useState<SpokenMathAnalysis | null>(null);
+  const [isConvertingVoiceMath, setIsConvertingVoiceMath] = useState(false);
 
   // Chat message thread & feedback
   const [chatMessages, setChatMessages] = useState<Array<{
@@ -202,21 +205,43 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
+    const processTranscriptToMath = async (text: string) => {
+      if (!text.trim()) return;
+      setIsConvertingVoiceMath(true);
+      setSpeechHelperMessage('Đang dịch giọng nói sang công thức Toán KaTeX...');
+      try {
+        const mathRes = await convertVoiceToMathAI(text);
+        if (mathRes?.data) {
+          setVoiceMathAnalysis(mathRes.data);
+          const formulaToSet = mathRes.data.latexFormula || mathRes.data.fullLatexDisplay;
+          if (formulaToSet) {
+            setActiveWordEquation(formulaToSet);
+            setSpeechHelperMessage('✓ Đã nạp công thức KaTeX vào khung Equation!');
+          }
+        }
+      } catch (err) {
+        console.error('Math voice parse error:', err);
+      } finally {
+        setIsConvertingVoiceMath(false);
+      }
+    };
+
     if (!SpeechRecognition) {
       setIsListening(true);
       setSpeechHelperMessage('Đang thu âm mô phỏng...');
       const simulatedPhrases = [
+        'Xác suất để đại lượng thống kê (F trừ p) chia cho căn bậc hai của (p nhân q trên n) nằm trong đoạn từ trừ z alpha trên hai đến z alpha trên hai là bằng một trừ alpha.',
         'Xác suất P của biến cố A bằng n A chia n Omega',
         'Kỳ vọng E của X bằng tổng x i nhân p i',
-        'Suy ra x bằng 18',
-        'Độ lệch chuẩn sigma bằng căn bậc hai của phương sai',
+        'Xác suất để đại lượng thống kê X ngang trừ muy chia cho sigma trên căn n nằm trong đoạn từ trừ z alpha trên hai đến z alpha trên hai bằng một trừ alpha',
       ];
-      const randomPhrase = simulatedPhrases[Math.floor(Math.random() * simulatedPhrases.length)];
-      setTimeout(() => {
+      const randomPhrase = simulatedPhrases[0];
+      setTimeout(async () => {
         setVoiceTranscript(randomPhrase);
         setSpeechHelperMessage(`Nhận diện: "${randomPhrase}"`);
         setIsListening(false);
-      }, 2500);
+        await processTranscriptToMath(randomPhrase);
+      }, 1500);
       return;
     }
 
@@ -226,15 +251,18 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
       recognition.continuous = false;
       recognition.interimResults = true;
 
+      let lastCapturedTranscript = '';
+
       recognition.onstart = () => {
         setIsListening(true);
-        setSpeechHelperMessage('Đang lắng nghe lời giải...');
+        setSpeechHelperMessage('Đang lắng nghe công thức bạn đọc...');
       };
 
       recognition.onresult = (event: any) => {
         const transcript = Array.from(event.results)
           .map((res: any) => res[0].transcript)
           .join('');
+        lastCapturedTranscript = transcript;
         setVoiceTranscript(transcript);
         setSpeechHelperMessage(`Đã nghe: "${transcript}"`);
       };
@@ -244,8 +272,11 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
         setSpeechHelperMessage('Lỗi thu âm, thử lại nhé!');
       };
 
-      recognition.onend = () => {
+      recognition.onend = async () => {
         setIsListening(false);
+        if (lastCapturedTranscript) {
+          await processTranscriptToMath(lastCapturedTranscript);
+        }
       };
 
       recognition.start();
@@ -929,6 +960,48 @@ export const WysiwygMathChatEditor: React.FC<WysiwygMathChatEditorProps> = ({
               </div>
             </div>
           </div>
+
+          {/* AI Speech-to-Math Floating Card Result */}
+          {voiceMathAnalysis && (
+            <div className="mt-2.5 p-3 bg-gradient-to-r from-slate-950 via-cyan-950/40 to-slate-950 border border-cyan-500/50 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-[0_0_20px_rgba(6,182,212,0.15)] animate-fade-in">
+              <div className="space-y-1 overflow-x-auto flex-1 min-w-0">
+                <div className="flex items-center gap-2 text-cyan-300 font-bold text-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>AI SPEECH-TO-MATH (NHẬN DIỆN TỪ GIỌNG NÓI):</span>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30 font-mono">
+                    KaTeX_RENDERED
+                  </span>
+                </div>
+                <div
+                  className="py-1 text-white text-xs sm:text-sm font-sans overflow-x-auto"
+                  dangerouslySetInnerHTML={{
+                    __html: renderKatexSafe(voiceMathAnalysis.fullLatexDisplay || voiceMathAnalysis.latexFormula),
+                  }}
+                />
+                <p className="text-[11px] text-slate-300 font-medium">
+                  💡 {voiceMathAnalysis.meaning} {voiceMathAnalysis.casioTip && `• 🧮 ${voiceMathAnalysis.casioTip}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                <button
+                  onClick={() => {
+                    const formula = voiceMathAnalysis.fullLatexDisplay || voiceMathAnalysis.latexFormula;
+                    handleInsertTemplate(formula);
+                  }}
+                  className="px-3 py-1.5 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-md transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Chèn Công Thức</span>
+                </button>
+                <button
+                  onClick={() => setVoiceMathAnalysis(null)}
+                  className="px-2 py-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 text-xs transition-all"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

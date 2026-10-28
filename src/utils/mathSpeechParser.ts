@@ -1,15 +1,106 @@
+import { aiFetch } from './apiHelper';
+
 /**
  * Mathematical Speech & Natural Language Normalizer for Probability & Statistics (XSTK)
  * Translates spoken Vietnamese math expressions, colloquial phonetics, and casual speech into precise KaTeX symbols
  */
 
+export interface SpokenMathAnalysis {
+  latexFormula: string;
+  deductionFormula?: string;
+  fullLatexDisplay: string;
+  meaning: string;
+  variables: Array<{ symbol: string; desc: string }>;
+  casioTip?: string;
+}
+
+/**
+ * Checks if raw transcript contains mathematical or statistical phrasing
+ */
+export function hasMathematicalTerms(rawText: string): boolean {
+  if (!rawText) return false;
+  const lower = rawText.toLowerCase();
+  const mathKeywords = [
+    'xác suất', 'đại lượng', 'thống kê', 'công thức', 'alpha', 'an pha',
+    'beta', 'bê ta', 'sigma', 'xích ma', 'muy', 'kỳ vọng', 'phương sai',
+    'độ lệch chuẩn', 'căn bậc', 'chia cho', 'nhân', 'bình phương',
+    'tổ hợp', 'chỉnh hợp', 'bernoulli', 'bayes', 'student', 'laplace',
+    'khoảng tin cậy', 'độ tin cậy', 'bằng', 'nằm trong đoạn', 'nhỏ hơn', 'lớn hơn'
+  ];
+  return mathKeywords.some((kw) => lower.includes(kw));
+}
+
 export function normalizeSpokenMath(rawText: string): string {
   if (!rawText) return '';
 
+  // 0. Check if the speech matches a complete statistical theorem / confidence interval deduction
+  const advanced = parseSpokenMathAdvanced(rawText);
+  if (advanced && advanced.deductionFormula) {
+    return `$${advanced.fullLatexDisplay}$`;
+  }
+
   let text = rawText;
+
+  // 0. Full Confidence Intervals & Complex Hypotheses (Exact spoken pattern matching)
+  const fullSentenceMatches: [RegExp, string][] = [
+    // Two-sided confidence interval for proportion p (Exact teacher speech example)
+    [
+      /(?:xác suất (?:để )?)?(?:đại lượng thống kê )?\(?\s*(?:f|ép)\s*(?:trừ|-)\s*(?:p|pê)\s*\)?\s*(?:chia cho|\/)\s*(?:căn bậc hai của|căn)\s*\(?\s*(?:p|pê)\s*(?:nhân|\*)\s*(?:q|quy)\s*(?:trên|\/)\s*n\s*\)?\s*(?:nằm trong đoạn|nằm giữa)\s*(?:từ )?\s*(?:trừ|-)\s*(?:z|dét)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\s*(?:đến|tới)\s*(?:z|dét)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\s*(?:là )?(?:bằng|=)\s*(?:1|một)\s*(?:trừ|-)\s*(?:an\s*pha|alpha)/gi,
+      '$P \\left\\{ -z_{\\alpha/2} \\le \\frac{F - p}{\\sqrt{\\frac{pq}{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P \\left\\{ F - z_{\\alpha/2} \\cdot \\sqrt{\\frac{pq}{n}} \\le p \\le F + z_{\\alpha/2} \\cdot \\sqrt{\\frac{pq}{n}} \\right\\} = 1 - \\alpha$'
+    ],
+    // Two-sided confidence interval for mean mu with known sigma
+    [
+      /(?:xác suất (?:để )?)?(?:đại lượng thống kê )?\(?\s*(?:x|ích)\s*(?:ngang|bar)\s*(?:trừ|-)\s*(?:muy|mu)\s*\)?\s*(?:chia cho|\/)\s*\(?\s*(?:sigma|xích ma)\s*(?:trên|\/)\s*(?:căn bậc hai của|căn)\s*n\s*\)?\s*(?:nằm trong đoạn|nằm giữa)\s*(?:từ )?\s*(?:trừ|-)\s*(?:z|dét)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\s*(?:đến|tới)\s*(?:z|dét)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\s*(?:là )?(?:bằng|=)\s*(?:1|một)\s*(?:trừ|-)\s*(?:an\s*pha|alpha)/gi,
+      '$P \\left\\{ -z_{\\alpha/2} \\le \\frac{\\bar{X} - \\mu}{\\frac{\\sigma}{\\sqrt{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P \\left\\{ \\bar{X} - z_{\\alpha/2} \\frac{\\sigma}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + z_{\\alpha/2} \\frac{\\sigma}{\\sqrt{n}} \\right\\} = 1 - \\alpha$'
+    ],
+    // Two-sided confidence interval for mean mu with unknown sigma (Student t)
+    [
+      /(?:xác suất (?:để )?)?(?:đại lượng thống kê )?\(?\s*(?:x|ích)\s*(?:ngang|bar)\s*(?:trừ|-)\s*(?:muy|mu)\s*\)?\s*(?:chia cho|\/)\s*\(?\s*s\s*(?:trên|\/)\s*(?:căn bậc hai của|căn)\s*n\s*\)?\s*(?:nằm trong đoạn|nằm giữa)\s*(?:từ )?\s*(?:trừ|-)\s*(?:t|tê)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\s*(?:đến|tới)\s*(?:t|tê)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\s*(?:là )?(?:bằng|=)\s*(?:1|một)\s*(?:trừ|-)\s*(?:an\s*pha|alpha)/gi,
+      '$P \\left\\{ -t_{\\alpha/2}^{(n-1)} \\le \\frac{\\bar{X} - \\mu}{\\frac{s}{\\sqrt{n}}} \\le t_{\\alpha/2}^{(n-1)} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P \\left\\{ \\bar{X} - t_{\\alpha/2}^{(n-1)} \\frac{s}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + t_{\\alpha/2}^{(n-1)} \\frac{s}{\\sqrt{n}} \\right\\} = 1 - \\alpha$'
+    ],
+    // Addition theorem: P(A + B) = P(A) + P(B) - P(AB)
+    [
+      /xác suất (?:của )?(?:a|a lớn)\s*(?:hợp|cộng|\+)\s*(?:b|b lớn)\s*(?:bằng|=)\s*(?:p|xác suất)?\s*\(?a\)?\s*(?:cộng|\+)\s*(?:p|xác suất)?\s*\(?b\)?\s*(?:trừ|-)\s*(?:p|xác suất)?\s*\(?a\s*(?:giao|nhân)?\s*b\)?/gi,
+      '$P(A \\cup B) = P(A) + P(B) - P(AB)$'
+    ],
+    // Bayes theorem
+    [
+      /xác suất (?:của )?h_?i\s*(?:với điều kiện|khi biết)\s*a\s*(?:bằng|=)\s*p\(h_?i\)\s*nhân\s*p\(a\/h_?i\)\s*chia\s*(?:cho )?(?:p\(a\)|tổng)/gi,
+      '$P(H_i / A) = \\frac{P(H_i) \\cdot P(A / H_i)}{\\sum_{j=1}^n P(H_j) \\cdot P(A / H_j)}$'
+    ]
+  ];
+
+  for (const [pattern, replacement] of fullSentenceMatches) {
+    if (pattern.test(text)) {
+      return text.replace(pattern, replacement);
+    }
+  }
 
   // 1. Specific Stats Hypothesis & Critical Values (high priority compound matches)
   const compoundReplacements: [RegExp, string][] = [
+    // Sub-formula: (F - p) / sqrt(pq / n)
+    [
+      /\(?\s*(?:f|ép)\s*(?:trừ|-)\s*(?:p|pê)\s*\)?\s*(?:chia cho|\/)\s*(?:căn bậc hai của|căn)\s*\(?\s*(?:p|pê)\s*(?:nhân|\*)\s*(?:q|quy)\s*(?:trên|\/)\s*n\s*\)?/gi,
+      '$\\frac{F - p}{\\sqrt{\\frac{pq}{n}}}$'
+    ],
+    // Sub-formula: sqrt(pq / n)
+    [
+      /(?:căn bậc hai của|căn)\s*\(?\s*(?:p|pê)\s*(?:nhân|\*)\s*(?:q|quy)\s*(?:trên|\/)\s*n\s*\)?/gi,
+      '$\\sqrt{\\frac{pq}{n}}$'
+    ],
+    // Sub-formula: sigma / sqrt(n)
+    [
+      /\(?\s*(?:sigma|xích ma)\s*(?:chia cho|trên|\/)\s*(?:căn bậc hai của|căn)\s*n\s*\)?/gi,
+      '$\\frac{\\sigma}{\\sqrt{n}}$'
+    ],
+    // Sub-formula: s / sqrt(n)
+    [
+      /\(?\s*s\s*(?:chia cho|trên|\/)\s*(?:căn bậc hai của|căn)\s*n\s*\)?/gi,
+      '$\\frac{s}{\\sqrt{n}}$'
+    ],
+    // Critical value fractions with minus sign
+    [/(?:trừ|-)\s*(?:z|dét)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\b/gi, '$-z_{\\alpha/2}$'],
+    [/(?:trừ|-)\s*(?:t|tê)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\b/gi, '$-t_{\\alpha/2}$'],
     // Critical value fractions
     [/\b(z|dét)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\b/gi, '$z_{\\alpha/2}$'],
     [/\b(t|tê)\s*(?:an\s*pha|alpha)\s*(?:trên|chia)\s*2\b/gi, '$t_{\\alpha/2}$'],
@@ -176,4 +267,115 @@ export function normalizeSpokenMath(rawText: string): string {
   text = text.replace(/\s+/g, ' ').trim();
 
   return text;
+}
+
+/**
+ * Advanced Semantic Parser for Spoken Math:
+ * Extracts variables, critical values, and bidirectional algebraic deductions (e.g., standard inequality => confidence interval)
+ */
+export function parseSpokenMathAdvanced(spokenText: string): SpokenMathAnalysis {
+  const lower = (spokenText || '').toLowerCase().trim();
+
+  // 1. Two-sided confidence interval for proportion p (Matches teacher handwritten example)
+  if (
+    (lower.includes('f trừ p') || lower.includes('f - p') || lower.includes('p nhân q') || lower.includes('pq/n') || lower.includes('tỷ lệ')) &&
+    (lower.includes('z') || lower.includes('alpha') || lower.includes('an pha') || lower.includes('đoạn từ') || lower.includes('nằm trong'))
+  ) {
+    return {
+      latexFormula: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{F - p}{\\sqrt{\\frac{pq}{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha`,
+      deductionFormula: `P\\left\\{ F - z_{\\alpha/2} \\cdot \\sqrt{\\frac{pq}{n}} \\le p \\le F + z_{\\alpha/2} \\cdot \\sqrt{\\frac{pq}{n}} \\right\\} = 1 - \\alpha`,
+      fullLatexDisplay: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{F - p}{\\sqrt{\\frac{pq}{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P\\left\\{ F - z_{\\alpha/2} \\cdot \\sqrt{\\frac{pq}{n}} \\le p \\le F + z_{\\alpha/2} \\cdot \\sqrt{\\frac{pq}{n}} \\right\\} = 1 - \\alpha`,
+      meaning: `Khoảng ước lượng tin cậy đối xứng cho tỷ lệ tổng thể p với độ tin cậy 1 - \\alpha (áp dụng khi cỡ mẫu lớn n >= 30).`,
+      variables: [
+        { symbol: 'p', desc: 'Tỷ lệ cá thể mang đặc tính A trong tổng thể (cần ước lượng)' },
+        { symbol: 'F', desc: 'Tỷ lệ mẫu quan sát được (F = m/n)' },
+        { symbol: 'q', desc: 'Tỷ lệ đối lập (q = 1 - p hoặc xấp xỉ 1 - F)' },
+        { symbol: 'n', desc: 'Kích thước mẫu khảo sát' },
+        { symbol: 'z_{\\alpha/2}', desc: 'Giá trị tới hạn chuẩn tra từ bảng phân phối chuẩn Laplace' },
+        { symbol: '1 - \\alpha', desc: 'Độ tin cậy của ước lượng (thường 90%, 95%, 99%)' }
+      ],
+      casioTip: 'Tìm z_{alpha/2}: Bấm MENU 7 -> 3 (Inverse Normal) -> nhập Area = 1 - alpha/2, sigma = 1, mu = 0.'
+    };
+  }
+
+  // 2. Two-sided confidence interval for mean mu with known sigma
+  if (
+    (lower.includes('x ngang trừ') || lower.includes('muy') || lower.includes('sigma trên căn')) &&
+    (lower.includes('z') || lower.includes('alpha') || lower.includes('khoảng') || lower.includes('đoạn'))
+  ) {
+    return {
+      latexFormula: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{\\bar{X} - \\mu}{\\frac{\\sigma}{\\sqrt{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha`,
+      deductionFormula: `P\\left\\{ \\bar{X} - z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      fullLatexDisplay: `P\\left\\{ -z_{\\alpha/2} \\le \\frac{\\bar{X} - \\mu}{\\frac{\\sigma}{\\sqrt{n}}} \\le z_{\\alpha/2} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P\\left\\{ \\bar{X} - z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      meaning: `Khoảng ước lượng tin cậy đối xứng cho kỳ vọng toán \\mu khi đã biết độ lệch chuẩn tổng thể \\sigma.`,
+      variables: [
+        { symbol: '\\mu', desc: 'Kỳ vọng toán của tổng thể (cần ước lượng)' },
+        { symbol: '\\bar{X}', desc: 'Trung bình mẫu quan sát được' },
+        { symbol: '\\sigma', desc: 'Độ lệch chuẩn tổng thể (đã cho)' },
+        { symbol: 'n', desc: 'Kích thước mẫu quan sát' },
+        { symbol: 'z_{\\alpha/2}', desc: 'Giá trị tới hạn chuẩn phân vị alpha/2' }
+      ],
+      casioTip: 'Bấm MENU 6 -> 1 để nhập mẫu và lấy x_bar; tính sai số epsilon = z * sigma / sqrt(n).'
+    };
+  }
+
+  // 3. Two-sided confidence interval for mean mu with unknown sigma (Student t)
+  if (
+    (lower.includes('student') || lower.includes('t alpha') || lower.includes('tê an pha')) &&
+    (lower.includes('s trên căn') || lower.includes('x ngang'))
+  ) {
+    return {
+      latexFormula: `P\\left\\{ -t_{\\alpha/2}^{(n-1)} \\le \\frac{\\bar{X} - \\mu}{\\frac{s}{\\sqrt{n}}} \\le t_{\\alpha/2}^{(n-1)} \\right\\} = 1 - \\alpha`,
+      deductionFormula: `P\\left\\{ \\bar{X} - t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      fullLatexDisplay: `P\\left\\{ -t_{\\alpha/2}^{(n-1)} \\le \\frac{\\bar{X} - \\mu}{\\frac{s}{\\sqrt{n}}} \\le t_{\\alpha/2}^{(n-1)} \\right\\} = 1 - \\alpha \\quad \\Rightarrow \\quad P\\left\\{ \\bar{X} - t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\le \\mu \\le \\bar{X} + t_{\\alpha/2}^{(n-1)}\\frac{s}{\\sqrt{n}} \\right\\} = 1 - \\alpha`,
+      meaning: `Khoảng ước lượng tin cậy cho kỳ vọng \\mu khi chưa biết phương sai tổng thể (mẫu nhỏ n < 30).`,
+      variables: [
+        { symbol: 's', desc: 'Độ lệch chuẩn mẫu hiệu chỉnh' },
+        { symbol: 'n - 1', desc: 'Bậc tự do của phân phối Student' }
+      ],
+      casioTip: 'Bấm MENU 6 -> 1 để lấy x_bar và s_x; tra bảng phân phối Student t(n-1; alpha/2).'
+    };
+  }
+
+  // 4. Default normalized fallback
+  const rawNormalized = normalizeSpokenMath(spokenText);
+  return {
+    latexFormula: rawNormalized,
+    deductionFormula: '',
+    fullLatexDisplay: rawNormalized,
+    meaning: 'Biểu thức toán học nhận diện từ giọng nói người dùng.',
+    variables: [],
+    casioTip: 'Bấm MENU -> 7 để tính xác suất hoặc MENU -> 6 cho bảng số liệu thống kê.'
+  };
+}
+
+/**
+ * Call Server-side AI Speech-to-Math engine powered by user's Gemini API Key
+ */
+export async function convertVoiceToMathAI(
+  spokenText: string,
+  context?: string
+): Promise<{ success: boolean; data: SpokenMathAnalysis; isAiGenerated?: boolean }> {
+  try {
+    const res = await aiFetch('/api/tutor/speech-to-math', {
+      method: 'POST',
+      body: JSON.stringify({
+        spokenText,
+        context: context || 'Xác suất Thống kê Đại học & Kinh tế (XSTK)',
+      }),
+    });
+    const json = await res.json();
+    if (json.success && json.data) {
+      return json;
+    }
+  } catch (err) {
+    console.warn('AI speech-to-math fetch error, using local math speech parser:', err);
+  }
+
+  // Safe fallback to advanced local parser
+  return {
+    success: true,
+    data: parseSpokenMathAdvanced(spokenText),
+    isAiGenerated: false,
+  };
 }

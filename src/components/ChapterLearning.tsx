@@ -3,7 +3,7 @@ import { Chapter } from '../types/xstk';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { MathFormula, MathText } from './MathFormula';
 import { aiFetch } from '../utils/apiHelper';
-import { normalizeSpokenMath } from '../utils/mathSpeechParser';
+import { normalizeSpokenMath, convertVoiceToMathAI, hasMathematicalTerms } from '../utils/mathSpeechParser';
 import confetti from 'canvas-confetti';
 import {
   Check,
@@ -244,11 +244,25 @@ export const ChapterLearning: React.FC<ChapterLearningProps> = ({
       recognition.continuous = false;
       recognition.interimResults = false;
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = async (event: any) => {
         const transcript = event.results[0][0].transcript;
         const normalized = normalizeSpokenMath(transcript);
         setStudentMsgInput((prev) => (prev ? prev + ' ' + normalized : normalized));
         setIsVoiceRecording(false);
+
+        if (hasMathematicalTerms(transcript)) {
+          try {
+            const aiRes = await convertVoiceToMathAI(transcript);
+            if (aiRes?.data?.fullLatexDisplay) {
+              setStudentMsgInput((prev) => {
+                const cleaned = prev ? prev.replace(normalized, '').trim() : '';
+                return cleaned ? `${cleaned}\n\n$$${aiRes.data.fullLatexDisplay}$$` : `$$${aiRes.data.fullLatexDisplay}$$`;
+              });
+            }
+          } catch (e) {
+            console.warn('Speech to math in learning error:', e);
+          }
+        }
       };
 
       recognition.onerror = () => setIsVoiceRecording(false);
